@@ -28,7 +28,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.15, y: 0.15, z: 0.15}
+  m_LocalScale: {x: 1.3, y: 1.3, z: 1.3}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
@@ -48,19 +48,19 @@ MonoBehaviour:
   blockTypes:
   - type: 0
     rarity: 5
-    sprite: {fileID: 21300000, guid: aee8353de2c4cfb41aa751ed39e17aa1, type: 3}
+    sprite: {fileID: 21300000, guid: 87ba0528fdd77354f8b29da291fd9167, type: 3}
   - type: 1
     rarity: 5
-    sprite: {fileID: 21300000, guid: 92ee9917918bc81499a6c2b9ab827710, type: 3}
+    sprite: {fileID: 21300000, guid: 8f40fe2b9ea45854daafa2c32ec8d144, type: 3}
   - type: 2
     rarity: 5
-    sprite: {fileID: 21300000, guid: 4020d09fd1a69b144bfc7bae6950de2f, type: 3}
+    sprite: {fileID: 21300000, guid: 1cdb1dbf9ca2c0e4388f95ba2e25319e, type: 3}
   - type: 3
     rarity: 5
-    sprite: {fileID: 21300000, guid: 23c52273943697043b3308115a2f953f, type: 3}
+    sprite: {fileID: 21300000, guid: 8a468e1b86d00d14b9f5d79e7811a1cc, type: 3}
   - type: 4
     rarity: 50
-    sprite: {fileID: 21300000, guid: 4c082f5af1244f7408efd1fd9fd5c1b3, type: 3}
+    sprite: {fileID: 21300000, guid: 02c4c2586a8440747bf2b01211c8a619, type: 3}
   type: 0
   column: 0
   row: 0

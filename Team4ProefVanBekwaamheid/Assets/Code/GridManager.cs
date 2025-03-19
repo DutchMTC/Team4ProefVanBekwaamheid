@@ -31,36 +31,91 @@ public class GridManager : MonoBehaviour
         }
     }
 
-    private Block.BlockType GetRandomBlockType()
+    private bool WouldCauseMatch(int x, int y, Block.BlockType type)
     {
-        Block blockComponent = blockPrefab.GetComponent<Block>();
-        int totalWeight = 0;
-        foreach (var blockType in blockComponent.blockTypes)
+        // Check horizontal matches (need at least 2 blocks of same type to left or right)
+        if (x >= 2 &&
+            blocks[x - 1, y]?.type == type &&
+            blocks[x - 2, y]?.type == type)
         {
-            // Ensure rarity is at least 1 and at most 100
-            int validRarity = Mathf.Clamp(blockType.rarity, 1, 100);
-            // Invert the rarity so that higher rarity (100) means lower weight (1)
-            int weight = 101 - validRarity;
-            totalWeight += weight;
+            return true;
+        }
+        if (x >= 1 && x < gridWidth - 1 &&
+            blocks[x - 1, y]?.type == type &&
+            blocks[x + 1, y]?.type == type)
+        {
+            return true;
+        }
+        if (x < gridWidth - 2 &&
+            blocks[x + 1, y]?.type == type &&
+            blocks[x + 2, y]?.type == type)
+        {
+            return true;
         }
 
-        int randomWeight = Random.Range(0, totalWeight);
-        int currentWeight = 0;
+        // Check vertical matches (need at least 2 blocks of same type above or below)
+        if (y >= 2 &&
+            blocks[x, y - 1]?.type == type &&
+            blocks[x, y - 2]?.type == type)
+        {
+            return true;
+        }
+        if (y >= 1 && y < gridHeight - 1 &&
+            blocks[x, y - 1]?.type == type &&
+            blocks[x, y + 1]?.type == type)
+        {
+            return true;
+        }
+        if (y < gridHeight - 2 &&
+            blocks[x, y + 1]?.type == type &&
+            blocks[x, y + 2]?.type == type)
+        {
+            return true;
+        }
 
+        return false;
+    }
+
+    private Block.BlockType GetRandomBlockType(int x, int y)
+    {
+        Block blockComponent = blockPrefab.GetComponent<Block>();
+        List<Block.BlockType> validTypes = new List<Block.BlockType>();
+        Dictionary<Block.BlockType, int> typeWeights = new Dictionary<Block.BlockType, int>();
+        int totalWeight = 0;
+
+        // Calculate weights for each valid block type
         foreach (var blockType in blockComponent.blockTypes)
         {
-            // Ensure rarity is at least 1 and at most 100
-            int validRarity = Mathf.Clamp(blockType.rarity, 1, 100);
-            // Use inverted rarity as weight
-            int weight = 101 - validRarity;
-            currentWeight += weight;
-            if (randomWeight < currentWeight)
+            if (!WouldCauseMatch(x, y, blockType.type))
             {
-                return blockType.type;
+                validTypes.Add(blockType.type);
+                int validRarity = Mathf.Clamp(blockType.rarity, 1, 100);
+                int weight = 101 - validRarity;
+                typeWeights[blockType.type] = weight;
+                totalWeight += weight;
             }
         }
 
-        return Block.BlockType.Blue; // Fallback
+        // If no valid types (shouldn't happen with 5 colors), return any type
+        if (validTypes.Count == 0)
+        {
+            return Block.BlockType.Blue;
+        }
+
+        // Select random type from valid ones based on weight
+        int randomWeight = Random.Range(0, totalWeight);
+        int currentWeight = 0;
+
+        foreach (var type in validTypes)
+        {
+            currentWeight += typeWeights[type];
+            if (randomWeight < currentWeight)
+            {
+                return type;
+            }
+        }
+
+        return validTypes[0]; // Fallback to first valid type
     }
 
     private void CreateBlock(int x, int y)
@@ -69,7 +124,7 @@ public class GridManager : MonoBehaviour
         blockObject.transform.parent = transform;
 
         Block block = blockObject.GetComponent<Block>();
-        Block.BlockType randomType = GetRandomBlockType();
+        Block.BlockType randomType = GetRandomBlockType(x, y);
         block.Initialize(randomType, x, y);
         blocks[x, y] = block;
     }

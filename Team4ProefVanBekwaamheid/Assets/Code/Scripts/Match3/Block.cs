@@ -6,8 +6,9 @@ public class Block : MonoBehaviour
     public class BlockTypeData
     {
         public BlockType type;
-        [Range(1, 100)] // 1 is common, 100 is very rare
+        [Range(1, 100)] // 1 is very common, 100 is extremely rare
         public int rarity = 1;
+        [Tooltip("Higher rarity means less frequent spawning")]
         public Sprite sprite;
     }
 
@@ -58,7 +59,14 @@ public class Block : MonoBehaviour
         }
     }
 
-    // Helper method to get rarity of current block type
+    /// <summary>
+    /// Gets the rarity value of the current block type.
+    /// Higher values (1-100) mean the block is more rare.
+    /// </summary>
+    /// <returns>
+    /// A value between 1 and 100 representing block rarity,
+    /// where 1 is very common and 100 is extremely rare.
+    /// </returns>
     public int GetRarity()
     {
         foreach (var blockType in blockTypes)

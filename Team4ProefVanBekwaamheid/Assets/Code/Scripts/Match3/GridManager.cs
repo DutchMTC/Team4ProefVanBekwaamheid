@@ -9,6 +9,9 @@ public class GridManager : MonoBehaviour
     public int gridHeight = 8;
     public float swapSpeed = 0.3f;
 
+    [Range(0f, 1f)]
+    public float rarityInfluence = 0.7f; // How much rarity affects spawn chances (0 = no effect, 1 = maximum effect)
+    
     private Block[,] blocks;
     private bool isSwapping = false;
     private Vector2 touchStart;
@@ -79,43 +82,67 @@ public class GridManager : MonoBehaviour
     private Block.BlockType GetRandomBlockType(int x, int y)
     {
         Block blockComponent = blockPrefab.GetComponent<Block>();
-        List<Block.BlockType> validTypes = new List<Block.BlockType>();
-        Dictionary<Block.BlockType, int> typeWeights = new Dictionary<Block.BlockType, int>();
-        int totalWeight = 0;
-
-        // Calculate weights for each valid block type
-        foreach (var blockType in blockComponent.blockTypes)
+        
+        // Step 1: Separate valid and invalid types (those that would cause matches)
+        List<Block.BlockTypeData> validTypes = new List<Block.BlockTypeData>();
+        List<Block.BlockTypeData> invalidTypes = new List<Block.BlockTypeData>();
+        
+        foreach (var blockTypeData in blockComponent.blockTypes)
         {
-            if (!WouldCauseMatch(x, y, blockType.type))
+            if (!WouldCauseMatch(x, y, blockTypeData.type))
             {
-                validTypes.Add(blockType.type);
-                int validRarity = Mathf.Clamp(blockType.rarity, 1, 100);
-                int weight = 101 - validRarity;
-                typeWeights[blockType.type] = weight;
-                totalWeight += weight;
+                validTypes.Add(blockTypeData);
+            }
+            else
+            {
+                invalidTypes.Add(blockTypeData);
             }
         }
-
-        // If no valid types (shouldn't happen with 5 colors), return any type
+        
+        // If there are no valid types, we have no choice but to create a match
         if (validTypes.Count == 0)
         {
-            return Block.BlockType.Blue;
+            Debug.LogWarning($"No valid block types at position ({x}, {y}), will create a match");
+            validTypes = invalidTypes;
         }
-
-        // Select random type from valid ones based on weight
-        int randomWeight = Random.Range(0, totalWeight);
-        int currentWeight = 0;
-
-        foreach (var type in validTypes)
+        
+        // Step 2: Calculate total rarity values
+        int totalRarity = 0;
+        foreach (var blockTypeData in validTypes)
         {
-            currentWeight += typeWeights[type];
-            if (randomWeight < currentWeight)
+            totalRarity += blockTypeData.rarity;
+        }
+        
+        // Step 3: Use a two-tier selection system
+        // First, give all types a base chance (1-rarityInfluence)
+        // Then, distribute the remaining probability (rarityInfluence) based on rarity
+        float randomValue = Random.value;
+        
+        // If we're using rarity influence
+        if (rarityInfluence > 0 && randomValue <= rarityInfluence)
+        {
+            // Using rarity-based probabilities
+            int randomRarity = Random.Range(1, totalRarity + 1);
+            int currentRarity = 0;
+            
+            foreach (var blockTypeData in validTypes)
             {
-                return type;
+                currentRarity += blockTypeData.rarity;
+                if (randomRarity <= currentRarity)
+                {
+                    return blockTypeData.type;
+                }
             }
         }
-
-        return validTypes[0]; // Fallback to first valid type
+        else 
+        {
+            // Using equal probabilities
+            int randomIndex = Random.Range(0, validTypes.Count);
+            return validTypes[randomIndex].type;
+        }
+        
+        // Fallback
+        return validTypes[0].type;
     }
 
     private void CreateBlock(int x, int y)

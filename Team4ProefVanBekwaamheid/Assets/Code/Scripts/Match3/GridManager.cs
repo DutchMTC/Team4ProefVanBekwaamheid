@@ -16,6 +16,8 @@ public class GridManager : MonoBehaviour
     private bool isSwapping = false;
     private Vector2 touchStart;
     private Block selectedBlock;
+    private Block block1SwappedWith;
+    private Block block2SwappedWith;
 
     private void Start()
     {
@@ -355,6 +357,10 @@ public class GridManager : MonoBehaviour
     {
         isSwapping = true;
 
+        // Store the blocks being swapped
+        block1SwappedWith = block1;
+        block2SwappedWith = block2;
+
         // Swap array positions
         blocks[block1.column, block1.row] = block2;
         blocks[block2.column, block2.row] = block1;
@@ -375,12 +381,45 @@ public class GridManager : MonoBehaviour
         Invoke(nameof(CheckMatches), swapSpeed);
     }
 
-    private void CheckMatches()
+    private void SwapBlocksBack(Block block1, Block block2)
+    {
+        // Swap array positions back
+        blocks[block1.column, block1.row] = block2;
+        blocks[block2.column, block2.row] = block1;
+
+        // Swap grid positions back
+        int tempColumn = block1.column;
+        int tempRow = block1.row;
+        block1.column = block2.column;
+        block1.row = block2.row;
+        block2.column = tempColumn;
+        block2.row = tempRow;
+
+        // Animate movement back
+        block1.SetTargetPosition(new Vector2(block1.column, block1.row));
+        block2.SetTargetPosition(new Vector2(block2.column, block2.row));
+
+        // Reset state after animation completes
+        Invoke(nameof(ResetSwapState), swapSpeed);
+    }
+
+    private void ResetSwapState()
     {
         isSwapping = false;
+        block1SwappedWith = null;
+        block2SwappedWith = null;
+    }
+
+    private void CheckMatches()
+    {
         List<Block> matchingBlocks = FindMatches();
         if (matchingBlocks.Count >= 3)
         {
+            // Match found - proceed with destroying blocks
+            isSwapping = false;
+            block1SwappedWith = null;
+            block2SwappedWith = null;
+
             // Remove matched blocks and log their destruction
             foreach (Block block in matchingBlocks)
             {
@@ -392,6 +431,16 @@ public class GridManager : MonoBehaviour
 
             // Apply gravity and fill empty spaces
             StartFalling();
+        }
+        else if (block1SwappedWith != null && block2SwappedWith != null)
+        {
+            // No match found - swap the blocks back
+            SwapBlocksBack(block1SwappedWith, block2SwappedWith);
+        }
+        else
+        {
+            // Reset state if no blocks were swapped
+            isSwapping = false;
         }
     }
 

@@ -36,44 +36,150 @@ public class GridManager : MonoBehaviour
 
     private bool WouldCauseMatch(int x, int y, Block.BlockType type)
     {
-        // Check horizontal matches (need at least 2 blocks of same type to left or right)
-        if (x >= 2 &&
-            blocks[x - 1, y]?.type == type &&
-            blocks[x - 2, y]?.type == type)
+        Block blockPrefabComponent = blockPrefab.GetComponent<Block>();
+        bool isJokerType = false;
+        foreach (var blockTypeData in blockPrefabComponent.blockTypes)
         {
-            return true;
-        }
-        if (x >= 1 && x < gridWidth - 1 &&
-            blocks[x - 1, y]?.type == type &&
-            blocks[x + 1, y]?.type == type)
-        {
-            return true;
-        }
-        if (x < gridWidth - 2 &&
-            blocks[x + 1, y]?.type == type &&
-            blocks[x + 2, y]?.type == type)
-        {
-            return true;
+            if (blockTypeData.type == type && blockTypeData.isJoker)
+            {
+                isJokerType = true;
+                break;
+            }
         }
 
-        // Check vertical matches (need at least 2 blocks of same type above or below)
-        if (y >= 2 &&
-            blocks[x, y - 1]?.type == type &&
-            blocks[x, y - 2]?.type == type)
+        // If this is a joker being placed, check if it would connect two same-colored blocks
+        if (isJokerType)
         {
-            return true;
+            // Check horizontal matches
+            if (x >= 1 && x < gridWidth - 1 && 
+                blocks[x - 1, y] != null && blocks[x + 1, y] != null &&
+                blocks[x - 1, y].type == blocks[x + 1, y].type)
+            {
+                return true;
+            }
+            if (x >= 2 && 
+                blocks[x - 1, y] != null && blocks[x - 2, y] != null &&
+                blocks[x - 1, y].type == blocks[x - 2, y].type)
+            {
+                return true;
+            }
+            if (x < gridWidth - 2 && 
+                blocks[x + 1, y] != null && blocks[x + 2, y] != null &&
+                blocks[x + 1, y].type == blocks[x + 2, y].type)
+            {
+                return true;
+            }
+
+            // Check vertical matches
+            if (y >= 1 && y < gridHeight - 1 && 
+                blocks[x, y - 1] != null && blocks[x, y + 1] != null &&
+                blocks[x, y - 1].type == blocks[x, y + 1].type)
+            {
+                return true;
+            }
+            if (y >= 2 && 
+                blocks[x, y - 1] != null && blocks[x, y - 2] != null &&
+                blocks[x, y - 1].type == blocks[x, y - 2].type)
+            {
+                return true;
+            }
+            if (y < gridHeight - 2 && 
+                blocks[x, y + 1] != null && blocks[x, y + 2] != null &&
+                blocks[x, y + 1].type == blocks[x, y + 2].type)
+            {
+                return true;
+            }
         }
-        if (y >= 1 && y < gridHeight - 1 &&
-            blocks[x, y - 1]?.type == type &&
-            blocks[x, y + 1]?.type == type)
+        else
         {
-            return true;
-        }
-        if (y < gridHeight - 2 &&
-            blocks[x, y + 1]?.type == type &&
-            blocks[x, y + 2]?.type == type)
-        {
-            return true;
+            // For non-joker blocks, check if they would match with existing blocks including jokers
+            // Horizontal checks
+            if (x >= 2)
+            {
+                Block b1 = blocks[x - 1, y];
+                Block b2 = blocks[x - 2, y];
+                if (b1 != null && b2 != null)
+                {
+                    if ((b1.IsJoker && b2.type == type) || 
+                        (b2.IsJoker && b1.type == type) ||
+                        (b1.type == type && b2.type == type))
+                    {
+                        return true;
+                    }
+                }
+            }
+            if (x >= 1 && x < gridWidth - 1)
+            {
+                Block b1 = blocks[x - 1, y];
+                Block b2 = blocks[x + 1, y];
+                if (b1 != null && b2 != null)
+                {
+                    if ((b1.IsJoker && b2.type == type) || 
+                        (b2.IsJoker && b1.type == type) ||
+                        (b1.type == type && b2.type == type))
+                    {
+                        return true;
+                    }
+                }
+            }
+            if (x < gridWidth - 2)
+            {
+                Block b1 = blocks[x + 1, y];
+                Block b2 = blocks[x + 2, y];
+                if (b1 != null && b2 != null)
+                {
+                    if ((b1.IsJoker && b2.type == type) || 
+                        (b2.IsJoker && b1.type == type) ||
+                        (b1.type == type && b2.type == type))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            // Vertical checks
+            if (y >= 2)
+            {
+                Block b1 = blocks[x, y - 1];
+                Block b2 = blocks[x, y - 2];
+                if (b1 != null && b2 != null)
+                {
+                    if ((b1.IsJoker && b2.type == type) || 
+                        (b2.IsJoker && b1.type == type) ||
+                        (b1.type == type && b2.type == type))
+                    {
+                        return true;
+                    }
+                }
+            }
+            if (y >= 1 && y < gridHeight - 1)
+            {
+                Block b1 = blocks[x, y - 1];
+                Block b2 = blocks[x, y + 1];
+                if (b1 != null && b2 != null)
+                {
+                    if ((b1.IsJoker && b2.type == type) || 
+                        (b2.IsJoker && b1.type == type) ||
+                        (b1.type == type && b2.type == type))
+                    {
+                        return true;
+                    }
+                }
+            }
+            if (y < gridHeight - 2)
+            {
+                Block b1 = blocks[x, y + 1];
+                Block b2 = blocks[x, y + 2];
+                if (b1 != null && b2 != null)
+                {
+                    if ((b1.IsJoker && b2.type == type) || 
+                        (b2.IsJoker && b1.type == type) ||
+                        (b1.type == type && b2.type == type))
+                    {
+                        return true;
+                    }
+                }
+            }
         }
 
         return false;
@@ -371,22 +477,80 @@ public class GridManager : MonoBehaviour
                 Block block2 = blocks[x + 1, y];
                 Block block3 = blocks[x + 2, y];
 
-                if (block1 != null && block2 != null && block3 != null &&
-                    block1.type == block2.type && block2.type == block3.type)
+                if (block1 != null && block2 != null && block3 != null)
                 {
-                    matchingBlocks.Add(block1);
-                    matchingBlocks.Add(block2);
-                    matchingBlocks.Add(block3);
-
-                    // Check for longer matches
-                    for (int i = x + 3; i < gridWidth; i++)
+                    // For jokers, we need to ensure they're actually connecting same-colored blocks
+                    bool isMatch = false;
+                    
+                    if (block1.IsJoker)
                     {
-                        Block nextBlock = blocks[i, y];
-                        if (nextBlock != null && nextBlock.type == block1.type)
+                        isMatch = block2.type == block3.type; // Joker must connect two same blocks
+                    }
+                    else if (block2.IsJoker)
+                    {
+                        isMatch = block1.type == block3.type; // Joker in middle must connect same blocks
+                    }
+                    else if (block3.IsJoker)
+                    {
+                        isMatch = block1.type == block2.type; // Joker must connect two same blocks
+                    }
+                    else
+                    {
+                        // No jokers - all blocks must match
+                        isMatch = block1.type == block2.type && block2.type == block3.type;
+                    }
+
+                    if (isMatch)
+                    {
+                        matchingBlocks.Add(block1);
+                        matchingBlocks.Add(block2);
+                        matchingBlocks.Add(block3);
+
+                        // Check for longer matches
+                        for (int i = x + 3; i < gridWidth; i++)
                         {
-                            matchingBlocks.Add(nextBlock);
+                            Block nextBlock = blocks[i, y];
+                            if (nextBlock == null) break;
+                            
+                            // For longer matches, if we have a joker in the sequence,
+                            // it must connect to blocks of the same type
+                            bool canExtendMatch = false;
+                            if (nextBlock.IsJoker)
+                            {
+                                // Get the last non-joker block type from the match
+                                Block.BlockType matchType = Block.BlockType.Blue; // default
+                                bool foundType = false;
+                                for (int j = i - 1; j >= x && !foundType; j--)
+                                {
+                                    if (!blocks[j, y].IsJoker)
+                                    {
+                                        matchType = blocks[j, y].type;
+                                        foundType = true;
+                                    }
+                                }
+                                canExtendMatch = foundType; // only extend if we found a type to match
+                            }
+                            else
+                            {
+                                // Get the type we're matching against (first non-joker block)
+                                Block.BlockType matchType = Block.BlockType.Blue;
+                                for (int j = i - 1; j >= x; j--)
+                                {
+                                    if (!blocks[j, y].IsJoker)
+                                    {
+                                        matchType = blocks[j, y].type;
+                                        break;
+                                    }
+                                }
+                                canExtendMatch = nextBlock.type == matchType;
+                            }
+
+                            if (canExtendMatch)
+                            {
+                                matchingBlocks.Add(nextBlock);
+                            }
+                            else break;
                         }
-                        else break;
                     }
                 }
             }
@@ -401,27 +565,98 @@ public class GridManager : MonoBehaviour
                 Block block2 = blocks[x, y + 1];
                 Block block3 = blocks[x, y + 2];
 
-                if (block1 != null && block2 != null && block3 != null &&
-                    block1.type == block2.type && block2.type == block3.type)
+                if (block1 != null && block2 != null && block3 != null)
                 {
-                    matchingBlocks.Add(block1);
-                    matchingBlocks.Add(block2);
-                    matchingBlocks.Add(block3);
-
-                    // Check for longer matches
-                    for (int i = y + 3; i < gridHeight; i++)
+                    // For jokers, we need to ensure they're actually connecting same-colored blocks
+                    bool isMatch = false;
+                    
+                    if (block1.IsJoker)
                     {
-                        Block nextBlock = blocks[x, i];
-                        if (nextBlock != null && nextBlock.type == block1.type)
+                        isMatch = block2.type == block3.type; // Joker must connect two same blocks
+                    }
+                    else if (block2.IsJoker)
+                    {
+                        isMatch = block1.type == block3.type; // Joker in middle must connect same blocks
+                    }
+                    else if (block3.IsJoker)
+                    {
+                        isMatch = block1.type == block2.type; // Joker must connect two same blocks
+                    }
+                    else
+                    {
+                        // No jokers - all blocks must match
+                        isMatch = block1.type == block2.type && block2.type == block3.type;
+                    }
+
+                    if (isMatch)
+                    {
+                        matchingBlocks.Add(block1);
+                        matchingBlocks.Add(block2);
+                        matchingBlocks.Add(block3);
+
+                        // Check for longer matches
+                        for (int i = y + 3; i < gridHeight; i++)
                         {
-                            matchingBlocks.Add(nextBlock);
+                            Block nextBlock = blocks[x, i];
+                            if (nextBlock == null) break;
+                            
+                            // For longer matches, if we have a joker in the sequence,
+                            // it must connect to blocks of the same type
+                            bool canExtendMatch = false;
+                            if (nextBlock.IsJoker)
+                            {
+                                // Get the last non-joker block type from the match
+                                Block.BlockType matchType = Block.BlockType.Blue; // default
+                                bool foundType = false;
+                                for (int j = i - 1; j >= y && !foundType; j--)
+                                {
+                                    if (!blocks[x, j].IsJoker)
+                                    {
+                                        matchType = blocks[x, j].type;
+                                        foundType = true;
+                                    }
+                                }
+                                canExtendMatch = foundType; // only extend if we found a type to match
+                            }
+                            else
+                            {
+                                // Get the type we're matching against (first non-joker block)
+                                Block.BlockType matchType = Block.BlockType.Blue;
+                                for (int j = i - 1; j >= y; j--)
+                                {
+                                    if (!blocks[x, j].IsJoker)
+                                    {
+                                        matchType = blocks[x, j].type;
+                                        break;
+                                    }
+                                }
+                                canExtendMatch = nextBlock.type == matchType;
+                            }
+
+                            if (canExtendMatch)
+                            {
+                                matchingBlocks.Add(nextBlock);
+                            }
+                            else break;
                         }
-                        else break;
                     }
                 }
             }
         }
 
         return matchingBlocks.ToList();
+    }
+
+    private bool AreBlocksMatching(Block block1, Block block2)
+    {
+        // If neither block is a joker, just check if they're the same type
+        if (!block1.IsJoker && !block2.IsJoker)
+        {
+            return block1.type == block2.type;
+        }
+
+        // We have at least one joker - but we'll check during the match-3 evaluation
+        // if it's actually connecting same-colored blocks
+        return true;
     }
 }

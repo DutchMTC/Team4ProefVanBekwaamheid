@@ -10,6 +10,8 @@ public class Block : MonoBehaviour
         public int rarity = 1;
         [Tooltip("Higher rarity means less frequent spawning")]
         public Sprite sprite;
+        [Tooltip("If true, this block type can match with any other blocks")]
+        public bool isJoker;
     }
 
     public enum BlockType
@@ -28,6 +30,22 @@ public class Block : MonoBehaviour
     private Vector2 targetPosition;
     private float moveSpeed = 10f;
     private SpriteRenderer spriteRenderer;
+
+    // Helper property to check if current block type is a joker
+    public bool IsJoker 
+    {
+        get 
+        {
+            foreach (var blockType in blockTypes)
+            {
+                if (blockType.type == type)
+                {
+                    return blockType.isJoker;
+                }
+            }
+            return false;
+        }
+    }
 
     private void Awake()
     {

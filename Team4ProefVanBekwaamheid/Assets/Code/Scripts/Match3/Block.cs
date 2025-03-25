@@ -12,6 +12,8 @@ public class Block : MonoBehaviour
         public Sprite sprite;
         [Tooltip("If true, this block type can match with any other blocks")]
         public bool isJoker;
+        [Tooltip("What type of power-up this joker provides")]
+        public PowerUpInventory.PowerUpType powerUpType;
     }
 
     public enum BlockType
@@ -20,7 +22,11 @@ public class Block : MonoBehaviour
         Red,
         Green,
         Yellow,
-        Purple
+        Purple,
+        JokerSword,
+        JokerShield,
+        JokerSteps,
+        JokerHealth
     }
 
     public BlockTypeData[] blockTypes;
@@ -95,6 +101,18 @@ public class Block : MonoBehaviour
             }
         }
         return 1; // Default rarity if not found
+    }
+
+    public PowerUpInventory.PowerUpType GetPowerUpType()
+    {
+        foreach (var blockType in blockTypes)
+        {
+            if (blockType.type == type)
+            {
+                return blockType.powerUpType;
+            }
+        }
+        return PowerUpInventory.PowerUpType.Sword; // Default fallback
     }
 
     public void UpdatePosition()

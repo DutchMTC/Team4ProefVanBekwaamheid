@@ -430,7 +430,7 @@ public class GridManager : MonoBehaviour
                             break;
                         }
                     }
-                    OnJokerMatched(block, matchedType);
+                    OnJokerMatched(block, matchedType, matchingBlocks.Count);
                 }
             }
 
@@ -724,13 +724,16 @@ public class GridManager : MonoBehaviour
         return true;
     }
 
-    private void OnJokerMatched(Block jokerBlock, Block.BlockType matchedWithType)
+    private void OnJokerMatched(Block jokerBlock, Block.BlockType matchedWithType, int matchSize)
     {
         if (jokerBlock == null) return;
         
         // Only trigger if this is actually a joker block
         if (!jokerBlock.IsJoker) return;
+
+        // Award power-ups equal to the number of blocks in the match
+        PowerUpInventory.Instance?.AddPowerUps(jokerBlock.GetPowerUpType(), matchSize);
         
-        Debug.Log($"Joker at ({jokerBlock.column}, {jokerBlock.row}) matched with {matchedWithType} blocks");
+        Debug.Log($"Joker at ({jokerBlock.column}, {jokerBlock.row}) matched with {matchedWithType} blocks - Awarded {matchSize} {jokerBlock.GetPowerUpType()} power-ups");
     }
 }

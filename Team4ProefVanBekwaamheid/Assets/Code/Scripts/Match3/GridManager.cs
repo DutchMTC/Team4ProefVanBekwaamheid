@@ -415,12 +415,30 @@ public class GridManager : MonoBehaviour
         List<Block> matchingBlocks = FindMatches();
         if (matchingBlocks.Count >= 3)
         {
-            // Match found - proceed with destroying blocks
+            // Find and notify about any joker matches before destroying blocks
+            foreach (Block block in matchingBlocks)
+            {
+                if (block.IsJoker)
+                {
+                    // Find the type the joker matched with
+                    Block.BlockType matchedType = Block.BlockType.Blue; // default
+                    foreach (Block otherBlock in matchingBlocks)
+                    {
+                        if (otherBlock != block && !otherBlock.IsJoker)
+                        {
+                            matchedType = otherBlock.type;
+                            break;
+                        }
+                    }
+                    OnJokerMatched(block, matchedType);
+                }
+            }
+
+            // Continue with regular match handling
             isSwapping = false;
             block1SwappedWith = null;
             block2SwappedWith = null;
 
-            // Remove matched blocks and log their destruction
             foreach (Block block in matchingBlocks)
             {
                 Vector2Int pos = new Vector2Int(block.column, block.row);
@@ -429,17 +447,14 @@ public class GridManager : MonoBehaviour
                 Destroy(block.gameObject);
             }
 
-            // Apply gravity and fill empty spaces
             StartFalling();
         }
         else if (block1SwappedWith != null && block2SwappedWith != null)
         {
-            // No match found - swap the blocks back
             SwapBlocksBack(block1SwappedWith, block2SwappedWith);
         }
         else
         {
-            // Reset state if no blocks were swapped
             isSwapping = false;
         }
     }
@@ -707,5 +722,15 @@ public class GridManager : MonoBehaviour
         // We have at least one joker - but we'll check during the match-3 evaluation
         // if it's actually connecting same-colored blocks
         return true;
+    }
+
+    private void OnJokerMatched(Block jokerBlock, Block.BlockType matchedWithType)
+    {
+        if (jokerBlock == null) return;
+        
+        // Only trigger if this is actually a joker block
+        if (!jokerBlock.IsJoker) return;
+        
+        Debug.Log($"Joker at ({jokerBlock.column}, {jokerBlock.row}) matched with {matchedWithType} blocks");
     }
 }

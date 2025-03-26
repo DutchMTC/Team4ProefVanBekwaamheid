@@ -29,6 +29,9 @@ public class CameraSetup : MonoBehaviour
         float x = (gridManager.gridWidth - 1) * 0.5f;
         float y = (gridManager.gridHeight - 1) * 0.5f;
         transform.position = new Vector3(x, y, -10f);
+
+        // Set up top camera viewport only
+        topCamera.rect = new Rect(0, bottomHalfHeight, 1, 1 - bottomHalfHeight);
         
         // Adjust orthographic size for bottom camera only
         float aspectRatio = (Screen.width / (float)Screen.height) * (1f / bottomHalfHeight);

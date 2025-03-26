@@ -14,6 +14,7 @@ public class GridManager : MonoBehaviour
     
     private Block[,] blocks;
     private bool isSwapping = false;
+    private bool isFalling = false;    
     private Vector2 touchStart;
     private Block selectedBlock;
     private Block block1SwappedWith;
@@ -262,11 +263,18 @@ public class GridManager : MonoBehaviour
         Block.BlockType randomType = GetRandomBlockType(x, y);
         block.Initialize(randomType, x, y);
         blocks[x, y] = block;
+        
+        // If creating a block above the grid (for falling animation), set the falling state
+        if (block.transform.position.y > y)
+        {
+            isFalling = true;
+        }
     }
 
     private void Update()
     {
-        if (isSwapping) return;
+        // If blocks are falling or being swapped, don't allow new moves
+        if (isSwapping || isFalling) return;
 
         // Handle mouse input
         if (Input.GetMouseButtonDown(0))
@@ -452,15 +460,18 @@ public class GridManager : MonoBehaviour
         else if (block1SwappedWith != null && block2SwappedWith != null)
         {
             SwapBlocksBack(block1SwappedWith, block2SwappedWith);
+            isFalling = false; // Reset falling state when swapping back
         }
         else
         {
             isSwapping = false;
+            isFalling = false; // Reset falling state when no matches found
         }
     }
 
     private void StartFalling()
     {
+        isFalling = true; // Set falling state when blocks start falling
         bool needsMoreFalling;
         do
         {
@@ -525,6 +536,10 @@ public class GridManager : MonoBehaviour
                 Destroy(block.gameObject);
             }
             StartFalling();
+        }
+        else
+        {
+            isFalling = false;
         }
     }
 

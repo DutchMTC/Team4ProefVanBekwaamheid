@@ -5,24 +5,33 @@ public class CameraSetup : MonoBehaviour
 {
     public GridManager gridManager;
     private Camera mainCamera;
+    
+    [SerializeField]
+    private Camera topCamera;
+    
+    [SerializeField]
+    private float bottomHalfHeight = 0.5f;
 
     private void Start()
     {
         mainCamera = GetComponent<Camera>();
-        AdjustCamera();
+        AdjustCameras();
     }
 
-    private void AdjustCamera()
+    private void AdjustCameras()
     {
         if (gridManager == null) return;
 
-        // Position camera to center of grid
+        // Set up bottom camera (main camera)
+        mainCamera.rect = new Rect(0, 0, 1, bottomHalfHeight);
+        
+        // Position bottom camera to center of grid
         float x = (gridManager.gridWidth - 1) * 0.5f;
         float y = (gridManager.gridHeight - 1) * 0.5f;
         transform.position = new Vector3(x, y, -10f);
-
-        // Adjust orthographic size to fit grid
-        float aspectRatio = Screen.width / (float)Screen.height;
+        
+        // Adjust orthographic size for bottom camera only
+        float aspectRatio = (Screen.width / (float)Screen.height) * (1f / bottomHalfHeight);
         float gridAspectRatio = gridManager.gridWidth / (float)gridManager.gridHeight;
         
         if (gridAspectRatio > aspectRatio)
@@ -34,7 +43,7 @@ public class CameraSetup : MonoBehaviour
             mainCamera.orthographicSize = gridManager.gridHeight / 2f;
         }
 
-        // Add padding
+        // Add padding to bottom camera
         mainCamera.orthographicSize *= 1.1f;
     }
 }

@@ -33,9 +33,9 @@ public class Block : MonoBehaviour
     public BlockType type;
     public int column;
     public int row;
-    private Vector2 targetPosition;
-    private float moveSpeed = 10f;
-    private SpriteRenderer spriteRenderer;
+    private Vector2 _targetPosition;
+    private float _moveSpeed = 10f;
+    private SpriteRenderer _spriteRenderer;
 
     // Helper property to check if current block type is a joker
     public bool IsJoker 
@@ -55,10 +55,10 @@ public class Block : MonoBehaviour
 
     private void Awake()
     {
-        spriteRenderer = GetComponent<SpriteRenderer>();
-        if (spriteRenderer == null)
+        _spriteRenderer = GetComponent<SpriteRenderer>();
+        if (_spriteRenderer == null)
         {
-            spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
+            _spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
         }
     }
 
@@ -77,7 +77,7 @@ public class Block : MonoBehaviour
         {
             if (blockType.type == type)
             {
-                spriteRenderer.sprite = blockType.sprite;
+                _spriteRenderer.sprite = blockType.sprite;
                 break;
             }
         }
@@ -117,20 +117,20 @@ public class Block : MonoBehaviour
 
     public void UpdatePosition()
     {
-        targetPosition = new Vector2(column, row);
+        _targetPosition = new Vector2(column, row);
         transform.position = new Vector3(column, row, 0);
     }
 
     public void SetTargetPosition(Vector2 position)
     {
-        targetPosition = position;
+        _targetPosition = position;
     }
 
     private void Update()
     {
-        if ((Vector2)transform.position != targetPosition)
+        if ((Vector2)transform.position != _targetPosition)
         {
-            transform.position = Vector2.MoveTowards(transform.position, targetPosition, moveSpeed * Time.deltaTime);
+            transform.position = Vector2.MoveTowards(transform.position, _targetPosition, _moveSpeed * Time.deltaTime);
         }
     }
 }

@@ -12,10 +12,10 @@ public class PowerUpInventory : MonoBehaviour
         Health
     }
 
-    [SerializeField] private int swordCount = 0;
-    [SerializeField] private int shieldCount = 0;
-    [SerializeField] private int stepsCount = 0;
-    [SerializeField] private int healthCount = 0;
+    [SerializeField] private int _swordCount = 0;
+    [SerializeField] private int _shieldCount = 0;
+    [SerializeField] private int _stepsCount = 0;
+    [SerializeField] private int _healthCount = 0;
 
     private void Awake()
     {
@@ -36,16 +36,16 @@ public class PowerUpInventory : MonoBehaviour
         switch (type)
         {
             case PowerUpType.Sword:
-                swordCount += amount;
+                _swordCount += amount;
                 break;
             case PowerUpType.Shield:
-                shieldCount += amount;
+                _shieldCount += amount;
                 break;
             case PowerUpType.Steps:
-                stepsCount += amount;
+                _stepsCount += amount;
                 break;
             case PowerUpType.Health:
-                healthCount += amount;
+                _healthCount += amount;
                 break;
         }
         
@@ -56,10 +56,10 @@ public class PowerUpInventory : MonoBehaviour
     {
         return type switch
         {
-            PowerUpType.Sword => swordCount,
-            PowerUpType.Shield => shieldCount,
-            PowerUpType.Steps => stepsCount,
-            PowerUpType.Health => healthCount,
+            PowerUpType.Sword => _swordCount,
+            PowerUpType.Shield => _shieldCount,
+            PowerUpType.Steps => _stepsCount,
+            PowerUpType.Health => _healthCount,
             _ => 0
         };
     }
@@ -68,17 +68,17 @@ public class PowerUpInventory : MonoBehaviour
     {
         switch (type)
         {
-            case PowerUpType.Sword when swordCount > 0:
-                swordCount--;
+            case PowerUpType.Sword when _swordCount > 0:
+                _swordCount--;
                 break;
-            case PowerUpType.Shield when shieldCount > 0:
-                shieldCount--;
+            case PowerUpType.Shield when _shieldCount > 0:
+                _shieldCount--;
                 break;
-            case PowerUpType.Steps when stepsCount > 0:
-                stepsCount--;
+            case PowerUpType.Steps when _stepsCount > 0:
+                _stepsCount--;
                 break;
-            case PowerUpType.Health when healthCount > 0:
-                healthCount--;
+            case PowerUpType.Health when _healthCount > 0:
+                _healthCount--;
                 break;
         }
         
@@ -88,9 +88,9 @@ public class PowerUpInventory : MonoBehaviour
     private void LogInventory()
     {
         Debug.Log($"Power-Up Inventory:\n" +
-                  $"Swords: {swordCount}\n" +
-                  $"Shields: {shieldCount}\n" +
-                  $"Steps: {stepsCount}\n" +
-                  $"Health: {healthCount}");
+                  $"Swords: {_swordCount}\n" +
+                  $"Shields: {_shieldCount}\n" +
+                  $"Steps: {_stepsCount}\n" +
+                  $"Health: {_healthCount}");
     }
 }

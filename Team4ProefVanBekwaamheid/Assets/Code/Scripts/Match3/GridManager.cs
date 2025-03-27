@@ -12,17 +12,17 @@ public class GridManager : MonoBehaviour
     [Range(0f, 1f)]
     public float rarityInfluence = 0.7f; // How much rarity affects spawn chances (0 = no effect, 1 = maximum effect)
     
-    private Block[,] blocks;
-    private bool isSwapping = false;
-    private bool isFalling = false;    
-    private Vector2 touchStart;
-    private Block selectedBlock;
-    private Block block1SwappedWith;
-    private Block block2SwappedWith;
+    private Block[,] _blocks;
+    private bool _isSwapping = false;
+    private bool _isFalling = false;    
+    private Vector2 _touchStart;
+    private Block _selectedBlock;
+    private Block _block1SwappedWith;
+    private Block _block2SwappedWith;
 
     private void Start()
     {
-        blocks = new Block[gridWidth, gridHeight];
+        _blocks = new Block[gridWidth, gridHeight];
         InitializeGrid();
     }
 
@@ -55,40 +55,40 @@ public class GridManager : MonoBehaviour
         {
             // Check horizontal matches
             if (x >= 1 && x < gridWidth - 1 && 
-                blocks[x - 1, y] != null && blocks[x + 1, y] != null &&
-                blocks[x - 1, y].type == blocks[x + 1, y].type)
+                _blocks[x - 1, y] != null && _blocks[x + 1, y] != null &&
+                _blocks[x - 1, y].type == _blocks[x + 1, y].type)
             {
                 return true;
             }
             if (x >= 2 && 
-                blocks[x - 1, y] != null && blocks[x - 2, y] != null &&
-                blocks[x - 1, y].type == blocks[x - 2, y].type)
+                _blocks[x - 1, y] != null && _blocks[x - 2, y] != null &&
+                _blocks[x - 1, y].type == _blocks[x - 2, y].type)
             {
                 return true;
             }
             if (x < gridWidth - 2 && 
-                blocks[x + 1, y] != null && blocks[x + 2, y] != null &&
-                blocks[x + 1, y].type == blocks[x + 2, y].type)
+                _blocks[x + 1, y] != null && _blocks[x + 2, y] != null &&
+                _blocks[x + 1, y].type == _blocks[x + 2, y].type)
             {
                 return true;
             }
 
             // Check vertical matches
             if (y >= 1 && y < gridHeight - 1 && 
-                blocks[x, y - 1] != null && blocks[x, y + 1] != null &&
-                blocks[x, y - 1].type == blocks[x, y + 1].type)
+                _blocks[x, y - 1] != null && _blocks[x, y + 1] != null &&
+                _blocks[x, y - 1].type == _blocks[x, y + 1].type)
             {
                 return true;
             }
             if (y >= 2 && 
-                blocks[x, y - 1] != null && blocks[x, y - 2] != null &&
-                blocks[x, y - 1].type == blocks[x, y - 2].type)
+                _blocks[x, y - 1] != null && _blocks[x, y - 2] != null &&
+                _blocks[x, y - 1].type == _blocks[x, y - 2].type)
             {
                 return true;
             }
             if (y < gridHeight - 2 && 
-                blocks[x, y + 1] != null && blocks[x, y + 2] != null &&
-                blocks[x, y + 1].type == blocks[x, y + 2].type)
+                _blocks[x, y + 1] != null && _blocks[x, y + 2] != null &&
+                _blocks[x, y + 1].type == _blocks[x, y + 2].type)
             {
                 return true;
             }
@@ -99,8 +99,8 @@ public class GridManager : MonoBehaviour
             // Horizontal checks
             if (x >= 2)
             {
-                Block b1 = blocks[x - 1, y];
-                Block b2 = blocks[x - 2, y];
+                Block b1 = _blocks[x - 1, y];
+                Block b2 = _blocks[x - 2, y];
                 if (b1 != null && b2 != null)
                 {
                     if ((b1.IsJoker && b2.type == type) || 
@@ -113,8 +113,8 @@ public class GridManager : MonoBehaviour
             }
             if (x >= 1 && x < gridWidth - 1)
             {
-                Block b1 = blocks[x - 1, y];
-                Block b2 = blocks[x + 1, y];
+                Block b1 = _blocks[x - 1, y];
+                Block b2 = _blocks[x + 1, y];
                 if (b1 != null && b2 != null)
                 {
                     if ((b1.IsJoker && b2.type == type) || 
@@ -127,8 +127,8 @@ public class GridManager : MonoBehaviour
             }
             if (x < gridWidth - 2)
             {
-                Block b1 = blocks[x + 1, y];
-                Block b2 = blocks[x + 2, y];
+                Block b1 = _blocks[x + 1, y];
+                Block b2 = _blocks[x + 2, y];
                 if (b1 != null && b2 != null)
                 {
                     if ((b1.IsJoker && b2.type == type) || 
@@ -143,8 +143,8 @@ public class GridManager : MonoBehaviour
             // Vertical checks
             if (y >= 2)
             {
-                Block b1 = blocks[x, y - 1];
-                Block b2 = blocks[x, y - 2];
+                Block b1 = _blocks[x, y - 1];
+                Block b2 = _blocks[x, y - 2];
                 if (b1 != null && b2 != null)
                 {
                     if ((b1.IsJoker && b2.type == type) || 
@@ -157,8 +157,8 @@ public class GridManager : MonoBehaviour
             }
             if (y >= 1 && y < gridHeight - 1)
             {
-                Block b1 = blocks[x, y - 1];
-                Block b2 = blocks[x, y + 1];
+                Block b1 = _blocks[x, y - 1];
+                Block b2 = _blocks[x, y + 1];
                 if (b1 != null && b2 != null)
                 {
                     if ((b1.IsJoker && b2.type == type) || 
@@ -171,8 +171,8 @@ public class GridManager : MonoBehaviour
             }
             if (y < gridHeight - 2)
             {
-                Block b1 = blocks[x, y + 1];
-                Block b2 = blocks[x, y + 2];
+                Block b1 = _blocks[x, y + 1];
+                Block b2 = _blocks[x, y + 2];
                 if (b1 != null && b2 != null)
                 {
                     if ((b1.IsJoker && b2.type == type) || 
@@ -262,30 +262,30 @@ public class GridManager : MonoBehaviour
         Block block = blockObject.GetComponent<Block>();
         Block.BlockType randomType = GetRandomBlockType(x, y);
         block.Initialize(randomType, x, y);
-        blocks[x, y] = block;
+        _blocks[x, y] = block;
         
         // If creating a block above the grid (for falling animation), set the falling state
         if (block.transform.position.y > y)
         {
-            isFalling = true;
+            _isFalling = true;
         }
     }
 
     private void Update()
     {
         // If blocks are falling or being swapped, don't allow new moves
-        if (isSwapping || isFalling) return;
+        if (_isSwapping || _isFalling) return;
 
         // Handle mouse input
         if (Input.GetMouseButtonDown(0))
         {
-            touchStart = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            selectedBlock = GetBlockAtPosition(touchStart);
+            _touchStart = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            _selectedBlock = GetBlockAtPosition(_touchStart);
         }
-        else if (Input.GetMouseButtonUp(0) && selectedBlock != null)
+        else if (Input.GetMouseButtonUp(0) && _selectedBlock != null)
         {
             Vector2 touchEnd = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            Vector2 direction = touchEnd - touchStart;
+            Vector2 direction = touchEnd - _touchStart;
 
             if (direction.magnitude > 0.5f)
             {
@@ -299,9 +299,9 @@ public class GridManager : MonoBehaviour
                     _ => new Vector2Int(0, -1)                 // Down
                 };
 
-                TrySwapBlocks(selectedBlock, swapDirection);
+                TrySwapBlocks(_selectedBlock, swapDirection);
             }
-            selectedBlock = null;
+            _selectedBlock = null;
         }
 
         // Handle touch input
@@ -311,13 +311,13 @@ public class GridManager : MonoBehaviour
             
             if (touch.phase == TouchPhase.Began)
             {
-                touchStart = Camera.main.ScreenToWorldPoint(touch.position);
-                selectedBlock = GetBlockAtPosition(touchStart);
+                _touchStart = Camera.main.ScreenToWorldPoint(touch.position);
+                _selectedBlock = GetBlockAtPosition(_touchStart);
             }
-            else if (touch.phase == TouchPhase.Ended && selectedBlock != null)
+            else if (touch.phase == TouchPhase.Ended && _selectedBlock != null)
             {
                 Vector2 touchEnd = Camera.main.ScreenToWorldPoint(touch.position);
-                Vector2 direction = touchEnd - touchStart;
+                Vector2 direction = touchEnd - _touchStart;
 
                 if (direction.magnitude > 0.5f)
                 {
@@ -330,9 +330,9 @@ public class GridManager : MonoBehaviour
                         _ => new Vector2Int(0, -1)                 // Down
                     };
 
-                    TrySwapBlocks(selectedBlock, swapDirection);
+                    TrySwapBlocks(_selectedBlock, swapDirection);
                 }
-                selectedBlock = null;
+                _selectedBlock = null;
             }
         }
     }
@@ -344,7 +344,7 @@ public class GridManager : MonoBehaviour
 
         if (x >= 0 && x < gridWidth && y >= 0 && y < gridHeight)
         {
-            return blocks[x, y];
+            return _blocks[x, y];
         }
         return null;
     }
@@ -356,22 +356,22 @@ public class GridManager : MonoBehaviour
 
         if (newX >= 0 && newX < gridWidth && newY >= 0 && newY < gridHeight)
         {
-            Block otherBlock = blocks[newX, newY];
+            Block otherBlock = _blocks[newX, newY];
             SwapBlocks(block, otherBlock);
         }
     }
 
     private void SwapBlocks(Block block1, Block block2)
     {
-        isSwapping = true;
+        _isSwapping = true;
 
         // Store the blocks being swapped
-        block1SwappedWith = block1;
-        block2SwappedWith = block2;
+        _block1SwappedWith = block1;
+        _block2SwappedWith = block2;
 
         // Swap array positions
-        blocks[block1.column, block1.row] = block2;
-        blocks[block2.column, block2.row] = block1;
+        _blocks[block1.column, block1.row] = block2;
+        _blocks[block2.column, block2.row] = block1;
 
         // Swap grid positions
         int tempColumn = block1.column;
@@ -392,8 +392,8 @@ public class GridManager : MonoBehaviour
     private void SwapBlocksBack(Block block1, Block block2)
     {
         // Swap array positions back
-        blocks[block1.column, block1.row] = block2;
-        blocks[block2.column, block2.row] = block1;
+        _blocks[block1.column, block1.row] = block2;
+        _blocks[block2.column, block2.row] = block1;
 
         // Swap grid positions back
         int tempColumn = block1.column;
@@ -413,9 +413,9 @@ public class GridManager : MonoBehaviour
 
     private void ResetSwapState()
     {
-        isSwapping = false;
-        block1SwappedWith = null;
-        block2SwappedWith = null;
+        _isSwapping = false;
+        _block1SwappedWith = null;
+        _block2SwappedWith = null;
     }
 
     private void CheckMatches()
@@ -443,35 +443,35 @@ public class GridManager : MonoBehaviour
             }
 
             // Continue with regular match handling
-            isSwapping = false;
-            block1SwappedWith = null;
-            block2SwappedWith = null;
+            _isSwapping = false;
+            _block1SwappedWith = null;
+            _block2SwappedWith = null;
 
             foreach (Block block in matchingBlocks)
             {
                 Vector2Int pos = new Vector2Int(block.column, block.row);
                 Debug.Log($"Destroyed {block.type} block at position ({pos.x}, {pos.y}) with rarity {block.GetRarity()}");
-                blocks[pos.x, pos.y] = null;
+                _blocks[pos.x, pos.y] = null;
                 Destroy(block.gameObject);
             }
 
             StartFalling();
         }
-        else if (block1SwappedWith != null && block2SwappedWith != null)
+        else if (_block1SwappedWith != null && _block2SwappedWith != null)
         {
-            SwapBlocksBack(block1SwappedWith, block2SwappedWith);
-            isFalling = false; // Reset falling state when swapping back
+            SwapBlocksBack(_block1SwappedWith, _block2SwappedWith);
+            _isFalling = false; // Reset falling state when swapping back
         }
         else
         {
-            isSwapping = false;
-            isFalling = false; // Reset falling state when no matches found
+            _isSwapping = false;
+            _isFalling = false; // Reset falling state when no matches found
         }
     }
 
     private void StartFalling()
     {
-        isFalling = true; // Set falling state when blocks start falling
+        _isFalling = true; // Set falling state when blocks start falling
         bool needsMoreFalling;
         do
         {
@@ -482,17 +482,17 @@ public class GridManager : MonoBehaviour
             {
                 for (int y = 0; y < gridHeight - 1; y++)
                 {
-                    if (blocks[x, y] == null)
+                    if (_blocks[x, y] == null)
                     {
                         // Look for the next non-null block above
                         for (int above = y + 1; above < gridHeight; above++)
                         {
-                            if (blocks[x, above] != null)
+                            if (_blocks[x, above] != null)
                             {
                                 // Move block down
-                                Block block = blocks[x, above];
-                                blocks[x, y] = block;
-                                blocks[x, above] = null;
+                                Block block = _blocks[x, above];
+                                _blocks[x, y] = block;
+                                _blocks[x, above] = null;
                                 block.row = y;
                                 block.SetTargetPosition(new Vector2(block.column, block.row));
                                 needsMoreFalling = true;
@@ -508,11 +508,11 @@ public class GridManager : MonoBehaviour
             {
                 for (int y = 0; y < gridHeight; y++)
                 {
-                    if (blocks[x, y] == null)
+                    if (_blocks[x, y] == null)
                     {
                         CreateBlock(x, y);
-                        blocks[x, y].transform.position = new Vector3(x, gridHeight, 0);
-                        blocks[x, y].SetTargetPosition(new Vector2(x, y));
+                        _blocks[x, y].transform.position = new Vector3(x, gridHeight, 0);
+                        _blocks[x, y].SetTargetPosition(new Vector2(x, y));
                         needsMoreFalling = true;
                     }
                 }
@@ -532,14 +532,14 @@ public class GridManager : MonoBehaviour
             foreach (Block block in newMatches)
             {
                 Vector2Int pos = new Vector2Int(block.column, block.row);
-                blocks[pos.x, pos.y] = null;
+                _blocks[pos.x, pos.y] = null;
                 Destroy(block.gameObject);
             }
             StartFalling();
         }
         else
         {
-            isFalling = false;
+            _isFalling = false;
         }
     }
 
@@ -552,9 +552,9 @@ public class GridManager : MonoBehaviour
         {
             for (int x = 0; x < gridWidth - 2; x++)
             {
-                Block block1 = blocks[x, y];
-                Block block2 = blocks[x + 1, y];
-                Block block3 = blocks[x + 2, y];
+                Block block1 = _blocks[x, y];
+                Block block2 = _blocks[x + 1, y];
+                Block block3 = _blocks[x + 2, y];
 
                 if (block1 != null && block2 != null && block3 != null)
                 {
@@ -588,7 +588,7 @@ public class GridManager : MonoBehaviour
                         // Check for longer matches
                         for (int i = x + 3; i < gridWidth; i++)
                         {
-                            Block nextBlock = blocks[i, y];
+                            Block nextBlock = _blocks[i, y];
                             if (nextBlock == null) break;
                             
                             // For longer matches, if we have a joker in the sequence,
@@ -601,9 +601,9 @@ public class GridManager : MonoBehaviour
                                 bool foundType = false;
                                 for (int j = i - 1; j >= x && !foundType; j--)
                                 {
-                                    if (!blocks[j, y].IsJoker)
+                                    if (!_blocks[j, y].IsJoker)
                                     {
-                                        matchType = blocks[j, y].type;
+                                        matchType = _blocks[j, y].type;
                                         foundType = true;
                                     }
                                 }
@@ -615,9 +615,9 @@ public class GridManager : MonoBehaviour
                                 Block.BlockType matchType = Block.BlockType.Blue;
                                 for (int j = i - 1; j >= x; j--)
                                 {
-                                    if (!blocks[j, y].IsJoker)
+                                    if (!_blocks[j, y].IsJoker)
                                     {
-                                        matchType = blocks[j, y].type;
+                                        matchType = _blocks[j, y].type;
                                         break;
                                     }
                                 }
@@ -640,9 +640,9 @@ public class GridManager : MonoBehaviour
         {
             for (int y = 0; y < gridHeight - 2; y++)
             {
-                Block block1 = blocks[x, y];
-                Block block2 = blocks[x, y + 1];
-                Block block3 = blocks[x, y + 2];
+                Block block1 = _blocks[x, y];
+                Block block2 = _blocks[x, y + 1];
+                Block block3 = _blocks[x, y + 2];
 
                 if (block1 != null && block2 != null && block3 != null)
                 {
@@ -676,7 +676,7 @@ public class GridManager : MonoBehaviour
                         // Check for longer matches
                         for (int i = y + 3; i < gridHeight; i++)
                         {
-                            Block nextBlock = blocks[x, i];
+                            Block nextBlock = _blocks[x, i];
                             if (nextBlock == null) break;
                             
                             // For longer matches, if we have a joker in the sequence,
@@ -689,9 +689,9 @@ public class GridManager : MonoBehaviour
                                 bool foundType = false;
                                 for (int j = i - 1; j >= y && !foundType; j--)
                                 {
-                                    if (!blocks[x, j].IsJoker)
+                                    if (!_blocks[x, j].IsJoker)
                                     {
-                                        matchType = blocks[x, j].type;
+                                        matchType = _blocks[x, j].type;
                                         foundType = true;
                                     }
                                 }
@@ -703,9 +703,9 @@ public class GridManager : MonoBehaviour
                                 Block.BlockType matchType = Block.BlockType.Blue;
                                 for (int j = i - 1; j >= y; j--)
                                 {
-                                    if (!blocks[x, j].IsJoker)
+                                    if (!_blocks[x, j].IsJoker)
                                     {
-                                        matchType = blocks[x, j].type;
+                                        matchType = _blocks[x, j].type;
                                         break;
                                     }
                                 }

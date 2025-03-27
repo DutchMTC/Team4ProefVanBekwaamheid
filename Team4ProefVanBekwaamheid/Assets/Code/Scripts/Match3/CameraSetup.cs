@@ -4,17 +4,17 @@ using UnityEngine;
 public class CameraSetup : MonoBehaviour
 {
     public GridManager gridManager;
-    private Camera mainCamera;
+    private Camera _mainCamera;
     
     [SerializeField]
-    private Camera topCamera;
+    private Camera _topCamera;
     
     [SerializeField]
-    private float bottomHalfHeight = 0.5f;
+    private float _bottomHalfHeight = 0.5f;
 
     private void Start()
     {
-        mainCamera = GetComponent<Camera>();
+        _mainCamera = GetComponent<Camera>();
         AdjustCameras();
     }
 
@@ -23,7 +23,7 @@ public class CameraSetup : MonoBehaviour
         if (gridManager == null) return;
 
         // Set up bottom camera (main camera)
-        mainCamera.rect = new Rect(0, 0, 1, bottomHalfHeight);
+        _mainCamera.rect = new Rect(0, 0, 1, _bottomHalfHeight);
         
         // Position bottom camera to center of grid
         float x = (gridManager.gridWidth - 1) * 0.5f;
@@ -31,22 +31,22 @@ public class CameraSetup : MonoBehaviour
         transform.position = new Vector3(x, y, -10f);
 
         // Set up top camera viewport only
-        topCamera.rect = new Rect(0, bottomHalfHeight, 1, 1 - bottomHalfHeight);
+        _topCamera.rect = new Rect(0, _bottomHalfHeight, 1, 1 - _bottomHalfHeight);
         
         // Adjust orthographic size for bottom camera only
-        float aspectRatio = (Screen.width / (float)Screen.height) * (1f / bottomHalfHeight);
+        float aspectRatio = (Screen.width / (float)Screen.height) * (1f / _bottomHalfHeight);
         float gridAspectRatio = gridManager.gridWidth / (float)gridManager.gridHeight;
         
         if (gridAspectRatio > aspectRatio)
         {
-            mainCamera.orthographicSize = gridManager.gridWidth / (2f * aspectRatio);
+            _mainCamera.orthographicSize = gridManager.gridWidth / (2f * aspectRatio);
         }
         else
         {
-            mainCamera.orthographicSize = gridManager.gridHeight / 2f;
+            _mainCamera.orthographicSize = gridManager.gridHeight / 2f;
         }
 
         // Add padding to bottom camera
-        mainCamera.orthographicSize *= 1.1f;
+        _mainCamera.orthographicSize *= 1.1f;
     }
 }

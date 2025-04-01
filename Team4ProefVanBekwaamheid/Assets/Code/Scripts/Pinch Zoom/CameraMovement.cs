@@ -2,15 +2,98 @@ using UnityEngine;
 
 public class CameraMovement : MonoBehaviour
 {
-    private Camera topCamera;
+    [SerializeField] private float speed = 0.01f; // Speed of zoom and pan
+    [SerializeField] private float minZoom = 0.1F; // Minimum zoom level
+    [SerializeField] private float maxZoom = 1F; // Maximum zoom level
+    [SerializeField] float minX, maxX, minY, maxY; // Camera movement bounds
+
+    private Vector3 touch; // Initial touch position
+    private Camera topCamera; // Camera reference
 
     void Start()
     {
-        topCamera = GetComponent<Camera>();
+        topCamera = gameObject.GetComponent<Camera>(); // Get Camera component
     }
-    
-    public void CameraZoom(float increment)
+
+    void Update()
     {
-        topCamera.orthographicSize = Mathf.Clamp(topCamera.orthographicSize + increment, 1, 4.4f);
-    } 
+        // Check for a input to start panning
+        if (Input.GetMouseButtonDown(0) && topCamera.pixelRect.Contains(Input.mousePosition))
+        {
+            StartPanning();
+        }
+
+        // Handle pinch zoom if two touches are detected
+        if (Input.touchCount == 2 && topCamera.pixelRect.Contains(Input.GetTouch(0).position) && topCamera.pixelRect.Contains(Input.GetTouch(1).position))
+        {
+            HandlePinchZoom();
+        }
+        // Handle panning if the input is held down
+        else if (Input.GetMouseButton(0) && topCamera.pixelRect.Contains(Input.mousePosition))
+        {
+            HandlePanning();
+        }
+
+        // Handle zooming with the scroll wheel
+        HandleScrollWheelZoom();
+    }
+
+    private void StartPanning()
+    {
+        // Store the initial touch position in world coordinates for panning
+        touch = topCamera.ScreenToWorldPoint(Input.mousePosition);
+    }
+
+    private void HandlePanning()
+    {
+        // Calculate the direction to move the camera based on touch movement
+        Vector3 direction = touch - topCamera.ScreenToWorldPoint(Input.mousePosition);
+        Vector3 newPosition = topCamera.transform.position + direction;
+
+        // Clamp the new position within the defined movement bounds
+        newPosition.x = Mathf.Clamp(newPosition.x, minX, maxX);
+        newPosition.y = Mathf.Clamp(newPosition.y, minY, maxY);
+        newPosition.z = topCamera.transform.position.z;
+
+        // Apply the clamped position to the camera
+        topCamera.transform.position = newPosition;
+    }
+
+    private void HandlePinchZoom()
+    {
+        // Get the two touch inputs for the pinch gesture
+        var touchZero = Input.GetTouch(0);
+        var touchOne = Input.GetTouch(1);
+
+        // Calculate the previous and current distances between the two touches
+        var prevMagnitude = (touchZero.position - touchZero.deltaPosition - (touchOne.position - touchOne.deltaPosition)).magnitude;
+        var currentMagnitude = (touchZero.position - touchOne.position).magnitude;
+
+        // Determine the difference in distances to calculate zoom amount
+        var difference = currentMagnitude - prevMagnitude;
+
+        // Find the midpoint between the two touches in screen space
+        Vector2 midpoint = (touchZero.position + touchOne.position) / 2;
+        Vector3 worldMidpoint = topCamera.ScreenToWorldPoint(new Vector3(midpoint.x, midpoint.y, topCamera.transform.position.z));
+
+        // Adjust the camera zoom level
+        CameraZoom(difference);
+
+        // Adjust the camera position to keep the zoom centered on the midpoint
+        Vector3 newWorldMidpoint = topCamera.ScreenToWorldPoint(new Vector3(midpoint.x, midpoint.y, topCamera.transform.position.z));
+        topCamera.transform.position += worldMidpoint - newWorldMidpoint;
+    }
+
+    private void HandleScrollWheelZoom()
+    {
+        // Adjust the camera zoom level based on scroll wheel input
+        CameraZoom(Input.GetAxis("Mouse ScrollWheel"));
+    }
+
+    private void CameraZoom(float increment)
+    {
+        // Adjust the camera's orthographic size to zoom in or out
+        float zoomFactor = increment * speed;
+        topCamera.orthographicSize = Mathf.Clamp(topCamera.orthographicSize - zoomFactor, minZoom, maxZoom);
+    }
 }

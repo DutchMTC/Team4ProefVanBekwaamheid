@@ -4,11 +4,16 @@ public class MovementBetweenTiles : MonoBehaviour
 {
     [SerializeField]
     private Camera topCamera;  // Reference to the top camera
-    private Vector3 _touchStart;
-    private GameObject _selectedTile;
-
-    [SerializeField] private GameObject player; // Reference to the player object
+    private GameObject selectedTile; // The tile that was selected by the player
     
+    private TileSettings tileSettings; // Reference to the TileSettings script
+    [SerializeField] private TileOccupants tileOccupants; // Reference to the TileOccupants script
+
+    void Start()
+    {
+        tileOccupants = this.gameObject.GetComponent<TileOccupants>();
+    }
+
     void Update()
     {
         // Handle mouse input
@@ -20,14 +25,21 @@ public class MovementBetweenTiles : MonoBehaviour
             // Use a larger max distance to ensure we can hit tiles at Y=23
             if (Physics.Raycast(ray, out hit, 100f))
             {
-                _selectedTile = hit.collider.gameObject;
-                Debug.Log("Touched object: " + _selectedTile.name + " at position: " + hit.point);
+                selectedTile = hit.collider.gameObject;               
+                tileSettings = selectedTile.GetComponent<TileSettings>();
+
+                if (!tileSettings.occupied)
+                {
+                    tileOccupants.row = tileSettings.row;
+                    tileOccupants.column = tileSettings.column;
+                }
+                else
+                {
+                    Debug.Log($"Selected tile is occupied by: {tileSettings.occupantType} , cannot move here.");
+                }
+
                 // Visual debug to see the ray
                 Debug.DrawLine(ray.origin, hit.point, Color.red, 1f);
-
-                // Get the tile's position and maintain the player's Y position
-                Vector3 tilePos = _selectedTile.transform.position;
-                player.transform.position = new Vector3(tilePos.x, player.transform.position.y, tilePos.z);
             }
             else
             {
@@ -49,10 +61,10 @@ public class MovementBetweenTiles : MonoBehaviour
 
                 if (Physics.Raycast(ray, out hit, 100f))
                 {
-                    _selectedTile = hit.collider.gameObject;
-                    Vector3 tilePos = _selectedTile.transform.position;
-                    player.transform.position = new Vector3(tilePos.x, player.transform.position.y, tilePos.z);
-                    Debug.Log("Touch hit object: " + _selectedTile.name + " at position: " + hit.point);
+                    selectedTile = hit.collider.gameObject;
+
+
+                    Debug.Log("Touch hit object: " + selectedTile.name + " at position: " + hit.point);
                 }
             }
         }

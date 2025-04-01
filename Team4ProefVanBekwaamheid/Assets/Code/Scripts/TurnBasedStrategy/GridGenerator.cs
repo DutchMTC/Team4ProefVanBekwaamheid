@@ -9,6 +9,8 @@ public class GridGenerator : MonoBehaviour
     [SerializeField] private float _tileWidth = 1f;
     [SerializeField] private float _tileHeight = 0.5f;
 
+    //[SerializeField] private TileSettings 
+
     public int width
     {
         get => _width;
@@ -87,9 +89,11 @@ public class GridGenerator : MonoBehaviour
                 // Convert grid coordinates to isometric space
                 float isoX = (x - y) * tileWidth * 0.5f + 3.5f;
                 float isoZ = (x + y) * tileHeight * 0.5f;
-
+                
                 Vector3 tilePosition = new Vector3(isoX, 23, isoZ);
                 GameObject tile = Instantiate(tilePrefab, tilePosition, Quaternion.Euler(0, 45, 0));
+                
+                tile.GetComponent<TileSettings>().Initzialize(TileSettings.OccupantType.None, x, y); // Initialize tile settings
                 tile.transform.parent = transform;  // Keep hierarchy organized
             }
         }

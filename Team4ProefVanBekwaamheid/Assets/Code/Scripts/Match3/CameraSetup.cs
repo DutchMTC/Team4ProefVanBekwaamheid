@@ -31,7 +31,7 @@ public class CameraSetup : MonoBehaviour
         transform.position = new Vector3(x, y, -10f);
 
         // Set up top camera viewport only
-        //_topCamera.rect = new Rect(0, _bottomHalfHeight, 1, 1 - _bottomHalfHeight);
+        _topCamera.rect = new Rect(0, _bottomHalfHeight, 1, 1 - _bottomHalfHeight);
         
         // Adjust orthographic size for bottom camera only
         float aspectRatio = (Screen.width / (float)Screen.height) * (1f / _bottomHalfHeight);

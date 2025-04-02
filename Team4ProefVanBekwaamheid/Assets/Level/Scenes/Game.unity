@@ -854,8 +854,8 @@ MonoBehaviour:
   speed: 0.01
   minZoom: 1.7
   maxZoom: 4
-  minX: -1
-  maxX: 1
+  minX: -2
+  maxX: 4
   minY: 19
   maxY: 21
 --- !u!1 &797258596

@@ -1,12 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class TileSettings : MonoBehaviour
 {
-    // Settings
-    public bool occupied;
-
     public enum OccupantType
     {
         None,
@@ -14,11 +12,12 @@ public class TileSettings : MonoBehaviour
         Enemy,
         Obstacle
     }
-
+    
+    // Settings
     public OccupantType occupantType;
-
     public int column;
     public int row;
+    internal UnityEvent OccupationChangedEvent;
     
     public void Initzialize(OccupantType occupantType, int column, int row)
     {
@@ -27,21 +26,24 @@ public class TileSettings : MonoBehaviour
         this.occupantType = occupantType;
     }
 
-    void Update()
+    void Start()
+    {
+        OccupationChangedEvent = new UnityEvent();
+        OccupationChangedEvent.AddListener(OnOccupationChange);
+    }
+
+    // Will eventually be used
+    public void OnOccupationChange()
     {
         switch (occupantType)
         {
             case OccupantType.None:
-                occupied = false;
                 break;
             case OccupantType.Player:
-                occupied = true;
                 break;
             case OccupantType.Enemy:
-                occupied = true;
                 break;
             case OccupantType.Obstacle:
-                occupied = true;
                 break;
         }
     }

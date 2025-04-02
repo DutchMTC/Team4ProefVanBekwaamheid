@@ -1,63 +1,62 @@
 using UnityEngine;
+using UnityEngine.Events;
 
 public class GridGenerator : MonoBehaviour
 {
     public GameObject tilePrefab;
 
-    [SerializeField] private int _width = 10;
-    [SerializeField] private int _height = 10;
-    [SerializeField] private float _tileWidth = 1f;
-    [SerializeField] private float _tileHeight = 0.5f;
+    [SerializeField] private int width = 10;
+    [SerializeField] private int height = 10;
+    [SerializeField] private float tileWidth = 1f;
+    [SerializeField] private float tileHeight = 0.5f;
 
-    //[SerializeField] private TileSettings 
-
-    public int width
+    public int _width
     {
-        get => _width;
+        get => width;
         set
         {
-            if (_width != value)
+            if (width != value)
             {
-                _width = value;
+                width = value;
                 if (Application.isPlaying) RegenerateGrid();
             }
         }
     }
 
-    public int height
+    public int _height
     {
-        get => _height;
+        get => height;
         set
         {
-            if (_height != value)
+            if (height != value)
             {
-                _height = value;
+                height = value;
                 if (Application.isPlaying) RegenerateGrid();
             }
         }
     }
 
-    public float tileWidth
+    public float _tileWidth
     {
-        get => _tileWidth;
+        get => tileWidth;
         set
         {
-            if (_tileWidth != value)
+            if (tileWidth != value)
             {
-                _tileWidth = value;
+                tileWidth = value;
                 if (Application.isPlaying) RegenerateGrid();
             }
         }
     }
 
-    public float tileHeight
+    public float _tileHeight
     {
-        get => _tileHeight;
+        get => tileHeight;
         set
         {
-            if (_tileHeight != value)
+            if (tileHeight != value)
             {
-                _tileHeight = value;
+                tileHeight = value;
                 if (Application.isPlaying) RegenerateGrid();
             }
         }
@@ -87,10 +86,10 @@ public class GridGenerator : MonoBehaviour
             for (int y = 0; y < height; y++)
             {
                 // Convert grid coordinates to isometric space
-                float isoX = (x - y) * tileWidth * 0.5f + 3.5f;
-                float isoZ = (x + y) * tileHeight * 0.5f;
+                float isometricX = (x - y) * tileWidth * 0.5f + 3.5f;
+                float isometricZ = (x + y) * tileHeight * 0.5f;
                 
-                Vector3 tilePosition = new Vector3(isoX, 23, isoZ);
+                Vector3 tilePosition = new Vector3(isometricX, 23, isometricZ);
                 GameObject tile = Instantiate(tilePrefab, tilePosition, Quaternion.Euler(0, 45, 0));
                 
                 tile.GetComponent<TileSettings>().Initzialize(TileSettings.OccupantType.None, x, y); // Initialize tile settings

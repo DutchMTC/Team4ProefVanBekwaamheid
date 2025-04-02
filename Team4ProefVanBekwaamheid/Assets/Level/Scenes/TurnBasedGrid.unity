@@ -704,8 +704,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   row: 0
   column: 4
-  selectedTile: {fileID: 0}
-  tileSettings: {fileID: 0}
   gridGenerator: {fileID: 1214771150}
   myOccupantType: 2
 --- !u!65 &1064311749
@@ -805,7 +803,7 @@ GameObject:
   - component: {fileID: 1214771149}
   - component: {fileID: 1214771150}
   m_Layer: 0
-  m_Name: Grid
+  m_Name: GridGenerator
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -840,10 +838,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tilePrefab: {fileID: 918325421012641991, guid: 80aa52d655857374881333b4feb1b0ad,
     type: 3}
-  _width: 5
-  _height: 5
-  _tileWidth: 1.5
-  _tileHeight: 1.5
+  width: 5
+  height: 5
+  tileWidth: 1.5
+  tileHeight: 1.5
 --- !u!1 &1287002245
 GameObject:
   m_ObjectHideFlags: 0
@@ -955,8 +953,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   row: 3
   column: 2
-  selectedTile: {fileID: 0}
-  tileSettings: {fileID: 0}
   gridGenerator: {fileID: 1214771150}
   myOccupantType: 3
 --- !u!135 &1768862250
@@ -1293,7 +1289,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   topCamera: {fileID: 435398306}
-  tileOccupants: {fileID: 0}
 --- !u!114 &2088763900
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1308,8 +1303,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   row: 4
   column: 0
-  selectedTile: {fileID: 0}
-  tileSettings: {fileID: 0}
   gridGenerator: {fileID: 1214771150}
   myOccupantType: 1
 --- !u!1660057539 &9223372036854775807

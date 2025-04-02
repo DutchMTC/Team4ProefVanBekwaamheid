@@ -9,7 +9,8 @@ public class PowerUpInventory : MonoBehaviour
         Sword,
         Shield,
         Steps,
-        Health
+        Health,
+        Wall
     }
 
     [SerializeField] private int _swordCount = 0;

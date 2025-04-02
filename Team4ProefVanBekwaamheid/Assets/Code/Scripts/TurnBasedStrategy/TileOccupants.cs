@@ -39,6 +39,7 @@ public class TileOccupants : MonoBehaviour
             // Move this GameObject to the selected tile's position
             Vector3 selectedTilePos = _selectedTile.transform.position;
             transform.position = new Vector3(selectedTilePos.x, transform.position.y, selectedTilePos.z);
+            _tileSettings.OccupationChangedEvent.Invoke(); // Trigger the occupation change event
         }
     }
 
@@ -48,6 +49,7 @@ public class TileOccupants : MonoBehaviour
         if (_tileSettings != null)
         {
             _tileSettings.occupantType = TileSettings.OccupantType.None;
+             _tileSettings.OccupationChangedEvent.Invoke(); // Trigger the occupation change event
         }
 
         // Search through all tiles in the grid

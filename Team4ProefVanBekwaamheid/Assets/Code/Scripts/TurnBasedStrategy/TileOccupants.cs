@@ -2,8 +2,8 @@ using UnityEngine;
 
 public class TileOccupants : MonoBehaviour
 {
-     [SerializeField] private GridGenerator gridGenerator; // Reference to the grid generator
-    [SerializeField] private TileSettings.OccupantType myOccupantType; // What type of occupant this GameObject is
+    [SerializeField] private GridGenerator _gridGenerator; // Reference to the grid generator
+    [SerializeField] private TileSettings.OccupantType _myOccupantType; // What type of occupant this GameObject is
     public int row;
     public int column;
     private GameObject _selectedTile;
@@ -51,7 +51,7 @@ public class TileOccupants : MonoBehaviour
         }
 
         // Search through all tiles in the grid
-        foreach (Transform child in gridGenerator.transform)
+        foreach (Transform child in _gridGenerator.transform)
         {
             TileSettings currentTile = child.GetComponent<TileSettings>();
             if (currentTile != null && currentTile.row == row && currentTile.column == column)
@@ -59,8 +59,8 @@ public class TileOccupants : MonoBehaviour
                 _selectedTile = child.gameObject;
                 _tileSettings = currentTile;
                 // Set the tile's occupant type based on what this GameObject represents
-                _tileSettings.occupantType = myOccupantType;
-                Debug.Log($"Selected tile at grid position ({row}, {column}). Set occupant type to: {myOccupantType}");
+                _tileSettings.occupantType = _myOccupantType;
+                Debug.Log($"Selected tile at grid position ({row}, {column}). Set occupant type to: {_myOccupantType}");
                 return;
             }
         }

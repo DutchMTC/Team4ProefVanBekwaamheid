@@ -507,7 +507,7 @@ MonoBehaviour:
   _tileWidth: 1.5
   _tileHeight: 1.5
   _gridHeight: 12.5
-  _horizontalOffset: 0.95
+  _horizontalOffset: 0
 --- !u!4 &318574813
 Transform:
   m_ObjectHideFlags: 0
@@ -711,7 +711,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 4
+  orthographic size: 5
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -736,7 +736,7 @@ Transform:
   m_GameObject: {fileID: 746859425}
   serializedVersion: 2
   m_LocalRotation: {x: 0.2588191, y: 0, z: 0, w: 0.9659258}
-  m_LocalPosition: {x: 1, y: 21, z: -10}
+  m_LocalPosition: {x: 0, y: 21.5, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -756,11 +756,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 0.01
   minZoom: 1.7
-  maxZoom: 4
-  minX: -2
-  maxX: 4
-  minY: 19
-  maxY: 21
+  maxZoom: 5
+  leftLimit: -5
+  rightLimit: 5
+  bottomLimit: 16.5
+  topLimit: 26.5
 --- !u!1 &797258596
 GameObject:
   m_ObjectHideFlags: 0

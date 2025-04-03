@@ -3,9 +3,9 @@ using UnityEngine;
 public class CameraMovement : MonoBehaviour
 {
     [SerializeField] private float speed = 0.01f; // Speed of zoom and pan
-    [SerializeField] private float minZoom = 0.1F; // Minimum zoom level
-    [SerializeField] private float maxZoom = 1F; // Maximum zoom level
-    [SerializeField] float minX, maxX, minY, maxY; // Camera movement bounds
+    [SerializeField] private float minZoom = 0.1f; // Minimum zoom level
+    [SerializeField] private float maxZoom = 5f; // Maximum zoom level
+    [SerializeField] float leftLimit, rightLimit, bottomLimit, topLimit; // Camera movement bounds
 
     private Vector3 _touch; // Initial touch position
     private Camera _topCamera; // Camera reference
@@ -46,13 +46,25 @@ public class CameraMovement : MonoBehaviour
 
     private void HandlePanning()
     {
+        
+
+        // Calculate the height and width of the camera view in world units
+        float height = _topCamera.orthographicSize;
+        float width = height * _topCamera.aspect;
+
         // Calculate the direction to move the camera based on touch movement
         Vector3 direction = _touch - _topCamera.ScreenToWorldPoint(Input.mousePosition);
         Vector3 newPosition = _topCamera.transform.position + direction;
 
-        // Clamp the new position within the defined movement bounds
-        newPosition.x = Mathf.Clamp(newPosition.x, minX, maxX);
-        newPosition.y = Mathf.Clamp(newPosition.y, minY, maxY);
+        // Dynamically adjust the bounds based on the camera's size and aspect ratio
+        float dynamicLeftLimit = -maxZoom + width;
+        float dynamicRightLimit = maxZoom - width;
+        float dynamicBottomLimit = bottomLimit + height;
+        float dynamicTopLimit = topLimit - height;
+
+        // Clamp the new position within the dynamically calculated bounds
+        newPosition.x = Mathf.Clamp(newPosition.x, dynamicLeftLimit, dynamicRightLimit);
+        newPosition.y = Mathf.Clamp(newPosition.y, dynamicBottomLimit, dynamicTopLimit);
         newPosition.z = _topCamera.transform.position.z;
 
         // Apply the clamped position to the camera

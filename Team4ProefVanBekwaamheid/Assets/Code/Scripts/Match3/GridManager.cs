@@ -423,27 +423,30 @@ public class GridManager : MonoBehaviour
         List<Block> matchingBlocks = FindMatches();
         if (matchingBlocks.Count >= 3)
         {
-            // Find and notify about any joker matches before destroying blocks
+            // --- Award Power-ups for any match ---
+            Block representativeBlock = null;
             foreach (Block block in matchingBlocks)
             {
-                if (block.IsJoker)
+                if (!block.IsJoker)
                 {
-                    // Find the type the joker matched with
-                    Block.BlockType matchedType = Block.BlockType.Blue; // default
-                    foreach (Block otherBlock in matchingBlocks)
-                    {
-                        if (otherBlock != block && !otherBlock.IsJoker)
-                        {
-                            matchedType = otherBlock.type;
-                            break;
-                        }
-                    }
-                    OnJokerMatched(block, matchedType, matchingBlocks.Count);
+                    representativeBlock = block;
+                    break;
                 }
             }
+            // If match was all jokers (edge case), use the first one
+            if (representativeBlock == null && matchingBlocks.Count > 0) {
+                 representativeBlock = matchingBlocks[0];
+            }
+
+            if (representativeBlock != null) {
+                int powerUpAmount = matchingBlocks.Count;
+                PowerUpInventory.Instance?.AddPowerUps(representativeBlock.GetPowerUpType(), powerUpAmount);
+                Debug.Log($"Match of {matchingBlocks.Count} blocks (type: {representativeBlock.type}) - Awarded {powerUpAmount} {representativeBlock.GetPowerUpType()} power-ups");
+            }
+            // --- End Power-up Award ---
 
             // Continue with regular match handling
-            _isSwapping = false;
+            _isSwapping = false; // Reset swap state since a match occurred
             _block1SwappedWith = null;
             _block2SwappedWith = null;
 
@@ -739,16 +742,4 @@ public class GridManager : MonoBehaviour
         return true;
     }
 
-    private void OnJokerMatched(Block jokerBlock, Block.BlockType matchedWithType, int matchSize)
-    {
-        if (jokerBlock == null) return;
-        
-        // Only trigger if this is actually a joker block
-        if (!jokerBlock.IsJoker) return;
-
-        // Award power-ups equal to the number of blocks in the match
-        PowerUpInventory.Instance?.AddPowerUps(jokerBlock.GetPowerUpType(), matchSize);
-        
-        Debug.Log($"Joker at ({jokerBlock.column}, {jokerBlock.row}) matched with {matchedWithType} blocks - Awarded {matchSize} {jokerBlock.GetPowerUpType()} power-ups");
-    }
 }

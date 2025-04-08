@@ -17,6 +17,7 @@ public class PowerUpInventory : MonoBehaviour
     [SerializeField] private int _shieldCount = 0;
     [SerializeField] private int _stepsCount = 0;
     [SerializeField] private int _healthCount = 0;
+    [SerializeField] private int _wallCount = 0;
 
     private void Awake()
     {
@@ -48,6 +49,9 @@ public class PowerUpInventory : MonoBehaviour
             case PowerUpType.Health:
                 _healthCount += amount;
                 break;
+            case PowerUpType.Wall:
+                _wallCount += amount;
+                break;
         }
         
         LogInventory();
@@ -61,6 +65,7 @@ public class PowerUpInventory : MonoBehaviour
             PowerUpType.Shield => _shieldCount,
             PowerUpType.Steps => _stepsCount,
             PowerUpType.Health => _healthCount,
+            PowerUpType.Wall => _wallCount,
             _ => 0
         };
     }
@@ -81,6 +86,9 @@ public class PowerUpInventory : MonoBehaviour
             case PowerUpType.Health when _healthCount > 0:
                 _healthCount--;
                 break;
+            case PowerUpType.Wall when _wallCount > 0:
+                _wallCount--;
+                break;
         }
         
         LogInventory();
@@ -92,6 +100,8 @@ public class PowerUpInventory : MonoBehaviour
                   $"Swords: {_swordCount}\n" +
                   $"Shields: {_shieldCount}\n" +
                   $"Steps: {_stepsCount}\n" +
-                  $"Health: {_healthCount}");
+                  $"Health: {_healthCount}\n" +
+                  $"Walls: {_wallCount}");
+                  
     }
 }

@@ -1,14 +1,17 @@
 using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.XR;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
-    public GameObject gridPrefab;
+
     public GameState State { get; private set; }
 
     public static event Action<GameState> OnGameStateChanged;
+
+    [SerializeField] private GridManager _gridManager;
     void Awake()
     {
         Instance = this;
@@ -16,6 +19,7 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+
         UpdateGameState(GameState.Matching);
     }
 
@@ -64,7 +68,7 @@ public class GameManager : MonoBehaviour
     {
         // Handle matching logic here
         Debug.Log("Matching phase!");
-        // Example: ungray out the grid
+        _gridManager.gridActive = true; // Enable grid interaction
     }
     public void HandlePlayerTurn()
     {
@@ -72,23 +76,34 @@ public class GameManager : MonoBehaviour
         Debug.Log("Player's turn!");
         // Example: gray out the grid
         // Example: enable player PowerUps
+        foreach (var block in _gridManager.Blocks)
+        {
+            var blockColor = block.GetComponent<SpriteRenderer>().color;
+            block.GetComponent<SpriteRenderer>().color = new Color(blockColor.r, blockColor.g, blockColor.b, 0.1f); // Gray out the block
+        }
+
+        _gridManager.gridActive = false; // Disable grid prefab;
     }
+
     private void HandleEnemyTurn()
     {
         // Handle enemy turn logic here
         Debug.Log("Enemy's turn!");
         // Example: start enemy AI logic
     }
+
     private void HandleWin()
     {
         // Handle win logic here
         Debug.Log("You win!");
     }
+
     private void HandleGameOver()
     {
         // Handle game over logic here
         Debug.Log("Game Over!");
     }
+
     private void HandlePause()
     {
         // Handle pause logic here

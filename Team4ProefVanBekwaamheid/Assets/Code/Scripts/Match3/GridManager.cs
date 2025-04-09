@@ -8,9 +8,9 @@ public class GridManager : MonoBehaviour
     public int gridWidth = 8;
     public int gridHeight = 8;
     public float swapSpeed = 0.3f;
-
     [Range(0f, 1f)]
     public float rarityInfluence = 0.7f; // How much rarity affects spawn chances (0 = no effect, 1 = maximum effect)
+    public int matchingLimit = 10;
     
     private Block[,] _blocks;
     private bool _isSwapping = false;
@@ -19,7 +19,7 @@ public class GridManager : MonoBehaviour
     private Block _selectedBlock;
     private Block _block1SwappedWith;
     private Block _block2SwappedWith;
-
+    private int _currentMatches;
     private void Start()
     {
         _blocks = new Block[gridWidth, gridHeight];
@@ -441,7 +441,13 @@ public class GridManager : MonoBehaviour
             if (representativeBlock != null) {
                 int powerUpAmount = matchingBlocks.Count;
                 PowerUpInventory.Instance?.AddPowerUps(representativeBlock.GetPowerUpType(), powerUpAmount);
+                _currentMatches ++;
                 Debug.Log($"Match of {matchingBlocks.Count} blocks (type: {representativeBlock.type}) - Awarded {powerUpAmount} {representativeBlock.GetPowerUpType()} power-ups");
+
+                if(GameManager.Instance.State == GameState.Matching && _currentMatches >= matchingLimit)
+                {
+                    GameManager.Instance.UpdateGameState(GameState.Player);
+                }
             }
             // --- End Power-up Award ---
 

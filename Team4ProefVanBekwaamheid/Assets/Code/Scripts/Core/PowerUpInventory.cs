@@ -9,14 +9,12 @@ public class PowerUpInventory : MonoBehaviour
         Sword,
         Shield,
         Steps,
-        Health,
         Wall
     }
 
     [SerializeField] private int _swordCount = 0;
     [SerializeField] private int _shieldCount = 0;
     [SerializeField] private int _stepsCount = 0;
-    [SerializeField] private int _healthCount = 0;
     [SerializeField] private int _wallCount = 0;
 
     private void Awake()
@@ -46,9 +44,6 @@ public class PowerUpInventory : MonoBehaviour
             case PowerUpType.Steps:
                 _stepsCount += amount;
                 break;
-            case PowerUpType.Health:
-                _healthCount += amount;
-                break;
             case PowerUpType.Wall:
                 _wallCount += amount;
                 break;
@@ -64,7 +59,6 @@ public class PowerUpInventory : MonoBehaviour
             PowerUpType.Sword => _swordCount,
             PowerUpType.Shield => _shieldCount,
             PowerUpType.Steps => _stepsCount,
-            PowerUpType.Health => _healthCount,
             PowerUpType.Wall => _wallCount,
             _ => 0
         };
@@ -83,9 +77,6 @@ public class PowerUpInventory : MonoBehaviour
             case PowerUpType.Steps when _stepsCount > 0:
                 _stepsCount--;
                 break;
-            case PowerUpType.Health when _healthCount > 0:
-                _healthCount--;
-                break;
             case PowerUpType.Wall when _wallCount > 0:
                 _wallCount--;
                 break;
@@ -94,13 +85,40 @@ public class PowerUpInventory : MonoBehaviour
         LogInventory();
     }
 
+    /// Sets the count for a specific power-up type.
+    /// Used by PowerUpManager for Supercharged cost.
+    public void SetPowerUpCount(PowerUpType type, int count)
+    {
+        switch (type)
+        {
+            case PowerUpType.Sword: _swordCount = Mathf.Max(0, count); break;
+            case PowerUpType.Shield: _shieldCount = Mathf.Max(0, count); break;
+            case PowerUpType.Steps: _stepsCount = Mathf.Max(0, count); break;
+            case PowerUpType.Wall: _wallCount = Mathf.Max(0, count); break;
+        }
+        LogInventory();
+    }
+
+    /// Decreases the count for a specific power-up type by a given amount.
+    /// Used by PowerUpManager for Charged cost.
+    public void DecreasePowerUpCount(PowerUpType type, int amount)
+    {
+        switch (type)
+        {
+            case PowerUpType.Sword: _swordCount = Mathf.Max(0, _swordCount - amount); break;
+            case PowerUpType.Shield: _shieldCount = Mathf.Max(0, _shieldCount - amount); break;
+            case PowerUpType.Steps: _stepsCount = Mathf.Max(0, _stepsCount - amount); break;
+            case PowerUpType.Wall: _wallCount = Mathf.Max(0, _wallCount - amount); break;
+        }
+        LogInventory();
+    }
+ 
     private void LogInventory()
     {
         Debug.Log($"Power-Up Inventory:\n" +
                   $"Swords: {_swordCount}\n" +
                   $"Shields: {_shieldCount}\n" +
                   $"Steps: {_stepsCount}\n" +
-                  $"Health: {_healthCount}\n" +
                   $"Walls: {_wallCount}");
                   
     }

@@ -1,7 +1,5 @@
 using System;
-using TMPro;
 using UnityEngine;
-using UnityEngine.XR;
 
 public class GameManager : MonoBehaviour
 {
@@ -68,27 +66,33 @@ public class GameManager : MonoBehaviour
     {
         // Handle matching logic here
         Debug.Log("Matching phase!");
-        _gridManager.gridActive = true; // Enable grid interaction
+
+        // disable interaction with player grid
+
+        _gridManager.gridActive = true; // Enable match 3 interaction
     }
     public void HandlePlayerTurn()
     {
         // Handle player turn logic here
         Debug.Log("Player's turn!");
-        // Example: gray out the grid
+
         // Example: enable player PowerUps
+
+        // gray out the blocks in the grid
         foreach (var block in _gridManager.Blocks)
         {
             var blockColor = block.GetComponent<SpriteRenderer>().color;
             block.GetComponent<SpriteRenderer>().color = new Color(blockColor.r, blockColor.g, blockColor.b, 0.1f); // Gray out the block
         }
 
-        _gridManager.gridActive = false; // Disable grid prefab;
+        _gridManager.gridActive = false; // Disable match 3 grid prefab;
     }
 
     private void HandleEnemyTurn()
     {
         // Handle enemy turn logic here
         Debug.Log("Enemy's turn!");
+
         // Example: start enemy AI logic
     }
 

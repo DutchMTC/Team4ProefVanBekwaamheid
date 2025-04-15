@@ -12,7 +12,7 @@ public class GridManager : MonoBehaviour
     public float swapSpeed = 0.3f;
     [Range(0f, 1f)]
     public float rarityInfluence = 0.7f; // How much rarity affects spawn chances (0 = no effect, 1 = maximum effect)
-    public int matchingLimit = 10;
+    public int matchAmount = 10;
     public bool gridActive; // Flag to control grid activity
 
 
@@ -548,7 +548,7 @@ public class GridManager : MonoBehaviour
         {
             _isFalling = false;
 
-            if(GameManager.Instance.State == GameState.Matching && _currentMatches >= matchingLimit)
+            if(GameManager.Instance.State == GameState.Matching && _currentMatches >= matchAmount)
             {
                 GameManager.Instance.UpdateGameState(GameState.Player);
             }

@@ -1474,7 +1474,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9e511df0c08f3244c9fed7a169306f8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gridPrefab: {fileID: 1832730702}
   _gridManager: {fileID: 1832730703}
 --- !u!4 &1216284610
 Transform:
@@ -1654,6 +1653,7 @@ MonoBehaviour:
   swapSpeed: 0.3
   rarityInfluence: 0.7
   matchingLimit: 5
+  gridActive: 1
 --- !u!4 &1832730704
 Transform:
   m_ObjectHideFlags: 0

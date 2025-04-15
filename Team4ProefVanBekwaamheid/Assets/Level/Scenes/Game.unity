@@ -1652,7 +1652,7 @@ MonoBehaviour:
   gridHeight: 8
   swapSpeed: 0.3
   rarityInfluence: 0.7
-  matchingLimit: 5
+  matchAmount: 10
   gridActive: 1
 --- !u!4 &1832730704
 Transform:

@@ -70,26 +70,29 @@ public class PowerUpManager : MonoBehaviour
         }
     }
 
-    // Simple test method using key presses
-    private void Update()
+    // --- Public Methods for UI Button OnClick Events ---
+
+    public void UseSwordPowerUp()
     {
-        if (Input.GetKeyDown(KeyCode.V))
-        {
-            TryUsePowerUp(PowerUpInventory.PowerUpType.Sword);
-        }
-        if (Input.GetKeyDown(KeyCode.B))
-        {
-            TryUsePowerUp(PowerUpInventory.PowerUpType.Shield);
-        }
-        if (Input.GetKeyDown(KeyCode.N))
-        {
-            TryUsePowerUp(PowerUpInventory.PowerUpType.Wall);
-        }
-        if (Input.GetKeyDown(KeyCode.M))
-        {
-            TryUsePowerUp(PowerUpInventory.PowerUpType.Steps);
-        }
+        TryUsePowerUp(PowerUpInventory.PowerUpType.Sword);
     }
+
+    public void UseShieldPowerUp()
+    {
+        TryUsePowerUp(PowerUpInventory.PowerUpType.Shield);
+    }
+
+    public void UseWallPowerUp()
+    {
+        TryUsePowerUp(PowerUpInventory.PowerUpType.Wall);
+    }
+
+    public void UseStepsPowerUp()
+    {
+        TryUsePowerUp(PowerUpInventory.PowerUpType.Steps);
+    }
+
+    // --- Private Helper Methods ---
 
     // Consolidated effect activation logic
     private void ActivateEffect(PowerUpInventory.PowerUpType type, PowerUpState state)
@@ -120,7 +123,6 @@ public class PowerUpManager : MonoBehaviour
         }
     }
 
-    // Specific effect handlers remain unchanged for now
     private void HandleSwordCharged()
     {
         Debug.Log("Handling Sword Charged effect!");

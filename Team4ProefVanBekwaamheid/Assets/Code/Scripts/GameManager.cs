@@ -9,7 +9,10 @@ public class GameManager : MonoBehaviour
 
     public static event Action<GameState> OnGameStateChanged;
 
+    [Header("Component References")]
     [SerializeField] private GridManager _gridManager;
+    [SerializeField] private EnemyAIController _enemyAIController; // Add reference to the Enemy AI
+
     void Awake()
     {
         Instance = this;
@@ -17,7 +20,6 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-
         UpdateGameState(GameState.Matching);
     }
 
@@ -70,6 +72,16 @@ public class GameManager : MonoBehaviour
         // disable interaction with player grid
 
         _gridManager.gridActive = true; // Enable match 3 interaction
+
+        // Tell the Enemy AI to display its chosen powerups
+        if (_enemyAIController != null)
+        {
+            _enemyAIController.DisplayPowerups();
+        }
+        else
+        {
+            Debug.LogWarning("GameManager: EnemyAIController reference not set in Inspector!");
+        }
     }
     public void HandlePlayerTurn()
     {
@@ -94,6 +106,7 @@ public class GameManager : MonoBehaviour
         Debug.Log("Enemy's turn!");
 
         // Example: start enemy AI logic
+        // Note: EnemyAIController now handles its own logic via OnGameStateChanged
     }
 
     private void HandleWin()

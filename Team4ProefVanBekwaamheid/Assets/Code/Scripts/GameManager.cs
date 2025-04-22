@@ -69,9 +69,22 @@ public class GameManager : MonoBehaviour
         // Handle matching logic here
         Debug.Log("Matching phase!");
 
-        // disable interaction with player grid
+        // Reset current matches
+        _gridManager.currentMatches = 0; 
 
-        _gridManager.gridActive = true; // Enable match 3 interaction
+        // Enable match 3 interaction
+        _gridManager.gridActive = true;
+
+        _gridManager.matchCounterText.text = (_gridManager.matchLimit - _gridManager.currentMatches).ToString(); // Update match counter text
+
+        
+
+        // reset block transparency in the match 3 grid
+        foreach (var block in _gridManager.Blocks)
+        {
+            var blockColor = block.GetComponent<SpriteRenderer>().color;
+            block.GetComponent<SpriteRenderer>().color = new Color(blockColor.r, blockColor.g, blockColor.b, 1f); // Gray out the block
+        } 
 
         // Tell the Enemy AI to display its chosen powerups
         if (_enemyAIController != null)
@@ -90,7 +103,7 @@ public class GameManager : MonoBehaviour
 
         // Example: enable player PowerUps
 
-        // gray out the blocks in the grid
+        // gray out the blocks in the match 3 grid
         foreach (var block in _gridManager.Blocks)
         {
             var blockColor = block.GetComponent<SpriteRenderer>().color;

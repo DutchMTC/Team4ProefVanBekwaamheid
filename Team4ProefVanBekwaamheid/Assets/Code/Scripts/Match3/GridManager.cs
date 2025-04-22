@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 
 public class GridManager : MonoBehaviour
 {
@@ -12,7 +13,11 @@ public class GridManager : MonoBehaviour
     public float swapSpeed = 0.3f;
     [Range(0f, 1f)]
     public float rarityInfluence = 0.7f; // How much rarity affects spawn chances (0 = no effect, 1 = maximum effect)
-    public int matchAmount = 10;
+    
+    [Header("Match Limit Settings")]
+    public int matchLimit = 10;
+    public int currentMatches;
+    public TMP_Text matchCounterText; // Reference to the UI element for match counter
     public bool gridActive; // Flag to control grid activity
 
 
@@ -22,12 +27,12 @@ public class GridManager : MonoBehaviour
     private Block _selectedBlock;
     private Block _block1SwappedWith;
     private Block _block2SwappedWith;
-    private int _currentMatches;
 
     private void Start()
     {
         Blocks = new Block[gridWidth, gridHeight];
         InitializeGrid();
+        matchCounterText.text = (matchLimit - currentMatches).ToString();
     }
 
     private void InitializeGrid()
@@ -445,7 +450,8 @@ public class GridManager : MonoBehaviour
             if (representativeBlock != null) {
                 int powerUpAmount = matchingBlocks.Count;
                 PowerUpInventory.Instance?.AddPowerUps(representativeBlock.GetPowerUpType(), powerUpAmount);
-                _currentMatches ++;
+                currentMatches ++;
+                matchCounterText.text = (matchLimit - currentMatches).ToString();
                 Debug.Log($"Match of {matchingBlocks.Count} blocks (type: {representativeBlock.type}) - Awarded {powerUpAmount} {representativeBlock.GetPowerUpType()} power-ups");
             }
             // --- End Power-up Award ---
@@ -548,7 +554,7 @@ public class GridManager : MonoBehaviour
         {
             _isFalling = false;
 
-            if(GameManager.Instance.State == GameState.Matching && _currentMatches >= matchAmount)
+            if(GameManager.Instance.State == GameState.Matching && currentMatches >= matchLimit)
             {
                 GameManager.Instance.UpdateGameState(GameState.Player);
             }

@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -6,7 +7,6 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance;
 
     public GameState State { get; private set; }
-
     public static event Action<GameState> OnGameStateChanged;
 
     [Header("Component References")]
@@ -77,14 +77,7 @@ public class GameManager : MonoBehaviour
 
         _gridManager.matchCounterText.text = (_gridManager.matchLimit - _gridManager.currentMatches).ToString(); // Update match counter text
 
-        
-
-        // reset block transparency in the match 3 grid
-        foreach (var block in _gridManager.Blocks)
-        {
-            var blockColor = block.GetComponent<SpriteRenderer>().color;
-            block.GetComponent<SpriteRenderer>().color = new Color(blockColor.r, blockColor.g, blockColor.b, 1f); // Gray out the block
-        } 
+        SetBlockTrasperancy(1f); // Set transparency
 
         // Tell the Enemy AI to display its chosen powerups
         if (_enemyAIController != null)
@@ -96,6 +89,7 @@ public class GameManager : MonoBehaviour
             Debug.LogWarning("GameManager: EnemyAIController reference not set in Inspector!");
         }
     }
+
     public void HandlePlayerTurn()
     {
         // Handle player turn logic here
@@ -103,12 +97,7 @@ public class GameManager : MonoBehaviour
 
         // Example: enable player PowerUps
 
-        // gray out the blocks in the match 3 grid
-        foreach (var block in _gridManager.Blocks)
-        {
-            var blockColor = block.GetComponent<SpriteRenderer>().color;
-            block.GetComponent<SpriteRenderer>().color = new Color(blockColor.r, blockColor.g, blockColor.b, 0.1f); // Gray out the block
-        }
+        SetBlockTrasperancy(0.1f); // Set transparency
 
         _gridManager.gridActive = false; // Disable match 3 grid prefab;
     }
@@ -138,6 +127,19 @@ public class GameManager : MonoBehaviour
     {
         // Handle pause logic here
         Debug.Log("Game Paused!");
+    }
+
+    private void SetBlockTrasperancy(float alpha)
+    {
+        // Validate the alpha value
+        alpha = Mathf.Clamp01(alpha);
+
+        // Set the transparency of the blocks in the match 3 grid
+        foreach (var block in _gridManager.Blocks)
+        {
+            var blockColor = block.GetComponent<SpriteRenderer>().color;
+            block.GetComponent<SpriteRenderer>().color = new Color(blockColor.r, blockColor.g, blockColor.b, alpha); // Gray out the block
+        }
     }
 }
 

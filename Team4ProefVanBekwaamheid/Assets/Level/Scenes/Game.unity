@@ -1493,6 +1493,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _gridManager: {fileID: 1832730703}
+  _enemyAIController: {fileID: 0}
 --- !u!4 &1216284610
 Transform:
   m_ObjectHideFlags: 0

@@ -1,172 +1,40 @@
 using UnityEngine;
-using UnityEngine.UI;
-using System.Collections.Generic;
-using System; // Added for Serializable
-
-[Serializable] // Make it visible in the Inspector
-public class PowerUpSprites
-{
-    public Sprite unusable;
-    public Sprite usable;
-    public Sprite charged;
-    public Sprite supercharged;
-}
 
 public enum PowerUpState
 {
     Unusable,
-    Usable,
     Charged,
     Supercharged
 }
 
 public class PowerUpManager : MonoBehaviour
 {
+    [Tooltip("Reference to the PowerUpInventory script instance.")]
     public PowerUpInventory powerUpInventory;
 
-    // --- UI Button References ---
-    [Header("UI Button Images")]
-    public Image swordButtonImage;
-    public Image shieldButtonImage;
-    public Image wallButtonImage;
-    public Image stepsButtonImage;
-
-    // --- PowerUp Specific Sprites ---
-    [Header("PowerUp Specific Sprites")]
-    public PowerUpSprites swordSprites;
-    public PowerUpSprites shieldSprites;
-    public PowerUpSprites wallSprites;
-    public PowerUpSprites stepsSprites;
-
-    // Dictionaries to map PowerUpType to UI Image and Sprites
-    private Dictionary<PowerUpInventory.PowerUpType, Image> powerUpImageMap;
-    private Dictionary<PowerUpInventory.PowerUpType, PowerUpSprites> powerUpSpriteMap;
-
-    private void Awake()
+    /// Gets the current power-up state for a specific power-up type
+    /// based on its count in the inventory.current PowerUpState for that type.</returns>
+    public PowerUpState GetCurrentState(PowerUpInventory.PowerUpType type)
     {
-        // Initialize the map on Awake
-        powerUpImageMap = new Dictionary<PowerUpInventory.PowerUpType, Image>
-        {
-            { PowerUpInventory.PowerUpType.Sword, swordButtonImage },
-            { PowerUpInventory.PowerUpType.Shield, shieldButtonImage },
-            { PowerUpInventory.PowerUpType.Wall, wallButtonImage },
-            { PowerUpInventory.PowerUpType.Steps, stepsButtonImage }
-        };
 
-        // Initialize the sprite map
-        powerUpSpriteMap = new Dictionary<PowerUpInventory.PowerUpType, PowerUpSprites>
-        {
-            { PowerUpInventory.PowerUpType.Sword, swordSprites },
-            { PowerUpInventory.PowerUpType.Shield, shieldSprites },
-            { PowerUpInventory.PowerUpType.Wall, wallSprites },
-            { PowerUpInventory.PowerUpType.Steps, stepsSprites }
-        };
-
-
-        // Initial visual update
-        UpdateAllPowerUpVisuals(); // Set initial state
-
-        // Subscribe to inventory changes
-        PowerUpInventory.OnPowerUpCountChanged += HandlePowerUpCountChanged;
-    }
-
-    private void OnDestroy() // Or OnDisable if the object might be disabled/enabled
-    {
-        // Unsubscribe to prevent errors and memory leaks
-        PowerUpInventory.OnPowerUpCountChanged -= HandlePowerUpCountChanged;
-    }
-
-    // Method called by the event from PowerUpInventory
-    private void HandlePowerUpCountChanged(PowerUpInventory.PowerUpType type, int newCount)
-    {
-        UpdatePowerUpVisual(type); // Update the visual for the specific power-up that changed
-    }
-
-
-    // Helper method to determine state based on count
-    private PowerUpState DetermineStateFromCount(int count)
-    {
-        if (count >= 25) return PowerUpState.Supercharged;
-        if (count >= 15) return PowerUpState.Charged;
-        if (count >= 1) return PowerUpState.Usable; // Added Usable check
-        return PowerUpState.Unusable;
-    }
-
-    public PowerUpState GetCurrentUsageState(PowerUpInventory.PowerUpType type)
-    {
         int count = powerUpInventory.GetPowerUpCount(type);
-        // Usage logic might differ slightly (e.g., maybe 'Usable' isn't a trigger state)
-        // For now, let's keep the original logic for TryUsePowerUp
-        if (count >= 25) return PowerUpState.Supercharged;
-        if (count >= 15) return PowerUpState.Charged;
-        // Original logic didn't have a distinct 'Usable' trigger state, only Charged/Supercharged
-        return PowerUpState.Unusable; // Default to Unusable if not Charged/Supercharged
-    }
 
-
-    /// Updates the visual representation (sprite) of a specific power-up button.
-    public void UpdatePowerUpVisual(PowerUpInventory.PowerUpType type)
-    {
-        if (powerUpInventory == null)
+        if (count >= 25)
         {
-            Debug.LogError("PowerUpInventory reference is not set!");
-            return;
+            return PowerUpState.Supercharged;
         }
-
-        int count = powerUpInventory.GetPowerUpCount(type);
-        PowerUpState visualState = DetermineStateFromCount(count); // Use helper for visual state
-
-        bool imageFound = powerUpImageMap.TryGetValue(type, out Image targetImage);
-        bool spritesFound = powerUpSpriteMap.TryGetValue(type, out PowerUpSprites sprites);
-
-        if (imageFound && targetImage != null && spritesFound && sprites != null)
+        else if (count >= 15)
         {
-            targetImage.sprite = GetSpriteForState(sprites, visualState);
+            return PowerUpState.Charged;
         }
         else
         {
-            // Log warnings based on what was missing
-            if (!imageFound || targetImage == null)
-            {
-                Debug.LogWarning($"UI Image for PowerUpType {type} is not assigned or found in the map.");
-            }
-            if (!spritesFound || sprites == null)
-            {
-                 Debug.LogWarning($"Sprite set for PowerUpType {type} is not assigned or found in the map.");
-            }
+            return PowerUpState.Unusable;
         }
     }
 
-    /// Updates the visuals for all power-up buttons.
-    public void UpdateAllPowerUpVisuals()
-    {
-        foreach (PowerUpInventory.PowerUpType type in System.Enum.GetValues(typeof(PowerUpInventory.PowerUpType)))
-        {
-             // Check if the type is valid before updating (optional, depends on PowerUpType enum definition)
-            if (System.Enum.IsDefined(typeof(PowerUpInventory.PowerUpType), type))
-            {
-                 UpdatePowerUpVisual(type);
-            }
-        }
-    }
-
-
-    // Helper to get the correct sprite based on type and state
-    private Sprite GetSpriteForState(PowerUpSprites sprites, PowerUpState state)
-    {
-        switch (state)
-        {
-            case PowerUpState.Unusable: return sprites.unusable;
-            case PowerUpState.Usable: return sprites.usable;
-            case PowerUpState.Charged: return sprites.charged;
-            case PowerUpState.Supercharged: return sprites.supercharged;
-            default:
-                Debug.LogWarning($"Unhandled PowerUpState for sprite selection: {state}");
-                return sprites.unusable; // Default to unusable sprite for this type
-        }
-    }
-
-
+    /// Attempts to use a power-up of the specified type.
+    /// Checks the state of the specific power-up type and applies costs and effects accordingly.
     public bool TryUsePowerUp(PowerUpInventory.PowerUpType type)
     {
         if (powerUpInventory == null)
@@ -175,33 +43,29 @@ public class PowerUpManager : MonoBehaviour
             return false;
         }
 
-        // Use the usage-specific state check
-        PowerUpState usageState = GetCurrentUsageState(type);
+        PowerUpState currentState = GetCurrentState(type);
 
-        switch (usageState)
+        switch (currentState)
         {
             case PowerUpState.Unusable:
-                int currentCount = powerUpInventory.GetPowerUpCount(type);
-                Debug.Log($"Power-up {type} unusable: Not enough charge ({currentCount}). Needs 15 for Charged, 25 for Supercharged.");
+                int currentCount = powerUpInventory.GetPowerUpCount(type); 
+                Debug.Log($"Power-up {type} unusable: Not enough charge ({currentCount}).");
                 return false;
 
             case PowerUpState.Supercharged:
-                ActivateEffect(type, usageState);
-                powerUpInventory.SetPowerUpCount(type, 0); // Reset count - This will trigger the event now
+                ActivateEffect(type, currentState); 
+                powerUpInventory.SetPowerUpCount(type, 0);
                 Debug.Log($"Used Supercharged {type}. Count for {type} reset to 0.");
-                // UpdatePowerUpVisual(type); // No longer needed here, event handles it
                 return true;
 
             case PowerUpState.Charged:
-                ActivateEffect(type, usageState);
-                powerUpInventory.DecreasePowerUpCount(type, 15); // Decrease count - This will trigger the event now
+                ActivateEffect(type, currentState);
+                powerUpInventory.DecreasePowerUpCount(type, 15);
                 Debug.Log($"Used Charged {type}. Count for {type} reduced by 15.");
-                // UpdatePowerUpVisual(type); // No longer needed here, event handles it
                 return true;
 
-            // Note: PowerUpState.Usable is not a trigger state for using the power-up here. It's only a visual state.
             default:
-                Debug.LogWarning($"Unhandled PowerUpState in TryUsePowerUp: {usageState} for type {type}");
+                Debug.LogWarning($"Unhandled PowerUpState: {currentState} for type {type}");
                 return false;
         }
     }
@@ -230,6 +94,7 @@ public class PowerUpManager : MonoBehaviour
 
     // --- Private Helper Methods ---
 
+    // Consolidated effect activation logic
     private void ActivateEffect(PowerUpInventory.PowerUpType type, PowerUpState state)
     {
         Debug.Log($"Activating {state} effect for {type}");

@@ -36,10 +36,9 @@ public class Block : MonoBehaviour
     private Vector2 _targetPosition;
     private float _moveSpeed = 10f;
     private SpriteRenderer _spriteRenderer;
-    public bool IsFalling { get; set; } = false; // Flag to indicate if GridManager is controlling fall animation
 
     // Helper property to check if current block type is a joker
-    public bool IsJoker
+    public bool IsJoker 
     {
         get 
         {
@@ -127,19 +126,9 @@ public class Block : MonoBehaviour
         _targetPosition = position;
     }
 
-    /// <summary>
-    /// Syncs the internal target position with the current transform position.
-    /// Used after GridManager finishes controlling movement (e.g., falling).
-    /// </summary>
-    public void SyncTargetPosition()
-    {
-        _targetPosition = transform.position;
-    }
-
     private void Update()
     {
-        // Only allow Block's own movement logic (for swapping) if it's not currently falling
-        if (!IsFalling && (Vector2)transform.position != _targetPosition)
+        if ((Vector2)transform.position != _targetPosition)
         {
             transform.position = Vector2.MoveTowards(transform.position, _targetPosition, _moveSpeed * Time.deltaTime);
         }

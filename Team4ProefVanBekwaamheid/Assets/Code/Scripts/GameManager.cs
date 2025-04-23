@@ -1,15 +1,5 @@
 using System;
-using System.Collections.Generic; // Added for List
-using System.Linq; // Added for LINQ
 using UnityEngine;
-
-[System.Serializable]
-public struct TileSpriteSet
-{
-    public Block.BlockType type; // Use Block.BlockType
-    public Sprite normalSprite;
-    public Sprite disabledSprite;
-}
 
 public class GameManager : MonoBehaviour
 {
@@ -21,9 +11,6 @@ public class GameManager : MonoBehaviour
     [Header("Component References")]
     [SerializeField] private GridManager _gridManager;
     [SerializeField] private EnemyAIController _enemyAIController; // Add reference to the Enemy AI
-
-    [Header("Tile Sprites")]
-    public List<TileSpriteSet> tileSprites; // List to hold sprite sets for each block type
 
     void Awake()
     {
@@ -81,19 +68,15 @@ public class GameManager : MonoBehaviour
         // Handle matching logic here
         Debug.Log("Matching phase!");
 
-        // Reset current swaps when entering matching phase
-        if (_gridManager != null) _gridManager.currentSwaps = 0;
+        // Reset current matches
+        _gridManager.currentMatches = 0; 
 
         // Enable match 3 interaction
-        if (_gridManager != null) _gridManager.gridActive = true;
+        _gridManager.gridActive = true;
 
-        // Update swap counter text using new variable names
-        if (_gridManager != null && _gridManager.matchCounterText != null)
-        {
-            _gridManager.matchCounterText.text = (_gridManager.swapLimit - _gridManager.currentSwaps).ToString();
-        }
+        _gridManager.matchCounterText.text = (_gridManager.matchLimit - _gridManager.currentMatches).ToString(); // Update match counter text
 
-        EnableMatch3Tiles();
+        SetBlockTrasperancy(1f); // Set transparency
 
         // Tell the Enemy AI to display its chosen powerups
         if (_enemyAIController != null)
@@ -112,8 +95,10 @@ public class GameManager : MonoBehaviour
         Debug.Log("Player's turn!");
 
         // Example: enable player PowerUps
-        DisableMatch3Tiles();
-        if (_gridManager != null) _gridManager.gridActive = false; // Disable match 3 grid interaction;
+
+        SetBlockTrasperancy(0.1f); // Set transparency
+
+        _gridManager.gridActive = false; // Disable match 3 grid prefab;
     }
 
     private void HandleEnemyTurn()
@@ -143,8 +128,6 @@ public class GameManager : MonoBehaviour
         Debug.Log("Game Paused!");
     }
 
-    // This method is now redundant if Enable/Disable methods handle sprites directly.
-    // Keep it if transparency is still needed for other effects.
     private void SetBlockTrasperancy(float alpha)
     {
         // Validate the alpha value
@@ -158,85 +141,10 @@ public class GameManager : MonoBehaviour
         }
 
         // Set the transparency of the blocks in the match 3 grid
-        foreach (var blockGO in _gridManager.Blocks) // Renamed variable to avoid conflict
+        foreach (var block in _gridManager.Blocks)
         {
-            if (blockGO == null) continue; // Skip if block GameObject is null
-            var renderer = blockGO.GetComponent<SpriteRenderer>();
-            if (renderer != null)
-            {
-                var blockColor = renderer.color;
-                renderer.color = new Color(blockColor.r, blockColor.g, blockColor.b, alpha);
-            }
-        }
-    }
-
-    private void DisableMatch3Tiles()
-    {
-        UpdateTileSprites(false);
-    }
-
-    private void EnableMatch3Tiles()
-    {
-        UpdateTileSprites(true);
-    }
-
-    private void UpdateTileSprites(bool enabled)
-    {
-        if (_gridManager == null || _gridManager.Blocks == null)
-        {
-            Debug.LogWarning("GridManager or its Blocks collection is not initialized.");
-            return;
-        }
-
-        if (tileSprites == null || tileSprites.Count == 0)
-        {
-             Debug.LogWarning("Tile Sprites list is not configured in GameManager.");
-             return;
-        }
-
-        // Optional: Convert list to Dictionary for faster lookups if performance becomes an issue
-        // var spriteDict = tileSprites.ToDictionary(s => s.type, s => enabled ? s.normalSprite : s.disabledSprite);
-
-        foreach (var blockGO in _gridManager.Blocks)
-        {
-            if (blockGO == null) continue;
-
-            var blockComponent = blockGO.GetComponent<Block>(); // Assuming Block script exists
-            var renderer = blockGO.GetComponent<SpriteRenderer>();
-
-            if (blockComponent == null || renderer == null)
-            {
-                Debug.LogWarning($"Block GameObject {blockGO.name} is missing Block component or SpriteRenderer.", blockGO);
-                continue;
-            }
-
-            // Find the corresponding sprite set for the block's type
-            // Using FirstOrDefault to handle cases where a type might not be in the list
-            // Ensure comparison uses Block.BlockType
-            TileSpriteSet spriteSet = tileSprites.FirstOrDefault(s => s.type == blockComponent.type);
-
-            // Check if a valid sprite set was found (type exists in the list)
-            // Ensure comparison uses Block.BlockType
-            if (spriteSet.Equals(default(TileSpriteSet)) && !tileSprites.Any(s => s.type == blockComponent.type)) // Check if it's default AND the type isn't actually in the list
-            {
-                 Debug.LogWarning($"No sprite set found for BlockType {blockComponent.type} in GameManager's tileSprites list.", blockGO);
-                 continue;
-            }
-
-
-            Sprite targetSprite = enabled ? spriteSet.normalSprite : spriteSet.disabledSprite;
-
-            if (targetSprite != null)
-            {
-                renderer.sprite = targetSprite;
-                // Optional: Reset transparency if SetBlockTrasperancy is removed/not used
-                // var color = renderer.color;
-                // renderer.color = new Color(color.r, color.g, color.b, 1f);
-            }
-            else
-            {
-                Debug.LogWarning($"{(enabled ? "Normal" : "Disabled")} sprite is null for BlockType {blockComponent.type} in GameManager's tileSprites list.", blockGO);
-            }
+            var blockColor = block.GetComponent<SpriteRenderer>().color;
+            block.GetComponent<SpriteRenderer>().color = new Color(blockColor.r, blockColor.g, blockColor.b, alpha); // Gray out the block
         }
     }
 }

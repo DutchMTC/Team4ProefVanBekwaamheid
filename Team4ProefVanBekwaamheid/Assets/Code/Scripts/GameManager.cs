@@ -133,6 +133,13 @@ public class GameManager : MonoBehaviour
         // Validate the alpha value
         alpha = Mathf.Clamp01(alpha);
 
+        // Add null checks to prevent errors
+        if (_gridManager == null || _gridManager.Blocks == null)
+        {
+            Debug.LogWarning("GridManager or its Blocks collection is not initialized yet.");
+            return; // Exit the method if references are null
+        }
+
         // Set the transparency of the blocks in the match 3 grid
         foreach (var block in _gridManager.Blocks)
         {

@@ -53,6 +53,7 @@ public class PowerUpManager : MonoBehaviour
     private Dictionary<PowerUpInventory.PowerUpType, Image> powerUpFillImageMap;
     private Dictionary<PowerUpInventory.PowerUpType, Coroutine> fillCoroutines;
     private Dictionary<PowerUpInventory.PowerUpType, PowerUpState> powerUpPreviousStates;
+    private Dictionary<PowerUpInventory.PowerUpType, Button> powerUpButtonMap; // Map type to Button component
 
     // Constants for State Thresholds
     private const int USABLE_THRESHOLD = 1;
@@ -89,6 +90,24 @@ public class PowerUpManager : MonoBehaviour
             { PowerUpInventory.PowerUpType.Wall, wallFillImage },
             { PowerUpInventory.PowerUpType.Steps, stepsFillImage }
         };
+
+        powerUpButtonMap = new Dictionary<PowerUpInventory.PowerUpType, Button>();
+        // Populate the button map, assuming Button is on the same GameObject as the Image
+        foreach (var kvp in powerUpImageMap)
+        {
+            if (kvp.Value != null)
+            {
+                Button button = kvp.Value.GetComponent<Button>();
+                if (button != null)
+                {
+                    powerUpButtonMap[kvp.Key] = button;
+                }
+                else
+                {
+                     Debug.LogWarning($"PowerUpManager: Button component not found on the GameObject for {kvp.Key} Image.", kvp.Value.gameObject);
+                }
+            }
+        }
 
         // Ensure fill images are correctly configured
         foreach (var kvp in powerUpFillImageMap)
@@ -146,7 +165,8 @@ public class PowerUpManager : MonoBehaviour
 
 
     /// Updates the visual representation (background sprite and fill image) of a specific power-up button.
-    public void UpdatePowerUpVisual(PowerUpInventory.PowerUpType type)
+    /// <param name="instantReset">If true, forces visuals to unusable state immediately, stopping animations.</param>
+    public void UpdatePowerUpVisual(PowerUpInventory.PowerUpType type, bool instantReset = false)
     {
         if (powerUpInventory == null)
         {
@@ -167,8 +187,27 @@ public class PowerUpManager : MonoBehaviour
         if (!fillImageFound || fillImage == null) Debug.LogWarning($"Fill Image for {type} not found/assigned.");
         if (!spritesFound || sprites == null) Debug.LogWarning($"Sprites for {type} not found/assigned.");
 
-        if (bgImage == null || fillImage == null || sprites == null) return; // Cannot proceed
+        if (bgImage == null || fillImage == null || sprites == null) return;
 
+        // --- Stop existing animation ---
+        if (fillCoroutines.TryGetValue(type, out Coroutine runningCoroutine) && runningCoroutine != null)
+        {
+            StopCoroutine(runningCoroutine);
+            fillCoroutines[type] = null;
+        }
+
+        // --- Handle Instant Reset ---
+        if (instantReset)
+        {
+            bgImage.sprite = sprites.unusable;
+            fillImage.fillAmount = 0f;
+            fillImage.gameObject.SetActive(false); // Hide fill
+            powerUpPreviousStates[type] = PowerUpState.Unusable; // Update previous state
+            // Debug.Log($"Instant Reset for {type}");
+            return; // Skip normal update logic
+        }
+
+        // --- Normal Update Logic ---
         // Determine sprites and fill amount based on current state
         Sprite bgSprite = sprites.unusable;
         Sprite fillSprite = sprites.usable;
@@ -279,13 +318,6 @@ public class PowerUpManager : MonoBehaviour
 
 
        // --- Start Animation (if needed) ---
-
-      // Stop existing animation for this power-up type
-      if (fillCoroutines.TryGetValue(type, out Coroutine runningCoroutine) && runningCoroutine != null)
-      {
-          StopCoroutine(runningCoroutine);
-          fillCoroutines[type] = null;
-         }
 
         // Only start animation if not a downward state change (which snaps)
         if (!(isStateChange && currentState < previousState))
@@ -447,13 +479,14 @@ public class PowerUpManager : MonoBehaviour
 
 
     /// Updates the visuals for all power-up buttons.
-    public void UpdateAllPowerUpVisuals()
+    /// <param name="instantReset">If true, forces all visuals to unusable state immediately.</param>
+    public void UpdateAllPowerUpVisuals(bool instantReset = false)
     {
         foreach (PowerUpInventory.PowerUpType type in System.Enum.GetValues(typeof(PowerUpInventory.PowerUpType)))
         {
             if (System.Enum.IsDefined(typeof(PowerUpInventory.PowerUpType), type))
             {
-                 UpdatePowerUpVisual(type);
+                 UpdatePowerUpVisual(type, instantReset); // Pass the flag
             }
         }
     }
@@ -472,6 +505,23 @@ public class PowerUpManager : MonoBehaviour
                 return sprites.unusable; // Default to unusable sprite
         }
     }
+
+   /// <summary>
+   /// Sets the interactable state of all power-up buttons.
+   /// </summary>
+   /// <param name="interactable">True to enable, false to disable.</param>
+   public void SetButtonsInteractable(bool interactable)
+   {
+       foreach (var kvp in powerUpButtonMap)
+       {
+           if (kvp.Value != null)
+           {
+               kvp.Value.interactable = interactable;
+           }
+       }
+       // Optionally, add visual feedback for disabled state if needed (e.g., grey out)
+       // This basic implementation just disables the Button component.
+   }
 
 
     public bool TryUsePowerUp(PowerUpInventory.PowerUpType type)
@@ -494,12 +544,14 @@ public class PowerUpManager : MonoBehaviour
             case PowerUpState.Supercharged:
                 ActivateEffect(type, usageState);
                 powerUpInventory.SetPowerUpCount(type, 0); // Reset count - This will trigger the event
+                UpdatePowerUpVisual(type, true); // Force instant visual reset
                 Debug.Log($"Used Supercharged {type}. Count for {type} reset to 0.");
                 return true;
 
             case PowerUpState.Charged:
                 ActivateEffect(type, usageState);
                 powerUpInventory.DecreasePowerUpCount(type, CHARGED_THRESHOLD); // Decrease count - This will trigger the event
+                UpdatePowerUpVisual(type, true); // Force instant visual reset
                 Debug.Log($"Used Charged {type}. Count for {type} reduced by {CHARGED_THRESHOLD}.");
                 return true;
 

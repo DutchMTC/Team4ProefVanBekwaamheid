@@ -129,7 +129,27 @@ public class PowerUpInventory : MonoBehaviour
         OnPowerUpCountChanged?.Invoke(type, newCount); // Invoke event
         // LogInventory();
     }
- 
+
+   /// <summary>
+   /// Resets the count of all power-ups to zero.
+   /// </summary>
+   public void ClearAllPowerUps()
+   {
+       _swordCount = 0;
+       _shieldCount = 0;
+       _stepsCount = 0;
+       _wallCount = 0;
+
+       // Invoke events for each type to notify listeners (like PowerUpManager)
+       OnPowerUpCountChanged?.Invoke(PowerUpType.Sword, _swordCount);
+       OnPowerUpCountChanged?.Invoke(PowerUpType.Shield, _shieldCount);
+       OnPowerUpCountChanged?.Invoke(PowerUpType.Steps, _stepsCount);
+       OnPowerUpCountChanged?.Invoke(PowerUpType.Wall, _wallCount);
+
+       Debug.Log("Power-up inventory cleared.");
+       // LogInventory(); // Optional: Log after clearing
+   }
+
     private void LogInventory()
     {
         Debug.Log($"Power-Up Inventory:\n" +

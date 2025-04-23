@@ -20,7 +20,11 @@ public class GameManager : MonoBehaviour
 
     [Header("Component References")]
     [SerializeField] private GridManager _gridManager;
-    [SerializeField] private EnemyAIController _enemyAIController; // Add reference to the Enemy AI
+    [SerializeField] private EnemyAIController _enemyAIController;
+    [SerializeField] private Timer _playerTimer; // Reference to the Timer script
+    [SerializeField] private GameObject _matchCounterUI;
+    [SerializeField] private GameObject _timerUI;
+    [SerializeField] private PowerUpManager _powerUpManager; // Add reference
 
     [Header("Tile Sprites")]
     public List<TileSpriteSet> tileSprites; // List to hold sprite sets for each block type
@@ -32,7 +36,26 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        // Ensure timer is subscribed correctly when starting
+        if (_playerTimer != null)
+        {
+            _playerTimer.onTimerEnd.RemoveListener(OnPlayerTimerEnd); // Remove just in case
+            _playerTimer.onTimerEnd.AddListener(OnPlayerTimerEnd);
+        }
+        else
+        {
+            Debug.LogError("GameManager: Player Timer reference not set in Inspector!");
+        }
         UpdateGameState(GameState.Matching);
+    }
+
+    void OnDestroy()
+    {
+        // Unsubscribe from the timer event when the GameManager is destroyed
+        if (_playerTimer != null)
+        {
+            _playerTimer.onTimerEnd.RemoveListener(OnPlayerTimerEnd);
+        }
     }
 
     /// <summary>
@@ -78,10 +101,14 @@ public class GameManager : MonoBehaviour
 
     private void HandleMatching()
     {
-        // Handle matching logic here
         Debug.Log("Matching phase!");
 
-        // Reset current swaps when entering matching phase
+        // Set UI visibility
+        if (_matchCounterUI != null) _matchCounterUI.SetActive(true);
+        if (_timerUI != null) _timerUI.SetActive(false);
+
+        if (_powerUpManager != null) _powerUpManager.SetButtonsInteractable(false);
+
         if (_gridManager != null) _gridManager.currentSwaps = 0;
 
         // Enable match 3 interaction
@@ -108,20 +135,59 @@ public class GameManager : MonoBehaviour
 
     public void HandlePlayerTurn()
     {
-        // Handle player turn logic here
         Debug.Log("Player's turn!");
 
-        // Example: enable player PowerUps
+        // Set UI visibility
+        if (_matchCounterUI != null) _matchCounterUI.SetActive(false);
+        if (_timerUI != null) _timerUI.SetActive(true);
+
+        if (_powerUpManager != null) _powerUpManager.SetButtonsInteractable(true); // Enable buttons
+
+        if (_playerTimer != null)
+        {
+            _playerTimer.StartTimer();
+        }
+        else
+        {
+             Debug.LogError("GameManager: Player Timer reference not set in Inspector!");
+        }
+
         DisableMatch3Tiles();
         if (_gridManager != null) _gridManager.gridActive = false; // Disable match 3 grid interaction;
     }
 
     private void HandleEnemyTurn()
     {
-        // Handle enemy turn logic here
         Debug.Log("Enemy's turn!");
 
-        // Example: start enemy AI logic
+        // Set UI visibility (Timer stays visible during enemy turn)
+        if (_matchCounterUI != null) _matchCounterUI.SetActive(false);
+        if (_timerUI != null) _timerUI.SetActive(true);
+
+        if (_powerUpManager != null) _powerUpManager.SetButtonsInteractable(false); // Disable buttons
+
+        // Ensure Match-3 grid remains disabled/greyed out
+        DisableMatch3Tiles();
+        if (_gridManager != null) _gridManager.gridActive = false;
+
+        // Clear powerup inventory at the start of enemy turn
+        if (_powerUpManager != null && _powerUpManager.powerUpInventory != null)
+        {
+            _powerUpManager.powerUpInventory.ClearAllPowerUps();
+        }
+        else
+        {
+            Debug.LogWarning("GameManager: PowerUpManager or its PowerUpInventory reference not set. Cannot clear inventory.");
+        }
+        // Explicitly update visuals after clearing inventory, forcing reset
+        if (_powerUpManager != null)
+        {
+            _powerUpManager.UpdateAllPowerUpVisuals(true); // Force instant reset
+        }
+
+        // Stop the player timer visually if needed, though the event handles state change
+        // if (_playerTimer != null) _playerTimer.StopTimer(); // Optional: Stop visual rotation
+
         // Note: EnemyAIController now handles its own logic via OnGameStateChanged
     }
 
@@ -238,6 +304,13 @@ public class GameManager : MonoBehaviour
                 Debug.LogWarning($"{(enabled ? "Normal" : "Disabled")} sprite is null for BlockType {blockComponent.type} in GameManager's tileSprites list.", blockGO);
             }
         }
+    }
+
+    // Method called when the player timer ends
+    private void OnPlayerTimerEnd()
+    {
+        Debug.Log("Player timer ended. Switching to Enemy phase.");
+        UpdateGameState(GameState.Enemy);
     }
 }
 

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events; // Added for UnityEvent
 
 public class Timer : MonoBehaviour
 {
@@ -9,6 +10,8 @@ public class Timer : MonoBehaviour
 
     [Tooltip("The total time in seconds for one full rotation.")]
     public float seconds = 10f;
+
+    public UnityEvent onTimerEnd;
 
     private Coroutine timerCoroutine;
     private const float DEGREES_IN_CIRCLE = 360f;
@@ -73,6 +76,7 @@ public class Timer : MonoBehaviour
 
 
         timerCoroutine = null;
+        onTimerEnd?.Invoke();
     }
 
     public void StopTimer()

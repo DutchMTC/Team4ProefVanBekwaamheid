@@ -2628,6 +2628,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _gridManager: {fileID: 1832730703}
   _enemyAIController: {fileID: 1748037594}
+  _playerTimer: {fileID: 1265569333}
+  _matchCounterUI: {fileID: 250102986}
+  _timerUI: {fileID: 1265569331}
+  _powerUpManager: {fileID: 0}
   tileSprites:
   - type: 1
     normalSprite: {fileID: 21300000, guid: d330296520ebbbe4fbfc8f45f13327cd, type: 3}
@@ -2707,6 +2711,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   objectToRotate: {fileID: 965951291}
   seconds: 10
+  onTimerEnd:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &1302259172
 GameObject:
   m_ObjectHideFlags: 0

@@ -3,13 +3,14 @@ using Team4ProefVanBekwaamheid.TurnBasedStrategy;
 
 namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
 {
-    public class MovementPowerUp : MonoBehaviour
+    public class AttackPowerUp : MonoBehaviour
     {
-        [SerializeField] private int _range; // The range of the power-up
-        private TileSelection _tileSelection; // Reference to the TileSelection script
-        private TileOccupants _tileOccupants; // Reference to the TileOccupants script
-        private bool _isWaitingForSelection = false;        
-        
+        [SerializeField] private int _range = 1; // Attack range
+        [SerializeField] private int _damage = 10; // Attack damage
+        private TileSelection _tileSelection;
+        private TileOccupants _tileOccupants;
+        private bool _isWaitingForSelection = false;
+
         void Start()
         {
             _tileSelection = FindObjectOfType<TileSelection>();
@@ -19,23 +20,18 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
             {
                 Debug.LogError("TileSelection script not found!");
             }
-        }       
-        public void MovementPowerUpSelected(PowerUpState _state)
+        }
+
+        void Update()
         {
-            // Movement moet hierin aangeroepen worden en range moet hierin bepaald worden
-            switch (_state)
+            if (Input.GetKeyDown(KeyCode.A)) // 'A' for Attack
             {
-                case PowerUpState.Usable:
-                    _range = 1; // Set range for usable state
-                    break;
-                case PowerUpState.Charged:
-                    _range = 2; // Set range for charged state
-                    break;
-                case PowerUpState.Supercharged:
-                    _range = 3; // Set range for supercharged state
-                    break;
+                AttackPowerUpSelected();
             }
-            
+        }
+
+        private void AttackPowerUpSelected()
+        {
             if (_isWaitingForSelection)
             {
                 // Cancel current selection
@@ -50,27 +46,34 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
             _tileSelection.OnTileSelected.AddListener(HandleTileSelected);
             Vector2Int currentPos = new Vector2Int(_tileOccupants.row, _tileOccupants.column);
             _tileSelection.StartTileSelection(_range, currentPos);
-        }          
+        }
+
         private void HandleTileSelected(TileSettings selectedTile)
         {
             if (!_isWaitingForSelection) return;
 
             _isWaitingForSelection = false;
             _tileSelection.OnTileSelected.RemoveListener(HandleTileSelected);
-            Move(selectedTile);
+            Attack(selectedTile);
         }
 
-        private void Move(TileSettings targetTile)
+        private void Attack(TileSettings targetTile)
         {
-            if (targetTile != null && targetTile.occupantType == TileSettings.OccupantType.None)
+            if (targetTile != null && targetTile.occupantType == TileSettings.OccupantType.Enemy)
             {
-                _tileOccupants.row = targetTile.row;
-                _tileOccupants.column = targetTile.column;
-                _tileOccupants.MoveToTile();
+                // Here you would implement the actual attack logic
+                Debug.Log($"Attacking enemy at position ({targetTile.row}, {targetTile.column}) for {_damage} damage!");
+                
+                // Example of how you might damage an enemy
+                // var enemy = targetTile.GetComponent<EnemyHealth>();
+                // if (enemy != null)
+                // {
+                //     enemy.TakeDamage(_damage);
+                // }
             }
             else
             {
-                Debug.Log("Selected tile is occupied or invalid, cannot move here.");
+                Debug.Log("Selected tile has no enemy to attack!");
             }
         }
 

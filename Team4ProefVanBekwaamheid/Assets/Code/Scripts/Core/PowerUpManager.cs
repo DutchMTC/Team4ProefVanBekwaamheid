@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps;
 
 [Serializable] // Make it visible in the Inspector
 public class PowerUpSprites
@@ -67,6 +68,9 @@ public class PowerUpManager : MonoBehaviour
     private const int USABLE_THRESHOLD = 1;
     private const int CHARGED_THRESHOLD = 15;
     private const int SUPERCHARGED_THRESHOLD = 25;
+
+    // Power Up References
+    [SerializeField] private MovementPowerUp _movementPowerUp; // Reference to the PowerUpInventory script
 
 
     private void Awake()
@@ -733,6 +737,7 @@ public class PowerUpManager : MonoBehaviour
 
     private void HandleSteps(PowerUpInventory.PowerUpType type, PowerUpState state, PowerUpUser user)
     {
+        _movementPowerUp.MovementPowerUpSelected(state); // Call the movement power-up selection method
         Debug.Log($"Handling {type} effect. State: {state}, User: {user}");
         // TODO: Pass type, state, user to the actual effect execution script/system
     }

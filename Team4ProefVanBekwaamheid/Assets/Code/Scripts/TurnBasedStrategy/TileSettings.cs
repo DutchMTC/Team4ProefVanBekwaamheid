@@ -60,7 +60,7 @@ public class TileSettings : MonoBehaviour
                 _tileMaterial.color = _defaultTileColor; // Default color for empty tiles
                 break;
             case OccupantType.Player:
-                _tileMaterial.color = _playerTileColor; // Default color for player tiles
+                //_tileMaterial.color = _playerTileColor; // Default color for player tiles
                 break;
             case OccupantType.Enemy:
                 _tileMaterial.color = _occupiedTileColor; // Color for Occupied tiles

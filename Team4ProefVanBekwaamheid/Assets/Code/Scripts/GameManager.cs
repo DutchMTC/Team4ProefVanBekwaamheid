@@ -103,6 +103,12 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Matching phase!");
 
+        // Restore power-up visuals from inventory
+        if (_powerUpManager != null)
+        {
+            _powerUpManager.RestoreVisualsFromInventory();
+        }
+
         // Set UI visibility
         if (_matchCounterUI != null) _matchCounterUI.SetActive(true);
         if (_timerUI != null) _timerUI.SetActive(false);
@@ -170,19 +176,14 @@ public class GameManager : MonoBehaviour
         DisableMatch3Tiles();
         if (_gridManager != null) _gridManager.gridActive = false;
 
-        // Clear powerup inventory at the start of enemy turn
-        if (_powerUpManager != null && _powerUpManager.powerUpInventory != null)
+        // Set power-up visuals to unusable for enemy turn
+        if (_powerUpManager != null)
         {
-            _powerUpManager.powerUpInventory.ClearAllPowerUps();
+            _powerUpManager.SetVisualsToUnusable();
         }
         else
         {
-            Debug.LogWarning("GameManager: PowerUpManager or its PowerUpInventory reference not set. Cannot clear inventory.");
-        }
-        // Explicitly update visuals after clearing inventory, forcing reset
-        if (_powerUpManager != null)
-        {
-            _powerUpManager.UpdateAllPowerUpVisuals(true); // Force instant reset
+             Debug.LogWarning("GameManager: PowerUpManager reference not set. Cannot set visuals to unusable.");
         }
 
         // Stop the player timer visually if needed, though the event handles state change

@@ -21,6 +21,13 @@ public enum PowerUpState
     Supercharged
 }
 
+// Enum to identify who is using the power-up
+public enum PowerUpUser
+{
+    Player,
+    Enemy
+}
+
 public class PowerUpManager : MonoBehaviour
 {
     public PowerUpInventory powerUpInventory;
@@ -54,6 +61,7 @@ public class PowerUpManager : MonoBehaviour
     private Dictionary<PowerUpInventory.PowerUpType, Coroutine> fillCoroutines;
     private Dictionary<PowerUpInventory.PowerUpType, PowerUpState> powerUpPreviousStates;
     private Dictionary<PowerUpInventory.PowerUpType, Button> powerUpButtonMap; // Map type to Button component
+    private bool _isUsingPowerUp = false; // Flag to prevent event-driven update during use
 
     // Constants for State Thresholds
     private const int USABLE_THRESHOLD = 1;
@@ -125,12 +133,13 @@ public class PowerUpManager : MonoBehaviour
            if (System.Enum.IsDefined(typeof(PowerUpInventory.PowerUpType), type))
            {
                powerUpPreviousStates[type] = DetermineStateFromCount(powerUpInventory.GetPowerUpCount(type));
-               UpdatePowerUpVisual(type); // Set initial visual state (will snap, not animate)
-             }
-        }
+               // Use instantUpdate true for initial setup to snap visuals without animation
+               UpdatePowerUpVisual(type, instantUpdate: true);
+            }
+       }
 
-        // Subscribe to inventory changes
-        PowerUpInventory.OnPowerUpCountChanged += HandlePowerUpCountChanged;
+       // Subscribe to inventory changes
+       PowerUpInventory.OnPowerUpCountChanged += HandlePowerUpCountChanged;
     }
 
     private void OnDestroy()
@@ -141,6 +150,11 @@ public class PowerUpManager : MonoBehaviour
 
     private void HandlePowerUpCountChanged(PowerUpInventory.PowerUpType type, int newCount)
     {
+        if (_isUsingPowerUp)
+        {
+            return;
+        }
+        // Call with default flags (allow animation)
         UpdatePowerUpVisual(type);
     }
 
@@ -156,17 +170,18 @@ public class PowerUpManager : MonoBehaviour
     public PowerUpState GetCurrentUsageState(PowerUpInventory.PowerUpType type)
     {
         int count = powerUpInventory.GetPowerUpCount(type);
-        // Usage logic might differ slightly from visual state determination
+        // Determine the state based on thresholds for usage purposes
         if (count >= SUPERCHARGED_THRESHOLD) return PowerUpState.Supercharged;
         if (count >= CHARGED_THRESHOLD) return PowerUpState.Charged;
-        // Original logic didn't have a distinct 'Usable' trigger state, only Charged/Supercharged
-        return PowerUpState.Unusable; // Default to Unusable if not Charged/Supercharged
+        if (count >= USABLE_THRESHOLD) return PowerUpState.Usable; // Add Usable state check
+        return PowerUpState.Unusable;
     }
 
 
     /// Updates the visual representation (background sprite and fill image) of a specific power-up button.
     /// <param name="instantReset">If true, forces visuals to unusable state immediately, stopping animations.</param>
-    public void UpdatePowerUpVisual(PowerUpInventory.PowerUpType type, bool instantReset = false)
+    /// <param name="instantUpdate">If true, stops animation and snaps visuals to the current state immediately.</param>
+    public void UpdatePowerUpVisual(PowerUpInventory.PowerUpType type, bool instantReset = false, bool instantUpdate = false)
     {
         if (powerUpInventory == null)
         {
@@ -196,7 +211,7 @@ public class PowerUpManager : MonoBehaviour
             fillCoroutines[type] = null;
         }
 
-        // --- Handle Instant Reset ---
+        // --- Handle Instant Reset (Force Unusable) ---
         if (instantReset)
         {
             bgImage.sprite = sprites.unusable;
@@ -207,8 +222,82 @@ public class PowerUpManager : MonoBehaviour
             return; // Skip normal update logic
         }
 
-        // --- Normal Update Logic ---
-        // Determine sprites and fill amount based on current state
+        // --- Handle Instant Update (Snap to Current State) ---
+        if (instantUpdate)
+        {
+            int currentCount = powerUpInventory.GetPowerUpCount(type);
+            PowerUpState stateNow = DetermineStateFromCount(currentCount);
+            // Ensure components are valid before proceeding
+             if (!bgImageFound || bgImage == null || !fillImageFound || fillImage == null || !spritesFound || sprites == null)
+             {
+                  Debug.LogError($"Missing components for instant update on {type}. Cannot proceed.");
+                  return;
+             }
+            PowerUpSprites spritesNow = powerUpSpriteMap[type];
+
+            Sprite bgSpriteNow = GetSpriteForState(spritesNow, stateNow);
+            Sprite fillSpriteNow; // Sprite for the *next* state's fill
+            float fillAmountNow = 0f;
+            bool showFillNow = false;
+            int collectedSinceLastStateNow = 0;
+            int requiredForNextStateNow = 1;
+
+            switch (stateNow)
+            {
+                case PowerUpState.Unusable:
+                    fillSpriteNow = spritesNow.usable;
+                    requiredForNextStateNow = USABLE_THRESHOLD;
+                    collectedSinceLastStateNow = currentCount;
+                    showFillNow = currentCount > 0;
+                    break;
+                case PowerUpState.Usable:
+                    fillSpriteNow = spritesNow.charged;
+                    requiredForNextStateNow = CHARGED_THRESHOLD - USABLE_THRESHOLD;
+                    collectedSinceLastStateNow = currentCount - USABLE_THRESHOLD;
+                    showFillNow = true;
+                    break;
+                case PowerUpState.Charged:
+                    fillSpriteNow = spritesNow.supercharged;
+                    requiredForNextStateNow = SUPERCHARGED_THRESHOLD - CHARGED_THRESHOLD;
+                    collectedSinceLastStateNow = currentCount - CHARGED_THRESHOLD;
+                    showFillNow = true;
+                    break;
+                case PowerUpState.Supercharged:
+                    fillSpriteNow = spritesNow.supercharged;
+                    requiredForNextStateNow = 1; // Avoid division by zero
+                    collectedSinceLastStateNow = 1;
+                    showFillNow = false;
+                    break;
+                default: // Should not happen
+                     fillSpriteNow = spritesNow.unusable;
+                     Debug.LogError($"Unhandled state {stateNow} in instant update for {type}");
+                     break;
+            }
+
+            if (requiredForNextStateNow > 0)
+            {
+                fillAmountNow = Mathf.Clamp01((float)collectedSinceLastStateNow / requiredForNextStateNow);
+            } else {
+                 fillAmountNow = (collectedSinceLastStateNow > 0) ? 1.0f : 0.0f;
+            }
+
+            bgImage.sprite = bgSpriteNow;
+            fillImage.sprite = fillSpriteNow; // Set the fill sprite correctly
+            fillImage.fillAmount = fillAmountNow;
+            fillImage.gameObject.SetActive(showFillNow);
+            powerUpPreviousStates[type] = stateNow; // Update previous state
+            // Debug.Log($"Instant Update for {type} to state {stateNow}, fill {fillAmountNow}");
+            return; // Skip normal animation logic
+        }
+
+
+        // --- Normal Update Logic (with animation) ---
+        // State info needed for animation logic if not handled by instant flags
+        // 'count' is already available from the start of the method if we reach this point.
+        currentState = DetermineStateFromCount(count); // Use existing 'count'
+        previousState = powerUpPreviousStates.ContainsKey(type) ? powerUpPreviousStates[type] : currentState; // Use existing 'currentState'
+
+        // Determine sprites and fill amount based on current state for animation
         Sprite bgSprite = sprites.unusable;
         Sprite fillSprite = sprites.usable;
         float fillAmount = 0f;
@@ -480,13 +569,14 @@ public class PowerUpManager : MonoBehaviour
 
     /// Updates the visuals for all power-up buttons.
     /// <param name="instantReset">If true, forces all visuals to unusable state immediately.</param>
-    public void UpdateAllPowerUpVisuals(bool instantReset = false)
+    /// <param name="instantUpdate">If true, snaps all visuals to the current state immediately.</param>
+    public void UpdateAllPowerUpVisuals(bool instantReset = false, bool instantUpdate = false) // Added instantUpdate
     {
         foreach (PowerUpInventory.PowerUpType type in System.Enum.GetValues(typeof(PowerUpInventory.PowerUpType)))
         {
             if (System.Enum.IsDefined(typeof(PowerUpInventory.PowerUpType), type))
             {
-                 UpdatePowerUpVisual(type, instantReset); // Pass the flag
+                 UpdatePowerUpVisual(type, instantReset, instantUpdate); // Pass the flags
             }
         }
     }
@@ -537,27 +627,28 @@ public class PowerUpManager : MonoBehaviour
         switch (usageState)
         {
             case PowerUpState.Unusable:
+                // No change in state, no action needed other than feedback
                 int currentCount = powerUpInventory.GetPowerUpCount(type);
-                Debug.Log($"Power-up {type} unusable: Not enough charge ({currentCount}). Needs {CHARGED_THRESHOLD} for Charged, {SUPERCHARGED_THRESHOLD} for Supercharged.");
+                Debug.Log($"Power-up {type} unusable: Not enough charge ({currentCount}). Needs {USABLE_THRESHOLD} to use.");
+                // We still call instant update to stop any potential ongoing animation if clicked rapidly
+                UpdatePowerUpVisual(type, instantUpdate: true);
                 return false;
 
-            case PowerUpState.Supercharged:
-                ActivateEffect(type, usageState);
-                powerUpInventory.SetPowerUpCount(type, 0); // Reset count - This will trigger the event
-                UpdatePowerUpVisual(type, true); // Force instant visual reset
-                Debug.Log($"Used Supercharged {type}. Count for {type} reset to 0.");
-                return true;
-
+            case PowerUpState.Usable:
             case PowerUpState.Charged:
-                ActivateEffect(type, usageState);
-                powerUpInventory.DecreasePowerUpCount(type, CHARGED_THRESHOLD); // Decrease count - This will trigger the event
-                UpdatePowerUpVisual(type, true); // Force instant visual reset
-                Debug.Log($"Used Charged {type}. Count for {type} reduced by {CHARGED_THRESHOLD}.");
+            case PowerUpState.Supercharged:
+                // Any successful use resets count to 0 and visuals instantly
+                _isUsingPowerUp = true;
+                ActivateEffect(type, usageState); // Activate effect based on the state it was used in
+                powerUpInventory.SetPowerUpCount(type, 0); // Reset count to 0
+                UpdatePowerUpVisual(type, instantReset: true); // Force instant visual reset to Unusable state
+                _isUsingPowerUp = false; // Reset flag AFTER instant update
+                Debug.Log($"Used {usageState} {type}. Count reset to 0.");
                 return true;
 
-            // Note: PowerUpState.Usable is not a trigger state for using the power-up here.
             default:
-                Debug.LogWarning($"Unhandled PowerUpState in TryUsePowerUp: {usageState} for type {type}");
+                // This case should ideally not be reached
+                Debug.LogWarning($"Unexpected PowerUpState in TryUsePowerUp: {usageState} for type {type}");
                 return false;
         }
     }
@@ -566,21 +657,25 @@ public class PowerUpManager : MonoBehaviour
 
     public void UseSwordPowerUp()
     {
+        Debug.Log("UseSwordPowerUp button clicked.");
         TryUsePowerUp(PowerUpInventory.PowerUpType.Sword);
     }
 
     public void UseShieldPowerUp()
     {
+        Debug.Log("UseShieldPowerUp button clicked.");
         TryUsePowerUp(PowerUpInventory.PowerUpType.Shield);
     }
 
     public void UseWallPowerUp()
     {
+        Debug.Log("UseWallPowerUp button clicked.");
         TryUsePowerUp(PowerUpInventory.PowerUpType.Wall);
     }
 
     public void UseStepsPowerUp()
     {
+        Debug.Log("UseStepsPowerUp button clicked.");
         TryUsePowerUp(PowerUpInventory.PowerUpType.Steps);
     }
 
@@ -590,23 +685,23 @@ public class PowerUpManager : MonoBehaviour
     {
         Debug.Log($"Activating {state} effect for {type}");
 
+        // Determine the user (In this context, it's always the player clicking the button)
+        PowerUpUser user = PowerUpUser.Player;
+
+        // Call the consolidated handler based on the power-up type
         switch (type)
         {
             case PowerUpInventory.PowerUpType.Sword:
-                if (state == PowerUpState.Charged) HandleSwordCharged();
-                else if (state == PowerUpState.Supercharged) HandleSwordSupercharged();
+                HandleSword(type, state, user);
                 break;
             case PowerUpInventory.PowerUpType.Shield:
-                if (state == PowerUpState.Charged) HandleShieldCharged();
-                else if (state == PowerUpState.Supercharged) HandleShieldSupercharged();
+                HandleShield(type, state, user);
                 break;
             case PowerUpInventory.PowerUpType.Wall:
-                if (state == PowerUpState.Charged) HandleWallCharged();
-                else if (state == PowerUpState.Supercharged) HandleWallSupercharged();
+                HandleWall(type, state, user);
                 break;
             case PowerUpInventory.PowerUpType.Steps:
-                if (state == PowerUpState.Charged) HandleStepsCharged();
-                else if (state == PowerUpState.Supercharged) HandleStepsSupercharged();
+                HandleSteps(type, state, user);
                 break;
             default:
                  Debug.LogWarning($"Unhandled PowerUpType {type} in ActivateEffect");
@@ -614,13 +709,55 @@ public class PowerUpManager : MonoBehaviour
         }
     }
 
-    // Placeholder effect handlers
-    private void HandleSwordCharged() { Debug.Log("Handling Sword Charged effect!"); }
-    private void HandleSwordSupercharged() { Debug.Log("Handling Sword Supercharged effect!"); }
-    private void HandleShieldCharged() { Debug.Log("Handling Shield Charged effect!"); }
-    private void HandleShieldSupercharged() { Debug.Log("Handling Shield Supercharged effect!"); }
-    private void HandleWallCharged() { Debug.Log("Handling Wall Charged effect!"); }
-    private void HandleWallSupercharged() { Debug.Log("Handling Wall Supercharged effect!"); }
-    private void HandleStepsCharged() { Debug.Log("Handling Steps Charged effect!"); }
-    private void HandleStepsSupercharged() { Debug.Log("Handling Steps Supercharged effect!"); }
+    // --- Consolidated Effect Handlers ---
+    // These methods now receive the state and user, and can pass this info
+    // to another script responsible for the actual game logic.
+
+    private void HandleSword(PowerUpInventory.PowerUpType type, PowerUpState state, PowerUpUser user)
+    {
+        Debug.Log($"Handling {type} effect. State: {state}, User: {user}");
+        // TODO: Pass type, state, user to the actual effect execution script/system
+    }
+
+    private void HandleShield(PowerUpInventory.PowerUpType type, PowerUpState state, PowerUpUser user)
+    {
+        Debug.Log($"Handling {type} effect. State: {state}, User: {user}");
+        // TODO: Pass type, state, user to the actual effect execution script/system
+    }
+
+    private void HandleWall(PowerUpInventory.PowerUpType type, PowerUpState state, PowerUpUser user)
+    {
+        Debug.Log($"Handling {type} effect. State: {state}, User: {user}");
+        // TODO: Pass type, state, user to the actual effect execution script/system
+    }
+
+    private void HandleSteps(PowerUpInventory.PowerUpType type, PowerUpState state, PowerUpUser user)
+    {
+        Debug.Log($"Handling {type} effect. State: {state}, User: {user}");
+        // TODO: Pass type, state, user to the actual effect execution script/system
+    }
+
+    /// <summary>
+    /// Forces the visual representation of all power-ups to the 'Unusable' state
+    /// without changing the underlying inventory counts. Stops any running animations.
+    /// Call this when the enemy phase starts.
+    /// </summary>
+    public void SetVisualsToUnusable()
+    {
+        Debug.Log("Setting all power-up visuals to Unusable for enemy phase.");
+        UpdateAllPowerUpVisuals(instantReset: true);
+    }
+
+    /// <summary>
+    /// Updates the visual representation of all power-ups based on the current
+    /// counts in the PowerUpInventory. Allows animations.
+    /// Call this when the matching phase starts.
+    /// </summary>
+    public void RestoreVisualsFromInventory()
+    {
+        Debug.Log("Restoring power-up visuals from inventory for matching phase.");
+        // Call UpdateAllPowerUpVisuals with default parameters (no instant flags)
+        // This will read current counts and apply visuals, potentially animating.
+        UpdateAllPowerUpVisuals();
+    }
 }

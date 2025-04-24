@@ -735,7 +735,7 @@ public class PowerUpManager : MonoBehaviour
 
     private void HandleSword(PowerUpInventory.PowerUpType type, PowerUpState state, PowerUpUser user)
     {
-        _attackPowerUp.AttackPowerUpSelected(state); // Call the attack power-up selection method
+        _attackPowerUp.AttackPowerUpSelected(state, TileSelection.UserType.Player); // Call the attack power-up selection method
         Debug.Log($"Handling {type} effect. State: {state}, User: {user}");
         // TODO: Pass type, state, user to the actual effect execution script/system
     }
@@ -748,14 +748,14 @@ public class PowerUpManager : MonoBehaviour
 
     private void HandleWall(PowerUpInventory.PowerUpType type, PowerUpState state, PowerUpUser user)
     {
-        _wallPowerUp.WallPowerUpSelected(state); // Call the wall power-up selection method
+        _wallPowerUp.WallPowerUpSelected(state, TileSelection.UserType.Player); // Call the wall power-up selection method
         Debug.Log($"Handling {type} effect. State: {state}, User: {user}");
         // TODO: Pass type, state, user to the actual effect execution script/system
     }
 
     private void HandleSteps(PowerUpInventory.PowerUpType type, PowerUpState state, PowerUpUser user)
     {
-        _movementPowerUp.MovementPowerUpSelected(state); // Call the movement power-up selection method
+        _movementPowerUp.MovementPowerUpSelected(state, TileSelection.UserType.Player); // Call the movement power-up selection method
         Debug.Log($"Handling {type} effect. State: {state}, User: {user}");
         // TODO: Pass type, state, user to the actual effect execution script/system
     }

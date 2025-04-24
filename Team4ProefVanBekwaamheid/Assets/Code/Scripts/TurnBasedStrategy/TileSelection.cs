@@ -213,4 +213,14 @@ public class TileSelection : MonoBehaviour
         }
         return null;
     }
+
+    /// <summary>
+    /// Returns a list of the currently selectable tiles (those highlighted).
+    /// </summary>
+    /// <returns>A new List containing the TileSettings of selectable tiles.</returns>
+    public List<TileSettings> GetSelectableTiles()
+    {
+        // Return a copy to prevent external modification of the internal HashSet
+        return new List<TileSettings>(_tilesInRange);
+    }
 }

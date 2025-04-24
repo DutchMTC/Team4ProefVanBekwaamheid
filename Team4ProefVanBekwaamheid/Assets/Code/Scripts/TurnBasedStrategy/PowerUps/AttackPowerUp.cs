@@ -11,8 +11,10 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
         [SerializeField] private int _baseDamage = 10;
         private int _currentDamage;
         private TileSelection _tileSelection;
-        private TileOccupants _tileOccupants;
+        private TileOccupants _tileOccupants; // The user of the powerup
         private bool _isWaitingForSelection = false;
+        private TileSelection.UserType _currentUserType; // Store the user type
+        private TileOccupants _targetOccupantForAI; // Store the target for AI
 
         void Start()
         {
@@ -25,16 +27,14 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
             }
         }
 
-        void Update()
-        {
-            if (Input.GetKeyDown(KeyCode.A))
-            {
-                AttackPowerUpSelected(PowerUpState.Usable);
-            }
-        }
+        // Removed Update method with debug key press
 
-        public void AttackPowerUpSelected(PowerUpState _state)
+        // Added optional targetOccupant parameter for AI
+        public void AttackPowerUpSelected(PowerUpState _state, TileSelection.UserType userType, TileOccupants targetOccupant = null)
         {
+            _currentUserType = userType; // Store user type
+            _targetOccupantForAI = targetOccupant; // Store target for AI
+
             switch (_state)
             {
                 case PowerUpState.Usable:
@@ -60,41 +60,102 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
                 return;
             }
 
-            // Start new selection
-            _isWaitingForSelection = true;
-            _tileSelection.OnTileSelected.AddListener(HandleTileSelected);
+            // Start tile selection process to find valid tiles
             Vector2Int currentPos = new Vector2Int(_tileOccupants.row, _tileOccupants.column);
-            _tileSelection.StartTileSelection(_range, currentPos, TileSelection.SelectionType.Attack, TileSelection.UserType.Player);
+            _tileSelection.StartTileSelection(_range, currentPos, TileSelection.SelectionType.Attack, userType);
+
+            if (userType == TileSelection.UserType.Enemy && _targetOccupantForAI != null)
+            {
+                // AI executes immediately
+                TileSettings playerTile = _targetOccupantForAI.GetCurrentTile();
+                if (playerTile != null && IsTileInRange(playerTile))
+                {
+                     Debug.Log($"Enemy AI (Attack): Attacking player at ({playerTile.row}, {playerTile.column})");
+                     Attack(playerTile);
+                }
+                else
+                {
+                    Debug.LogWarning("Enemy AI (Attack): Player is not in range or player tile not found.");
+                    // Optionally, do nothing or attack nearest valid target if any
+                }
+                _tileSelection.CancelTileSelection(); // Clean up selection state
+            }
+            else // Player waits for input
+            {
+                _isWaitingForSelection = true;
+                _tileSelection.OnTileSelected.AddListener(HandleTileSelected);
+            }
         }
 
+        // This is now only called for Player input
         private void HandleTileSelected(TileSettings selectedTile)
         {
-            if (!_isWaitingForSelection) return;
+            if (!_isWaitingForSelection) return; // Only proceed if waiting for player input
 
             _isWaitingForSelection = false;
             _tileSelection.OnTileSelected.RemoveListener(HandleTileSelected);
+
+            // Player Logic: Attack the selected tile
             Attack(selectedTile);
+
+            // AI logic is handled directly in AttackPowerUpSelected, so this part is no longer needed here.
+            /*
+            if (_currentUserType == TileSelection.UserType.Enemy && _targetOccupantForAI != null)
+            {
+            {
+                 // This block is now handled directly in AttackPowerUpSelected for AI
+            }
+            else // Player Logic
+            {
+                 // This is handled above
+            }
+            */
+        }
+
+        // Helper to check if a tile is within the current attack range
+        private bool IsTileInRange(TileSettings targetTile)
+        {
+            if (targetTile == null || _tileOccupants == null) return false;
+
+            Vector2Int currentPos = new Vector2Int(_tileOccupants.row, _tileOccupants.column);
+            Vector2Int targetPos = new Vector2Int(targetTile.row, targetTile.column);
+
+            // Simple Manhattan distance check for grid movement
+            int distance = Mathf.Abs(currentPos.x - targetPos.x) + Mathf.Abs(currentPos.y - targetPos.y);
+            return distance <= _range;
         }
 
         private void Attack(TileSettings targetTile)
         {
-            if (targetTile != null && targetTile.occupantType == TileSettings.OccupantType.Enemy)
+            // Determine the correct target type based on the user
+            TileSettings.OccupantType expectedTargetType = (_currentUserType == TileSelection.UserType.Player)
+                ? TileSettings.OccupantType.Enemy
+                : TileSettings.OccupantType.Player;
+
+            if (targetTile != null && targetTile.occupantType == expectedTargetType)
             {
-                // Get the enemy's health component and apply damage
-                var enemyHealth = targetTile.tileOccupant.GetComponent<TileOccupants>();
-                if (enemyHealth != null)
+                // Get the target's health component and apply damage
+                var targetHealth = targetTile.tileOccupant.GetComponent<TileOccupants>();
+                if (targetHealth != null)
                 {
-                    enemyHealth.TakeDamage(_currentDamage);
-                    Debug.Log($"Attacked enemy for {_currentDamage} damage!");
+                    targetHealth.TakeDamage(_currentDamage);
+                    Debug.Log($"{_currentUserType} attacked {expectedTargetType} for {_currentDamage} damage!");
                 }
                 else
                 {
-                    Debug.LogWarning("Enemy tile found but no Health component present!");
+                    Debug.LogWarning($"{expectedTargetType} tile found but no TileOccupants component present!");
                 }
             }
             else
             {
-                Debug.Log("Selected tile has no enemy to attack!");
+                if (targetTile == null)
+                {
+                     Debug.Log("Invalid target tile for attack.");
+                }
+                else
+                {
+                    Debug.Log($"Selected tile has no {expectedTargetType} to attack!");
+                }
             }
         }
 

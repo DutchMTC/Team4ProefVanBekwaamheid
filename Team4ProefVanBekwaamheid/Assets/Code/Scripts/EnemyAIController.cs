@@ -4,6 +4,8 @@ using System.Collections.Generic; // Needed for List<>
 using System;                   // Needed for Serializable and Action
 using System.Linq;              // Needed for Enum.GetValues().Cast<>()
 using static PowerUpManager;    // Import PowerUpState and PowerUpSprites
+using Team4ProefVanBekwaamheid.TurnBasedStrategy; // For TileOccupants
+using Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps; // For PowerUp scripts
 
 public class EnemyAIController : MonoBehaviour
 {
@@ -26,6 +28,15 @@ public class EnemyAIController : MonoBehaviour
     // [SerializeField] private Transform enemyTransform;
     [Tooltip("Assign the parent RectTransform of the powerupDisplayIcons. This should be a child of the Enemy, likely on a World Space Canvas.")]
     [SerializeField] private RectTransform powerupDisplayParent;
+    [Tooltip("Assign the player's TileOccupants component.")]
+    [SerializeField] private TileOccupants playerOccupants; // Reference to player
+
+    // References to the power-up scripts attached to the Enemy GameObject
+    private MovementPowerUp _movementPowerUp;
+    private AttackPowerUp _attackPowerUp;
+    private WallPowerUp _wallPowerUp;
+    // ShieldPowerUp reference would go here if implemented
+    private TileOccupants _enemyOccupants; // Reference to self
 
     [Header("UI Positioning")]
     [Tooltip("Local vertical offset from this GameObject's origin (or the parent's origin if not a direct child).")]
@@ -68,6 +79,26 @@ public class EnemyAIController : MonoBehaviour
     {
         // Set initial position once
         PositionPowerupDisplay();
+
+        // Get references to power-up components on the same GameObject
+        _movementPowerUp = GetComponent<MovementPowerUp>();
+        _attackPowerUp = GetComponent<AttackPowerUp>();
+        _wallPowerUp = GetComponent<WallPowerUp>();
+        _enemyOccupants = GetComponent<TileOccupants>();
+        // Get ShieldPowerUp component here
+
+        if (_movementPowerUp == null || _attackPowerUp == null || _wallPowerUp == null /* || shieldPowerUp == null */)
+        {
+            Debug.LogError("EnemyAIController: One or more PowerUp script references are missing on this GameObject!");
+        }
+        if (_enemyOccupants == null)
+        {
+             Debug.LogError("EnemyAIController: TileOccupants component missing on this GameObject!");
+        }
+        if (playerOccupants == null)
+        {
+             Debug.LogError("EnemyAIController: Player TileOccupants reference not assigned in Inspector!");
+        }
     }
 
     void OnEnable()
@@ -129,9 +160,10 @@ public class EnemyAIController : MonoBehaviour
                 break;
 
             case GameState.Player:
-                 // Player's turn/RPG phase ends: Hide powerups
-                Debug.Log("Enemy AI: Player state entered. Hiding powerups...");
-                HidePowerups();
+                 // Player's turn/RPG phase begins.
+                 // Powerups selected during the previous Matching phase should remain visible.
+                Debug.Log("Enemy AI: Player state entered. Enemy powerups remain visible.");
+                // HidePowerups(); // REMOVED: Don't hide powerups here.
                 break;
 
              // Add cases for other states if needed (e.g., reset on Win/GameOver)
@@ -320,45 +352,127 @@ public class EnemyAIController : MonoBehaviour
         }
     }
 
-    private System.Collections.IEnumerator ExecutePowerups() // Changed to IEnumerator
+    private System.Collections.IEnumerator ExecutePowerups()
     {
+        bool _hasMovedThisTurn = false; // Track if movement happened this turn
+        bool _movementWasChosen = chosenPowerups.Any(p => p.Type == PowerUpInventory.PowerUpType.Steps); // Check if movement was chosen at all
+
         if (chosenPowerups.Count == 0)
         {
             Debug.Log("Enemy AI: No powerups were selected for this turn.");
         }
         else
         {
-            Debug.Log("Enemy AI: Starting powerup execution sequence...");
-            // Iterate through a copy in case we modify the list or icons during execution
-            List<SelectedPowerup> powerupsToExecute = new List<SelectedPowerup>(chosenPowerups);
+            Debug.Log("Enemy AI: Starting powerup execution sequence based on priority...");
 
-            for(int i = 0; i < powerupsToExecute.Count; i++)
+            // Define priority order
+            List<PowerUpInventory.PowerUpType> priorityOrder = new List<PowerUpInventory.PowerUpType>
             {
-                 SelectedPowerup powerup = powerupsToExecute[i];
-                 Debug.Log($"- Executing Powerup Type: {powerup.Type} (State: {powerup.State})");
+                PowerUpInventory.PowerUpType.Steps,
+                PowerUpInventory.PowerUpType.Sword,
+                PowerUpInventory.PowerUpType.Shield, // Add Shield logic when implemented
+                PowerUpInventory.PowerUpType.Wall
+            };
 
-                 // --- Add actual enemy-specific powerup effect logic here ---
-                 // Example: ApplyEffectBasedOnState(powerup.Type, powerup.State);
+            List<int> executedIconIndices = new List<int>(); // Track indices of executed icons
 
-                 // Visually hide the executed powerup's icon
-                 if (i < powerupDisplayIcons.Length && powerupDisplayIcons[i] != null)
-                 {
-                     // Optional: Add a slight delay here if needed using a coroutine
-                     powerupDisplayIcons[i].enabled = false;
-                     Debug.Log($"  > Hiding icon at index {i}");
-                 }
-                 else
-                 {
-                     Debug.LogWarning($"  > Could not find icon at index {i} to hide.");
-                 }
+            // Iterate through priority order
+            foreach (var priorityType in priorityOrder)
+            {
+                // Find if this powerup was chosen
+                int chosenIndex = chosenPowerups.FindIndex(p => p.Type == priorityType);
 
-                 // Add delay between powerup executions
-                 yield return new WaitForSeconds(2.0f); // Wait for 2 seconds
+                if (chosenIndex != -1)
+                {
+                    SelectedPowerup powerupToExecute = chosenPowerups[chosenIndex];
+                    bool executedThisPowerup = false; // Track if this specific powerup executes
+
+                    Debug.Log($"Enemy AI: Considering {powerupToExecute.Type} (State: {powerupToExecute.State}) at index {chosenIndex}.");
+
+                    // Execute the powerup based on type and conditions
+                    switch (powerupToExecute.Type)
+                    {
+                        case PowerUpInventory.PowerUpType.Steps:
+                            if (_movementPowerUp != null)
+                            {
+                                Debug.Log($"Enemy AI: Executing Movement ({powerupToExecute.State})");
+                                _movementPowerUp.MovementPowerUpSelected(powerupToExecute.State, TileSelection.UserType.Enemy, playerOccupants);
+                                _hasMovedThisTurn = true; // Set flag
+                                executedThisPowerup = true;
+                            }
+                            break;
+                        case PowerUpInventory.PowerUpType.Sword:
+                            if (_attackPowerUp != null)
+                            {
+                                Debug.Log($"Enemy AI: Executing Attack ({powerupToExecute.State})");
+                                _attackPowerUp.AttackPowerUpSelected(powerupToExecute.State, TileSelection.UserType.Enemy, playerOccupants);
+                                executedThisPowerup = true;
+                            }
+                            break;
+                        case PowerUpInventory.PowerUpType.Shield:
+                            // Add Shield execution logic here
+                            Debug.Log("Enemy AI: Shield powerup execution not implemented yet.");
+                            break;
+                        case PowerUpInventory.PowerUpType.Wall:
+                            // *** Wall Condition Check ***
+                            bool canUseWall = !_movementWasChosen || _hasMovedThisTurn;
+                            if (_wallPowerUp != null && canUseWall)
+                            {
+                                Debug.Log($"Enemy AI: Executing Wall ({powerupToExecute.State})");
+                                _wallPowerUp.WallPowerUpSelected(powerupToExecute.State, TileSelection.UserType.Enemy, playerOccupants);
+                                executedThisPowerup = true;
+                            }
+                            else if (!canUseWall)
+                            {
+                                Debug.Log($"Enemy AI: Skipping Wall ({powerupToExecute.State}) because Movement was chosen but not executed yet.");
+                            }
+                            break;
+                    }
+
+                    // If this powerup was successfully initiated, mark its icon for hiding and wait
+                    if (executedThisPowerup)
+                    {
+                        Debug.Log($"Enemy AI: Initiated {powerupToExecute.Type}.");
+                        executedIconIndices.Add(chosenIndex); // Add index to hide later
+                        yield return new WaitForSeconds(1.0f); // Wait after each action
+                    }
+                    else
+                    {
+                         Debug.LogWarning($"Enemy AI: Failed to initiate {powerupToExecute.Type} (script missing, condition not met, or error).");
+                    }
+                }
             }
-            Debug.Log("Enemy AI: Finished executing powerups.");
+
+            // After iterating through all priorities, hide the icons of executed powerups
+            if (executedIconIndices.Count > 0)
+            {
+                 Debug.Log($"Enemy AI: Hiding icons for {executedIconIndices.Count} executed powerups.");
+                 // Optional: Add a small delay before hiding if needed
+                 // yield return new WaitForSeconds(0.5f);
+                 foreach (int indexToHide in executedIconIndices)
+                 {
+                     if (indexToHide >= 0 && indexToHide < powerupDisplayIcons.Length && powerupDisplayIcons[indexToHide] != null)
+                     {
+                         powerupDisplayIcons[indexToHide].enabled = false;
+                         Debug.Log($"Enemy AI: Hiding icon at index {indexToHide}");
+                     }
+                     else
+                     {
+                         Debug.LogWarning($"Enemy AI: Could not find icon at index {indexToHide} to hide.");
+                     }
+                 }
+                 // Optional: Add delay after hiding icons before ending turn
+                 // yield return new WaitForSeconds(0.5f);
+            }
+            else
+            {
+                 Debug.Log("Enemy AI: No powerups were executed this turn.");
+            }
+             Debug.Log("Enemy AI: Finished powerup execution sequence.");
         }
 
         // Notify GameManager to transition to the next state (e.g., back to Matching)
+        // Ensure this happens *after* all potential actions and delays
         if (gameManager != null)
         {
              Debug.Log("Enemy AI: Notifying GameManager to transition state back to Matching.");

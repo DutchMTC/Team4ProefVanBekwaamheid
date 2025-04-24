@@ -1,5 +1,6 @@
 using UnityEngine;
 using Team4ProefVanBekwaamheid.TurnBasedStrategy;
+using System.Collections.Generic; // Added for List<>
 
 namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
 {
@@ -7,9 +8,11 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
     {
         [SerializeField] private int _range; // The range of the power-up
         private TileSelection _tileSelection; // Reference to the TileSelection script
-        private TileOccupants _tileOccupants; // Reference to the TileOccupants script
-        private bool _isWaitingForSelection = false;        
-        
+        private TileOccupants _tileOccupants; // Reference to the TileOccupants script (the user of the powerup)
+        private bool _isWaitingForSelection = false;
+        private TileSelection.UserType _currentUserType; // Store the user type
+        private TileOccupants _targetOccupantForAI; // Store the target for AI
+
         void Start()
         {
             _tileSelection = FindObjectOfType<TileSelection>();
@@ -21,15 +24,13 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
             }
         }      
 
-        void Update()
+        // Removed Update method with debug key press
+        // Added optional targetOccupant parameter for AI
+        public void MovementPowerUpSelected(PowerUpState _state, TileSelection.UserType userType, TileOccupants targetOccupant = null)
         {
-            if (Input.GetKeyDown(KeyCode.M)) // 'M' for Movement
-            {
-                MovementPowerUpSelected(PowerUpState.Usable); // Example usage, replace with actual state
-            }
-        } 
-        public void MovementPowerUpSelected(PowerUpState _state)
-        {
+            _currentUserType = userType; // Store user type
+            _targetOccupantForAI = targetOccupant; // Store target for AI
+
             // Movement moet hierin aangeroepen worden en range moet hierin bepaald worden
             switch (_state)
             {
@@ -51,19 +52,74 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
                 _isWaitingForSelection = false;
                 _tileSelection.OnTileSelected.RemoveListener(HandleTileSelected);
                 return;
-            }            // Start new selection
-            _isWaitingForSelection = true;
-            _tileSelection.OnTileSelected.AddListener(HandleTileSelected);
+            }
+
+            // Start tile selection process to find valid tiles
             Vector2Int currentPos = new Vector2Int(_tileOccupants.row, _tileOccupants.column);
-            _tileSelection.StartTileSelection(_range, currentPos, TileSelection.SelectionType.Movement, TileSelection.UserType.Player);
-        }          
+            _tileSelection.StartTileSelection(_range, currentPos, TileSelection.SelectionType.Movement, userType);
+
+            if (userType == TileSelection.UserType.Enemy && _targetOccupantForAI != null)
+            {
+                // AI executes immediately
+                List<TileSettings> selectableTiles = _tileSelection.GetSelectableTiles();
+                TileSettings bestTile = FindBestMoveTileTowardsTarget(selectableTiles, _targetOccupantForAI);
+
+                if (bestTile != null)
+                {
+                    Debug.Log($"Enemy AI (Movement): Moving towards player at ({_targetOccupantForAI.row}, {_targetOccupantForAI.column}). Best tile: ({bestTile.row}, {bestTile.column})");
+                    Move(bestTile);
+                }
+                else
+                {
+                    Debug.LogWarning("Enemy AI (Movement): Could not find a valid tile to move towards the player.");
+                    // Optionally, pick a random valid tile or do nothing
+                }
+                _tileSelection.CancelTileSelection(); // Clean up selection state
+            }
+            else // Player waits for input
+            {
+                _isWaitingForSelection = true;
+                _tileSelection.OnTileSelected.AddListener(HandleTileSelected);
+            }
+        }
+
+        // This is now only called for Player input
         private void HandleTileSelected(TileSettings selectedTile)
         {
-            if (!_isWaitingForSelection) return;
+            if (!_isWaitingForSelection) return; // Only proceed if waiting for player input
 
             _isWaitingForSelection = false;
             _tileSelection.OnTileSelected.RemoveListener(HandleTileSelected);
+
+            // Player Logic: Move to the selected tile
             Move(selectedTile);
+
+            // AI logic is handled directly in MovementPowerUpSelected, so this part is no longer needed here.
+            /*
+            if (_currentUserType == TileSelection.UserType.Enemy && _targetOccupantForAI != null)
+            {
+                 List<TileSettings> selectableTiles = _tileSelection.GetSelectableTiles();
+                 TileSettings bestTile = FindBestMoveTileTowardsTarget(selectableTiles, _targetOccupantForAI);
+                 // Debug.LogWarning("Enemy AI (Movement): AI targeting needs TileSelection.GetSelectableTiles() or equivalent."); // Removed warning
+
+                 if (bestTile != null)
+                 {
+                     Debug.Log($"Enemy AI (Movement): Moving towards player at ({_targetOccupantForAI.row}, {_targetOccupantForAI.column}). Best tile: ({bestTile.row}, {bestTile.column})");
+                     Move(bestTile);
+                 }
+                 else
+                 {
+                     Debug.LogWarning("Enemy AI (Movement): Could not find a valid tile to move towards the player.");
+                     // Optionally, pick a random valid tile or do nothing
+                     Move(selectedTile); // Fallback to originally selected (might be null or invalid for AI)
+                 }
+                 _tileSelection.CancelTileSelection(); // Ensure selection mode is exited
+            }
+            else // Player Logic
+            {
+                 // This is handled above
+            }
+            */
         }
 
         private void Move(TileSettings targetTile)
@@ -79,6 +135,31 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
                 Debug.Log("Selected tile is occupied or invalid, cannot move here.");
             }
         }
+
+        // AI Helper: Find the best tile to move towards the target
+        private TileSettings FindBestMoveTileTowardsTarget(List<TileSettings> selectableTiles, TileOccupants target)
+        {
+            TileSettings bestTile = null;
+            float minDistanceSq = float.MaxValue;
+            Vector2Int targetPos = new Vector2Int(target.row, target.column);
+
+            foreach (var tile in selectableTiles)
+            {
+                if (tile.occupantType == TileSettings.OccupantType.None) // Ensure tile is empty
+                {
+                    Vector2Int tilePos = new Vector2Int(tile.row, tile.column);
+                    float distanceSq = Vector2Int.Distance(tilePos, targetPos); // Using squared distance for efficiency
+
+                    if (distanceSq < minDistanceSq)
+                    {
+                        minDistanceSq = distanceSq;
+                        bestTile = tile;
+                    }
+                }
+            }
+            return bestTile;
+        }
+
 
         void OnDestroy()
         {

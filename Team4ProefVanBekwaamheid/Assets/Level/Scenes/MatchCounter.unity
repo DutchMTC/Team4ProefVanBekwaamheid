@@ -177,6 +177,10 @@ GameObject:
   - component: {fileID: 71067642}
   - component: {fileID: 71067644}
   - component: {fileID: 71067643}
+  - component: {fileID: 71067648}
+  - component: {fileID: 71067647}
+  - component: {fileID: 71067646}
+  - component: {fileID: 71067645}
   m_Layer: 2
   m_Name: Enemy
   m_TagString: Untagged
@@ -240,6 +244,97 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &71067645
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 71067641}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea9afb50a115ca84ba3e175a1be312ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _range: 0
+--- !u!114 &71067646
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 71067641}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93983feb76359804fbbcdddfeb10c003, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _range: 1
+  _baseDamage: 10
+--- !u!114 &71067647
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 71067641}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b4018ec2838df549b9d6af032b748b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _range: 0
+  _wallPrefab: {fileID: 4507598483232769260, guid: 90862bad46d4cbe4e9de12bf2e29a56a,
+    type: 3}
+  _positionOffset: {x: 0, y: 0, z: 0}
+--- !u!114 &71067648
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 71067641}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 58d875c4ac0961b45a5d6583e2855387, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameManager: {fileID: 1216284609}
+  powerupDisplayIcons:
+  - {fileID: 1589255835}
+  - {fileID: 1257768700}
+  - {fileID: 204145375}
+  powerupSpriteMappings:
+  - type: 0
+    sprites:
+      unusable: {fileID: 21300000, guid: 968dada4dd95eb04fa69c6f243006cc3, type: 3}
+      usable: {fileID: 21300000, guid: c563f3dd04eb8a44aa1d037402fd83ea, type: 3}
+      charged: {fileID: 21300000, guid: 2075ab53137849a4b9b295909e18a5ef, type: 3}
+      supercharged: {fileID: 21300000, guid: 95804c84c4b0b7a469789871f615f7fe, type: 3}
+  - type: 1
+    sprites:
+      unusable: {fileID: 21300000, guid: 226a3f48890ffe441a9885498ccddad8, type: 3}
+      usable: {fileID: 21300000, guid: 20ebe8d3fe4b8004f905617c2fb6ad52, type: 3}
+      charged: {fileID: 21300000, guid: 14eb20062cc3cf2488339c5e2a657685, type: 3}
+      supercharged: {fileID: 21300000, guid: e95ccad5ddfc6f44cba06a76c1aacdb3, type: 3}
+  - type: 2
+    sprites:
+      unusable: {fileID: 21300000, guid: 6484b75c62e1e6f43a1be5e75fbcf9f3, type: 3}
+      usable: {fileID: 21300000, guid: f5c2e27045df3654ca63adc038dd924a, type: 3}
+      charged: {fileID: 21300000, guid: 36b2861e22c98644990bdbbb91900254, type: 3}
+      supercharged: {fileID: 21300000, guid: eb6efc18b9098504d938a55f2ac73e64, type: 3}
+  - type: 3
+    sprites:
+      unusable: {fileID: 21300000, guid: 80a9263cb448fc94f8ed2074c885d5cc, type: 3}
+      usable: {fileID: 21300000, guid: a49d1c1729e0ec446896df353046d59c, type: 3}
+      charged: {fileID: 21300000, guid: 4feed9b43fa656e4685d137b58f2e0e9, type: 3}
+      supercharged: {fileID: 21300000, guid: 3dc7d927142e9f54b834473164613642, type: 3}
+  powerupDisplayParent: {fileID: 1817170674}
+  playerOccupants: {fileID: 428523646}
+  verticalOffset: 0
+  probabilityToSelectThreePowerups: 0.2
+  probabilityCharged: 0.4
+  probabilitySupercharged: 0.1
 --- !u!1 &74103058
 GameObject:
   m_ObjectHideFlags: 0
@@ -3674,7 +3769,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1748037593
 Transform:
   m_ObjectHideFlags: 0
@@ -3697,7 +3792,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1748037592}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 58d875c4ac0961b45a5d6583e2855387, type: 3}
   m_Name: 
@@ -3733,6 +3828,7 @@ MonoBehaviour:
       charged: {fileID: 21300000, guid: 4feed9b43fa656e4685d137b58f2e0e9, type: 3}
       supercharged: {fileID: 21300000, guid: 3dc7d927142e9f54b834473164613642, type: 3}
   powerupDisplayParent: {fileID: 1817170674}
+  playerOccupants: {fileID: 0}
   verticalOffset: 0
   probabilityToSelectThreePowerups: 0.2
   probabilityCharged: 0.4

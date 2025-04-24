@@ -173,6 +173,17 @@ public class TileOccupants : MonoBehaviour
         Debug.LogWarning($"No tile found at grid position ({row}, {column})");
     }
 
+    /// <summary>
+    /// Returns the TileSettings of the tile this occupant is currently on.
+    /// </summary>
+    /// <returns>The current TileSettings, or null if not on a valid tile.</returns>
+    public TileSettings GetCurrentTile()
+    {
+        // Ensure the tile reference is up-to-date, although MoveToTile should handle this.
+        // FindTileAtCoordinates(); // Optional: Uncomment if you suspect the reference might become stale.
+        return _tileSettings;
+    }
+
     public void TakeDamage(int amount)
     {
         health -= amount;

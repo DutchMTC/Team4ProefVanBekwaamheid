@@ -1217,7 +1217,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 650329066}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Match3 Environment
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1411,6 +1411,7 @@ GameObject:
   - component: {fileID: 746859427}
   - component: {fileID: 746859426}
   - component: {fileID: 746859429}
+  - component: {fileID: 746859430}
   m_Layer: 0
   m_Name: TopCamera
   m_TagString: Untagged
@@ -1457,7 +1458,7 @@ Camera:
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 55
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
@@ -1503,6 +1504,27 @@ MonoBehaviour:
   maxX: 4
   minY: 19
   maxY: 21
+--- !u!95 &746859430
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 746859425}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: c578fc4914e04da489f3263660e2d3dd, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &792388165
 GameObject:
   m_ObjectHideFlags: 0
@@ -2421,7 +2443,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1074381738}
   - component: {fileID: 1074381737}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: T_Match3Board2_Grid
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3725,7 +3747,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1776560425}
   - component: {fileID: 1776560424}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: T_Match3Board2_Board
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3887,7 +3909,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1832730704}
   - component: {fileID: 1832730703}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Match3 Grid
   m_TagString: Untagged
   m_Icon: {fileID: 0}

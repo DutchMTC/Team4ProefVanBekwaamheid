@@ -3161,9 +3161,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameManager: {fileID: 1216284609}
   powerupDisplayIcons: []
-  powerupIconMappings: []
+  powerupSpriteMappings: []
+  powerupDisplayParent: {fileID: 0}
+  verticalOffset: 2
   probabilityToSelectThreePowerups: 0.2
-  probabilityToSupercharge: 0.15
+  probabilityCharged: 0.3
+  probabilitySupercharged: 0.1
 --- !u!1 &1776560423
 GameObject:
   m_ObjectHideFlags: 0

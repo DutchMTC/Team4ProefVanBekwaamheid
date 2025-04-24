@@ -2,31 +2,101 @@ using UnityEngine;
 
 public class TileOccupants : MonoBehaviour
 {
-    [SerializeField] private GridGenerator _gridGenerator; // Reference to the grid generator
-    public TileSettings.OccupantType myOccupantType; // What type of occupant this GameObject is
+    [SerializeField] private GridGenerator _gridGenerator;
+    public TileSettings.OccupantType myOccupantType;
     public int row;
     public int column;
     private GameObject _selectedTile;
     private TileSettings _tileSettings;
+    private Renderer _renderer;
+    private int _initializationAttempts = 0;
+    private const int MAX_INITIALIZATION_ATTEMPTS = 5;
    
-   [SerializeField] private int health = 30;       
-   void Start()
+    [SerializeField] private int health = 30;       
+    
+    void Start()
     {
+        _renderer = GetComponent<Renderer>();
+        // Wait longer for initialization in builds
+        float delay = Application.isEditor ? 0.1f : 0.3f;
+        Invoke("InitializePosition", delay);
+    }
+
+    private void InitializePosition()
+    {
+        _initializationAttempts++;
+        
+        // Prevent infinite retry loops
+        if (_initializationAttempts > MAX_INITIALIZATION_ATTEMPTS)
+        {
+            Debug.LogError($"Failed to initialize {gameObject.name} after {MAX_INITIALIZATION_ATTEMPTS} attempts");
+            return;
+        }
+
+        // Ensure GridGenerator is initialized
         if (_gridGenerator == null)
         {
             _gridGenerator = FindObjectOfType<GridGenerator>();
             if (_gridGenerator == null)
             {
                 Debug.LogError("GridGenerator reference not found!");
+                if (_initializationAttempts < MAX_INITIALIZATION_ATTEMPTS)
+                {
+                    Invoke("InitializePosition", 0.2f); // Retry initialization
+                }
                 return;
             }
         }
-        
+
+        // First ensure the transform is properly set
+        if (!gameObject.activeInHierarchy)
+        {
+            gameObject.SetActive(true);
+        }
+
+        // Ensure renderer is initialized
+        if (_renderer == null)
+        {
+            _renderer = GetComponent<Renderer>();
+        }
+
         // Find and initialize the starting tile's occupation state
         FindTileAtCoordinates();
         
-        // Set initial position based on current row/column if they're set
-        MoveToTile();
+        if (_selectedTile != null)
+        {
+            // Set initial position based on current row/column
+            MoveToTile();
+            
+            // Force rendering update
+            transform.position = transform.position;
+            if (_renderer != null)
+            {
+                StartCoroutine(ForceRendererRefresh());
+            }
+        }
+        else
+        {
+            // If we still don't have a valid tile, retry after a short delay
+            Debug.Log($"Retrying initialization - tile not found yet (Attempt {_initializationAttempts}/{MAX_INITIALIZATION_ATTEMPTS})");
+            if (_initializationAttempts < MAX_INITIALIZATION_ATTEMPTS)
+            {
+                Invoke("InitializePosition", 0.2f);
+            }
+        }
+    }
+
+    private System.Collections.IEnumerator ForceRendererRefresh()
+    {
+        _renderer.enabled = false;
+        yield return new WaitForEndOfFrame();
+        _renderer.enabled = true;
+        yield return new WaitForEndOfFrame();
+        // Double-check visibility
+        if (!_renderer.enabled)
+        {
+            _renderer.enabled = true;
+        }
     }void Update()
     {
         // Only search for a new tile if the row or column values have changed
@@ -64,11 +134,22 @@ public class TileOccupants : MonoBehaviour
 
     private void FindTileAtCoordinates()
     {
+        // Ensure GridGenerator is initialized
+        if (_gridGenerator == null)
+        {
+            _gridGenerator = FindObjectOfType<GridGenerator>();
+            if (_gridGenerator == null)
+            {
+                Debug.LogError("GridGenerator reference not found in FindTileAtCoordinates!");
+                return;
+            }
+        }
+
         // Clear occupancy of old tile if we're moving
         if (_tileSettings != null)
         {
             _tileSettings.occupantType = TileSettings.OccupantType.None;
-             _tileSettings.OccupationChangedEvent.Invoke(); // Trigger the occupation change event
+            _tileSettings.OccupationChangedEvent.Invoke(); // Trigger the occupation change event
         }
 
         // Search through all tiles in the grid

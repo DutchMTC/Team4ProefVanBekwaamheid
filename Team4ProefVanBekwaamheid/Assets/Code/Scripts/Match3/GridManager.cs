@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 
 public class GridManager : MonoBehaviour
 {
@@ -10,24 +11,32 @@ public class GridManager : MonoBehaviour
     public int gridWidth = 8;
     public int gridHeight = 8;
     public float swapSpeed = 0.3f;
-    [Range(0f, 1f)]
-    public float rarityInfluence = 0.7f; // How much rarity affects spawn chances (0 = no effect, 1 = maximum effect)
-    public int matchAmount = 10;
-    public bool gridActive; // Flag to control grid activity
+    public float fallSpeed = 0.5f; 
+    public AnimationCurve fallEaseCurve; 
+    [Range(0f, 1f)]    public float rarityInfluence = 0.7f; 
+
+    [Header("Swap Limit Settings")] 
+    public int swapLimit = 10;      
+    public int currentSwaps;        
+    public TMP_Text matchCounterText; 
+    public bool gridActive; 
 
 
     private bool _isSwapping = false;
-    private bool _isFalling = false;    
+    private bool _isFalling = false;
+    private int _activeFallingAnimations = 0; 
     private Vector2 _touchStart;
     private Block _selectedBlock;
     private Block _block1SwappedWith;
     private Block _block2SwappedWith;
-    private int _currentMatches;
 
     private void Start()
     {
         Blocks = new Block[gridWidth, gridHeight];
         InitializeGrid();
+        // Initialize text based on swaps
+        if (matchCounterText != null) matchCounterText.text = (swapLimit - currentSwaps).ToString();
+        else Debug.LogError("MatchCounterText is not assigned in the Inspector!");
     }
 
     private void InitializeGrid()
@@ -196,7 +205,7 @@ public class GridManager : MonoBehaviour
     {
         Block blockComponent = blockPrefab.GetComponent<Block>();
         
-        // Step 1: Separate valid and invalid types (those that would cause matches)
+        // Separate valid and invalid types (those that would cause matches)
         List<Block.BlockTypeData> validTypes = new List<Block.BlockTypeData>();
         List<Block.BlockTypeData> invalidTypes = new List<Block.BlockTypeData>();
         
@@ -212,29 +221,27 @@ public class GridManager : MonoBehaviour
             }
         }
         
-        // If there are no valid types, we have no choice but to create a match
+        // If there are no valid types, create a match
         if (validTypes.Count == 0)
         {
             Debug.LogWarning($"No valid block types at position ({x}, {y}), will create a match");
             validTypes = invalidTypes;
         }
         
-        // Step 2: Calculate total rarity values
+        // Calculate total rarity values
         int totalRarity = 0;
         foreach (var blockTypeData in validTypes)
         {
             totalRarity += blockTypeData.rarity;
         }
         
-        // Step 3: Use a two-tier selection system
-        // First, give all types a base chance (1-rarityInfluence)
-        // Then, distribute the remaining probability (rarityInfluence) based on rarity
+        // Use a two-tier selection system
+        // Give all types a base chance (1-rarityInfluence)
+        // Distribute the remaining probability (rarityInfluence) based on rarity
         float randomValue = Random.value;
         
-        // If we're using rarity influence
         if (rarityInfluence > 0 && randomValue <= rarityInfluence)
         {
-            // Using rarity-based probabilities
             int randomRarity = Random.Range(1, totalRarity + 1);
             int currentRarity = 0;
             
@@ -249,7 +256,6 @@ public class GridManager : MonoBehaviour
         }
         else 
         {
-            // Using equal probabilities
             int randomIndex = Random.Range(0, validTypes.Count);
             return validTypes[randomIndex].type;
         }
@@ -268,11 +274,7 @@ public class GridManager : MonoBehaviour
         block.Initialize(randomType, x, y);
         Blocks[x, y] = block;
         
-        // If creating a block above the grid (for falling animation), set the falling state
-        if (block.transform.position.y > y)
-        {
-            _isFalling = true;
-        }
+        // Initial position for newly spawned blocks will be set in StartFalling
     }
 
     private void Update()
@@ -389,7 +391,6 @@ public class GridManager : MonoBehaviour
         block1.SetTargetPosition(new Vector2(block1.column, block1.row));
         block2.SetTargetPosition(new Vector2(block2.column, block2.row));
 
-        // Check for matches after swapping
         Invoke(nameof(CheckMatches), swapSpeed);
     }
 
@@ -427,7 +428,13 @@ public class GridManager : MonoBehaviour
         List<Block> matchingBlocks = FindMatches();
         if (matchingBlocks.Count >= 3)
         {
-            // --- Award Power-ups for any match ---
+            currentSwaps++;
+            if (matchCounterText != null)
+            {
+                matchCounterText.text = (swapLimit - currentSwaps).ToString();
+            }
+            Debug.Log($"Valid swap performed (Match Found). Current Swaps: {currentSwaps}/{swapLimit}");
+
             Block representativeBlock = null;
             foreach (Block block in matchingBlocks)
             {
@@ -437,7 +444,6 @@ public class GridManager : MonoBehaviour
                     break;
                 }
             }
-            // If match was all jokers (edge case), use the first one
             if (representativeBlock == null && matchingBlocks.Count > 0) {
                  representativeBlock = matchingBlocks[0];
             }
@@ -445,13 +451,10 @@ public class GridManager : MonoBehaviour
             if (representativeBlock != null) {
                 int powerUpAmount = matchingBlocks.Count;
                 PowerUpInventory.Instance?.AddPowerUps(representativeBlock.GetPowerUpType(), powerUpAmount);
-                _currentMatches ++;
                 Debug.Log($"Match of {matchingBlocks.Count} blocks (type: {representativeBlock.type}) - Awarded {powerUpAmount} {representativeBlock.GetPowerUpType()} power-ups");
             }
-            // --- End Power-up Award ---
 
-            // Continue with regular match handling
-            _isSwapping = false; // Reset swap state since a match occurred
+            _isSwapping = false; 
             _block1SwappedWith = null;
             _block2SwappedWith = null;
 
@@ -462,98 +465,189 @@ public class GridManager : MonoBehaviour
                 Blocks[pos.x, pos.y] = null;
                 Destroy(block.gameObject);
             }
-            StartFalling();
+            StartCoroutine(ProcessFallingAndCheckMatches());
         }
         else if (_block1SwappedWith != null && _block2SwappedWith != null)
         {
             SwapBlocksBack(_block1SwappedWith, _block2SwappedWith);
-            _isFalling = false; // Reset falling state when swapping back
+            // _isFalling is reset in ResetSwapState after animation
         }
         else
         {
-            _isSwapping = false;
-            _isFalling = false; // Reset falling state when no matches found
+             ResetSwapState(); 
         }
     }
 
-    private void StartFalling()
+    private System.Collections.IEnumerator ProcessFallingAndCheckMatches()
     {
-        _isFalling = true; // Set falling state when blocks start falling
-        bool needsMoreFalling;
+        if (_isFalling) yield break; 
+        _isFalling = true;
+        _activeFallingAnimations = 0;
+
+        bool blocksMoved;
         do
         {
-            needsMoreFalling = false;
+            blocksMoved = false;
+            List<System.Collections.IEnumerator> fallAnimations = new List<System.Collections.IEnumerator>();
 
-            // Move blocks down if there's empty space below
+            // Handle existing blocks falling down
             for (int x = 0; x < gridWidth; x++)
             {
-                for (int y = 0; y < gridHeight - 1; y++)
-                {
-                    if (Blocks[x, y] == null)
-                    {
-                        // Look for the next non-null block above
-                        for (int above = y + 1; above < gridHeight; above++)
-                        {
-                            if (Blocks[x, above] != null)
-                            {
-                                // Move block down
-                                Block block = Blocks[x, above];
-                                Blocks[x, y] = block;
-                                Blocks[x, above] = null;
-                                block.row = y;
-                                block.SetTargetPosition(new Vector2(block.column, block.row));
-                                needsMoreFalling = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Fill empty spaces at the top with new blocks
-            for (int x = 0; x < gridWidth; x++)
-            {
+                int fallTargetY = -1; 
                 for (int y = 0; y < gridHeight; y++)
                 {
-                    if (Blocks[x, y] == null)
+                    if (Blocks[x, y] == null && fallTargetY == -1)
                     {
-                        CreateBlock(x, y);
-                        Blocks[x, y].transform.position = new Vector3(x, gridHeight, 0);
-                        Blocks[x, y].SetTargetPosition(new Vector2(x, y));
-                        needsMoreFalling = true;
+                        fallTargetY = y; // 
+                    }
+                    else if (Blocks[x, y] != null && fallTargetY != -1)
+                    {
+                        // Found a block above an empty spot, make it fall
+                        Block block = Blocks[x, y];
+                        Blocks[x, fallTargetY] = block;
+                        Blocks[x, y] = null;
+                        block.row = fallTargetY;
+
+                        // Start animation
+                        Vector3 startPos = block.transform.position;
+                        Vector3 endPos = new Vector3(block.column, block.row, 0);
+                        fallAnimations.Add(AnimateBlockMovement(block, startPos, endPos, fallSpeed));
+                        _activeFallingAnimations++;
+
+                        blocksMoved = true;
+                        fallTargetY++;
                     }
                 }
             }
 
-        } while (needsMoreFalling);
+            // Spawn new blocks at the top
+            for (int x = 0; x < gridWidth; x++)
+            {
+                for (int y = gridHeight - 1; y >= 0; y--)
+                {
+                    if (Blocks[x, y] == null)
+                    {
+                        // Create new block at a consistent height above the grid
+                        Vector3 spawnPos = new Vector3(x, gridHeight, 0); // Consistent spawn height above grid
+                        GameObject blockObject = Instantiate(blockPrefab, spawnPos, Quaternion.identity);
+                        blockObject.transform.parent = transform;
 
-        // Check for new matches after falling
-        Invoke(nameof(CheckForNewMatches), swapSpeed);
+                        Block block = blockObject.GetComponent<Block>();
+                        Block.BlockType randomType = GetRandomBlockType(x, y);
+                        block.Initialize(randomType, x, y); // Initialize with final grid position
+                        Blocks[x, y] = block; // Place in array
+
+                        // Start animation
+                        Vector3 endPos = new Vector3(x, y, 0);
+                        fallAnimations.Add(AnimateBlockMovement(block, spawnPos, endPos, fallSpeed));
+                        _activeFallingAnimations++;
+
+                        blocksMoved = true;
+                    }
+                    else
+                    {
+                        // Found a block, no need to check lower in this column for spawning
+                        break;
+                    }
+                }
+            }
+
+            // Wait for all animations in this pass to complete
+            if (fallAnimations.Count > 0)
+            {
+                // Start all coroutines for this pass
+                foreach (var animCoroutine in fallAnimations)
+                {
+                    StartCoroutine(animCoroutine);
+                }
+
+                // Wait until all animations are done
+                yield return new WaitUntil(() => _activeFallingAnimations == 0);
+            }
+
+
+            // After blocks fall/spawn, check for new matches immediately
+            List<Block> newMatches = FindMatches();
+            if (newMatches.Count >= 3)
+            {
+                Block representativeBlock = null;
+                foreach (Block block in newMatches)
+                {
+                    if (!block.IsJoker)
+                    {
+                        representativeBlock = block;
+                        break;
+                    }
+                }
+                if (representativeBlock == null && newMatches.Count > 0) {
+                     representativeBlock = newMatches[0];
+                }
+
+                if (representativeBlock != null) {
+                    int powerUpAmount = newMatches.Count;
+                    PowerUpInventory.Instance?.AddPowerUps(representativeBlock.GetPowerUpType(), powerUpAmount);
+                    Debug.Log($"Cascade Match of {newMatches.Count} blocks (type: {representativeBlock.type}) - Awarded {powerUpAmount} {representativeBlock.GetPowerUpType()} power-ups");
+                }
+
+                foreach (Block block in newMatches)
+                {
+                    if (Blocks[block.column, block.row] == block) 
+                    {
+                        Blocks[block.column, block.row] = null;
+                        Destroy(block.gameObject);
+                    }
+                }
+                blocksMoved = true;
+            }
+            else
+            {
+                blocksMoved = false;
+            }
+
+        } while (blocksMoved); // Loop if blocks moved (either fell or new matches were cleared)
+
+        _isFalling = false; // All falling and cascading is complete
+
+        // Final check for game state transition based on swaps
+        if (GameManager.Instance.State == GameState.Matching && currentSwaps >= swapLimit)
+        {
+            GameManager.Instance.UpdateGameState(GameState.Player);
+        }
     }
 
-    private void CheckForNewMatches()
+
+    // Animates a block's movement from startPos to endPos over a given duration.
+    private System.Collections.IEnumerator AnimateBlockMovement(Block block, Vector3 startPos, Vector3 endPos, float duration)
     {
-        List<Block> newMatches = FindMatches();
-        if (newMatches.Count >= 3)
-        {
-            foreach (Block block in newMatches)
-            {
-                Vector2Int pos = new Vector2Int(block.column, block.row);
-                Blocks[pos.x, pos.y] = null;
-                Destroy(block.gameObject);
-            }
-            StartFalling();
-        }
-        else
-        {
-            _isFalling = false;
+        if (block != null) block.IsFalling = true; 
+        float timeElapsed = 0f;
 
-            if(GameManager.Instance.State == GameState.Matching && _currentMatches >= matchAmount)
-            {
-                GameManager.Instance.UpdateGameState(GameState.Player);
-            }
+        while (timeElapsed < duration)
+        {
+            if (block == null) yield break;
+
+            float t = timeElapsed / duration;
+            float easedT = fallEaseCurve != null && fallEaseCurve.keys.Length > 0 ? fallEaseCurve.Evaluate(t) : t; // Apply easing
+
+            block.transform.position = Vector3.LerpUnclamped(startPos, endPos, easedT); // Use LerpUnclamped for potential overshoot
+
+            timeElapsed += Time.deltaTime;
+            yield return null;
         }
+
+        // Ensure final position is exact
+        if (block != null)
+        {
+             block.transform.position = endPos;
+             block.SyncTargetPosition();
+             block.IsFalling = false; 
+        }
+
+        // Decrement counter when animation finishes
+        _activeFallingAnimations--;
+         if (_activeFallingAnimations < 0) _activeFallingAnimations = 0;
     }
+
 
     private List<Block> FindMatches()
     {
@@ -570,24 +664,23 @@ public class GridManager : MonoBehaviour
 
                 if (block1 != null && block2 != null && block3 != null)
                 {
-                    // For jokers, we need to ensure they're actually connecting same-colored blocks
+
                     bool isMatch = false;
                     
                     if (block1.IsJoker)
                     {
-                        isMatch = block2.type == block3.type; // Joker must connect two same blocks
+                        isMatch = block2.type == block3.type;
                     }
                     else if (block2.IsJoker)
                     {
-                        isMatch = block1.type == block3.type; // Joker in middle must connect same blocks
+                        isMatch = block1.type == block3.type; 
                     }
                     else if (block3.IsJoker)
                     {
-                        isMatch = block1.type == block2.type; // Joker must connect two same blocks
+                        isMatch = block1.type == block2.type;
                     }
                     else
                     {
-                        // No jokers - all blocks must match
                         isMatch = block1.type == block2.type && block2.type == block3.type;
                     }
 
@@ -609,7 +702,7 @@ public class GridManager : MonoBehaviour
                             if (nextBlock.IsJoker)
                             {
                                 // Get the last non-joker block type from the match
-                                Block.BlockType matchType = Block.BlockType.Blue; // default
+                                Block.BlockType matchType = Block.BlockType.Blue; 
                                 bool foundType = false;
                                 for (int j = i - 1; j >= x && !foundType; j--)
                                 {
@@ -619,7 +712,7 @@ public class GridManager : MonoBehaviour
                                         foundType = true;
                                     }
                                 }
-                                canExtendMatch = foundType; // only extend if we found a type to match
+                                canExtendMatch = foundType;
                             }
                             else
                             {
@@ -663,15 +756,15 @@ public class GridManager : MonoBehaviour
                     
                     if (block1.IsJoker)
                     {
-                        isMatch = block2.type == block3.type; // Joker must connect two same blocks
+                        isMatch = block2.type == block3.type; 
                     }
                     else if (block2.IsJoker)
                     {
-                        isMatch = block1.type == block3.type; // Joker in middle must connect same blocks
+                        isMatch = block1.type == block3.type; 
                     }
                     else if (block3.IsJoker)
                     {
-                        isMatch = block1.type == block2.type; // Joker must connect two same blocks
+                        isMatch = block1.type == block2.type; 
                     }
                     else
                     {
@@ -691,13 +784,10 @@ public class GridManager : MonoBehaviour
                             Block nextBlock = Blocks[x, i];
                             if (nextBlock == null) break;
                             
-                            // For longer matches, if we have a joker in the sequence,
-                            // it must connect to blocks of the same type
                             bool canExtendMatch = false;
                             if (nextBlock.IsJoker)
                             {
-                                // Get the last non-joker block type from the match
-                                Block.BlockType matchType = Block.BlockType.Blue; // default
+                                Block.BlockType matchType = Block.BlockType.Blue;
                                 bool foundType = false;
                                 for (int j = i - 1; j >= y && !foundType; j--)
                                 {
@@ -707,7 +797,7 @@ public class GridManager : MonoBehaviour
                                         foundType = true;
                                     }
                                 }
-                                canExtendMatch = foundType; // only extend if we found a type to match
+                                canExtendMatch = foundType;
                             }
                             else
                             {
@@ -745,9 +835,6 @@ public class GridManager : MonoBehaviour
         {
             return block1.type == block2.type;
         }
-
-        // We have at least one joker - but we'll check during the match-3 evaluation
-        // if it's actually connecting same-colored blocks
         return true;
     }
 

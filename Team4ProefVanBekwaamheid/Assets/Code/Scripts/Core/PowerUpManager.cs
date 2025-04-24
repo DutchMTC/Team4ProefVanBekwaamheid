@@ -71,6 +71,7 @@ public class PowerUpManager : MonoBehaviour
 
     // Power Up References
     [SerializeField] private MovementPowerUp _movementPowerUp; // Reference to the PowerUpInventory script
+    [SerializeField] private AttackPowerUp _attackPowerUp; // Reference to the PowerUpInventory script
 
 
     private void Awake()
@@ -719,6 +720,7 @@ public class PowerUpManager : MonoBehaviour
 
     private void HandleSword(PowerUpInventory.PowerUpType type, PowerUpState state, PowerUpUser user)
     {
+        _attackPowerUp.AttackPowerUpSelected(state); // Call the attack power-up selection method
         Debug.Log($"Handling {type} effect. State: {state}, User: {user}");
         // TODO: Pass type, state, user to the actual effect execution script/system
     }

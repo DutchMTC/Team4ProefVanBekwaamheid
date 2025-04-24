@@ -19,7 +19,15 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
             {
                 Debug.LogError("TileSelection script not found!");
             }
-        }       
+        }      
+
+        void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.M)) // 'M' for Movement
+            {
+                MovementPowerUpSelected(PowerUpState.Usable); // Example usage, replace with actual state
+            }
+        } 
         public void MovementPowerUpSelected(PowerUpState _state)
         {
             // Movement moet hierin aangeroepen worden en range moet hierin bepaald worden
@@ -43,13 +51,11 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
                 _isWaitingForSelection = false;
                 _tileSelection.OnTileSelected.RemoveListener(HandleTileSelected);
                 return;
-            }
-
-            // Start new selection
+            }            // Start new selection
             _isWaitingForSelection = true;
             _tileSelection.OnTileSelected.AddListener(HandleTileSelected);
             Vector2Int currentPos = new Vector2Int(_tileOccupants.row, _tileOccupants.column);
-            _tileSelection.StartTileSelection(_range, currentPos);
+            _tileSelection.StartTileSelection(_range, currentPos, TileSelection.SelectionType.Movement, TileSelection.UserType.Player);
         }          
         private void HandleTileSelected(TileSettings selectedTile)
         {

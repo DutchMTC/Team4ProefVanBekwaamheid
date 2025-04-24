@@ -4,6 +4,18 @@ using System.Collections.Generic;
 
 public class TileSelection : MonoBehaviour
 {
+    public enum SelectionType
+    {
+        Movement,
+        Attack
+    }
+
+    public enum UserType
+    {
+        Player,
+        Enemy
+    }
+
     public UnityEvent<TileSettings> OnTileSelected = new UnityEvent<TileSettings>();
     
     [SerializeField] private Camera _topCamera;
@@ -53,14 +65,12 @@ public class TileSelection : MonoBehaviour
                 SelectTile(ray);
             }
         }
-    }
-
-    public void StartTileSelection(int range, Vector2Int currentPosition)
+    }    public void StartTileSelection(int range, Vector2Int currentPosition, SelectionType selectionType, UserType userType)
     {
         ClearTilesInRange();
         _isSelectionEnabled = true;
         _hasSelectedTile = false;
-        FindTilesInRange(range, currentPosition.x, currentPosition.y);
+        FindTilesInRange(range, currentPosition.x, currentPosition.y, selectionType, userType);
     }
 
     public void CancelTileSelection()
@@ -70,7 +80,7 @@ public class TileSelection : MonoBehaviour
         _hasSelectedTile = false;
     }
 
-    private void FindTilesInRange(int range, int currentRow, int currentColumn)
+    private void FindTilesInRange(int range, int currentRow, int currentColumn, SelectionType selectionType, UserType userType)
     {
         for (int row = currentRow - range; row <= currentRow + range; row++)
         {
@@ -79,12 +89,29 @@ public class TileSelection : MonoBehaviour
                 if (IsTileInBounds(row, column))
                 {
                     TileSettings tile = FindTileAtCoordinates(row, column);
-                    if (tile != null && 
-                        tile.occupantType == TileSettings.OccupantType.None &&
-                        IsValidMovement(currentRow, currentColumn, row, column, range))
+                    if (tile != null && IsValidMovement(currentRow, currentColumn, row, column, range))
                     {
-                        _tilesInRange.Add(tile);
-                        HighlightTile(row, column);
+                        bool isValidTile = false;
+                        
+                        switch (selectionType)
+                        {
+                            case SelectionType.Movement:
+                                isValidTile = tile.occupantType == TileSettings.OccupantType.None;
+                                break;
+                            
+                            case SelectionType.Attack:
+                                if (userType == UserType.Player)
+                                    isValidTile = tile.occupantType == TileSettings.OccupantType.Enemy;
+                                else
+                                    isValidTile = tile.occupantType == TileSettings.OccupantType.Player;
+                                break;
+                        }
+
+                        if (isValidTile)
+                        {
+                            _tilesInRange.Add(tile);
+                            HighlightTile(row, column);
+                        }
                     }
                 }
             }
@@ -116,6 +143,7 @@ public class TileSelection : MonoBehaviour
                 _hasSelectedTile = true;
                 _tileSettings = hitTile;
                 OnTileSelected.Invoke(hitTile);
+                _tileSettings.getObjects();
                 ClearTilesInRange();
             }
             else
@@ -124,15 +152,13 @@ public class TileSelection : MonoBehaviour
                 _selectedTile = null;
             }
         }
-    }
-
-    public void ClearTilesInRange()
+    }    public void ClearTilesInRange()
     {
         foreach (var tile in _tilesInRange)
         {
             if (tile != null)
             {
-                tile.SetTileColor(_defaultTileColor);
+                tile.OccupationChangedEvent.Invoke();
             }
         }
         

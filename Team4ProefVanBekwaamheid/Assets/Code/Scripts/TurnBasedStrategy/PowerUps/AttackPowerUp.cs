@@ -1,12 +1,15 @@
 using UnityEngine;
 using Team4ProefVanBekwaamheid.TurnBasedStrategy;
+using static PowerUpManager;
+using UnityEngine.Tilemaps;
 
 namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
 {
     public class AttackPowerUp : MonoBehaviour
     {
-        [SerializeField] private int _range = 1; // Attack range
-        [SerializeField] private int _damage = 10; // Attack damage
+        [SerializeField] private int _range = 1;
+        [SerializeField] private int _baseDamage = 10;
+        private int _currentDamage;
         private TileSelection _tileSelection;
         private TileOccupants _tileOccupants;
         private bool _isWaitingForSelection = false;
@@ -24,14 +27,30 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
 
         void Update()
         {
-            if (Input.GetKeyDown(KeyCode.A)) // 'A' for Attack
+            if (Input.GetKeyDown(KeyCode.A))
             {
-                AttackPowerUpSelected();
+                AttackPowerUpSelected(PowerUpState.Usable);
             }
         }
 
-        private void AttackPowerUpSelected()
+        public void AttackPowerUpSelected(PowerUpState _state)
         {
+            switch (_state)
+            {
+                case PowerUpState.Usable:
+                    _range = 1;
+                    _currentDamage = _baseDamage;
+                    break;
+                case PowerUpState.Charged:
+                    _range = 1;
+                    _currentDamage = _baseDamage * 2;
+                    break;
+                case PowerUpState.Supercharged:
+                    _range = 2;
+                    _currentDamage = _baseDamage * 3;
+                    break;
+            }
+
             if (_isWaitingForSelection)
             {
                 // Cancel current selection
@@ -45,7 +64,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
             _isWaitingForSelection = true;
             _tileSelection.OnTileSelected.AddListener(HandleTileSelected);
             Vector2Int currentPos = new Vector2Int(_tileOccupants.row, _tileOccupants.column);
-            _tileSelection.StartTileSelection(_range, currentPos);
+            _tileSelection.StartTileSelection(_range, currentPos, TileSelection.SelectionType.Attack, TileSelection.UserType.Player);
         }
 
         private void HandleTileSelected(TileSettings selectedTile)
@@ -61,15 +80,17 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
         {
             if (targetTile != null && targetTile.occupantType == TileSettings.OccupantType.Enemy)
             {
-                // Here you would implement the actual attack logic
-                Debug.Log($"Attacking enemy at position ({targetTile.row}, {targetTile.column}) for {_damage} damage!");
-                
-                // Example of how you might damage an enemy
-                // var enemy = targetTile.GetComponent<EnemyHealth>();
-                // if (enemy != null)
-                // {
-                //     enemy.TakeDamage(_damage);
-                // }
+                // Get the enemy's health component and apply damage
+                var enemyHealth = targetTile.tileOccupant.GetComponent<TileOccupants>();
+                if (enemyHealth != null)
+                {
+                    enemyHealth.TakeDamage(_currentDamage);
+                    Debug.Log($"Attacked enemy for {_currentDamage} damage!");
+                }
+                else
+                {
+                    Debug.LogWarning("Enemy tile found but no Health component present!");
+                }
             }
             else
             {

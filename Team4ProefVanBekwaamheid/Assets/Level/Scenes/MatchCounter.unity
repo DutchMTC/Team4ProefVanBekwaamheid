@@ -135,6 +135,7 @@ GameObject:
   - component: {fileID: 71067645}
   - component: {fileID: 71067644}
   - component: {fileID: 71067643}
+  - component: {fileID: 71067647}
   m_Layer: 2
   m_Name: Enemy
   m_TagString: Untagged
@@ -172,9 +173,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _gridGenerator: {fileID: 318574812}
-  _myOccupantType: 2
+  myOccupantType: 2
   row: 0
   column: 4
+  health: 30
 --- !u!65 &71067644
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -246,6 +248,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 71067641}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &71067647
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 71067641}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f9620d1343bead4e843d38e18e961dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  health: 30
 --- !u!1 &74103058
 GameObject:
   m_ObjectHideFlags: 0
@@ -919,9 +934,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _gridGenerator: {fileID: 318574812}
-  _myOccupantType: 1
+  myOccupantType: 1
   row: 4
   column: 0
+  health: 30
 --- !u!114 &428523649
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -935,6 +951,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _range: 1
+--- !u!114 &428523652
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 428523643}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93983feb76359804fbbcdddfeb10c003, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _range: 1
+  _baseDamage: 10
 --- !u!1 &431951362
 GameObject:
   m_ObjectHideFlags: 0
@@ -1728,9 +1758,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _gridGenerator: {fileID: 318574812}
-  _myOccupantType: 3
+  myOccupantType: 3
   row: 3
   column: 2
+  health: 30
 --- !u!135 &849431663
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -2232,6 +2263,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 428523649}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 83f39fb945e7cb0488c223b7372747e1,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 428523652}
   m_SourcePrefab: {fileID: 100100000, guid: 83f39fb945e7cb0488c223b7372747e1, type: 3}
 --- !u!1 &963997350
 GameObject:
@@ -3185,7 +3220,8 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  _movementPowerUp: {fileID: 0}
+  _movementPowerUp: {fileID: 428523649}
+  _attackPowerUp: {fileID: 0}
 --- !u!114 &1460290667
 MonoBehaviour:
   m_ObjectHideFlags: 0

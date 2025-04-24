@@ -12,7 +12,8 @@ public class TileSettings : MonoBehaviour
         Enemy,
         Obstacle
     }
-    
+    public GameObject tileOccupant;
+
     // Settings
     public OccupantType occupantType;
     public int column;
@@ -50,6 +51,26 @@ public class TileSettings : MonoBehaviour
         OccupationChangedEvent.AddListener(OnOccupationChange);
         _tileMaterial = GetComponent<Renderer>().material;
         _tileMaterial.color = _defaultTileColor; // Default color for empty tiles
+        getObjects();        
+    }
+
+    public GameObject[] getObjects() 
+    {
+	    TileOccupants[] tileOccupants = FindObjectsOfType<TileOccupants>();
+	    GameObject[] objects = new GameObject[tileOccupants.Length];		
+        for (int i = 0; i < objects.Length; i++)
+        {
+            if (tileOccupants[i] == null) continue; // Skip if the TileOccupant is null
+            
+            // Check if the TileOccupant is on this tile
+            if (tileOccupants[i].row != row || tileOccupants[i].column != column) continue;
+            
+            // If it is, set tileOccupant to be that gameobject            
+            tileOccupant = tileOccupants[i].gameObject;
+            //Debug.Log(tileOccupant.name);             
+        }
+        
+        return objects;
     }
 
     public void OnOccupationChange()

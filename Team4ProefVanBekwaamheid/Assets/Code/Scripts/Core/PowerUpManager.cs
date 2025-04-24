@@ -71,7 +71,8 @@ public class PowerUpManager : MonoBehaviour
 
     // Power Up References
     [SerializeField] private MovementPowerUp _movementPowerUp; // Reference to the PowerUpInventory script
-    [SerializeField] private AttackPowerUp _attackPowerUp; // Reference to the PowerUpInventory script
+    [SerializeField] private AttackPowerUp _attackPowerUp; 
+    [SerializeField] private WallPowerUp _wallPowerUp; 
 
 
     private void Awake()
@@ -733,6 +734,7 @@ public class PowerUpManager : MonoBehaviour
 
     private void HandleWall(PowerUpInventory.PowerUpType type, PowerUpState state, PowerUpUser user)
     {
+        _wallPowerUp.WallPowerUpSelected(state); // Call the wall power-up selection method
         Debug.Log($"Handling {type} effect. State: {state}, User: {user}");
         // TODO: Pass type, state, user to the actual effect execution script/system
     }

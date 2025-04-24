@@ -67,7 +67,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
             _isWaitingForSelection = true;
             _tileSelection.OnTileSelected.AddListener(HandleTileSelected);
             Vector2Int currentPos = new Vector2Int(_tileOccupants.row, _tileOccupants.column);
-            _tileSelection.StartTileSelection(_range, currentPos);
+            _tileSelection.StartTileSelection(_range, currentPos, TileSelection.SelectionType.Movement , TileSelection.UserType.Player);
         }
 
         private void HandleTileSelected(TileSettings selectedTile)

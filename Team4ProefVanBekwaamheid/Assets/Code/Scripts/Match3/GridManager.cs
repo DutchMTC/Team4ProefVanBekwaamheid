@@ -1,42 +1,74 @@
 using UnityEngine;
+using System.Collections; // Added for Coroutines
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
+using UnityEngine.UI; // Added for UI elements like Buttons
 
 public class GridManager : MonoBehaviour
 {
-    
+
     public Block[,] Blocks { get; private set; }
     public GameObject blockPrefab;
     public int gridWidth = 8;
     public int gridHeight = 8;
     public float swapSpeed = 0.3f;
-    public float fallSpeed = 0.5f; 
-    public AnimationCurve fallEaseCurve; 
-    [Range(0f, 1f)]    public float rarityInfluence = 0.7f; 
+    public float fallSpeed = 0.5f;
+    public AnimationCurve fallEaseCurve;
+    [Range(0f, 1f)] public float rarityInfluence = 0.7f;
 
-    [Header("Swap Limit Settings")] 
-    public int swapLimit = 10;      
-    public int currentSwaps;        
-    public TMP_Text matchCounterText; 
-    public bool gridActive; 
+    [Header("Swap Limit Settings")]
+    public int swapLimit = 10;
+    public int currentSwaps;
+    public TMP_Text matchCounterText;
+    public bool gridActive;
+
+    [Header("PowerUp Animation Settings")]
+    public float liftHeight = 0.5f; // How high blocks lift before moving
+    public float liftDuration = 0.2f; // Duration of the lift phase
+    // public float moveToGroupDuration = 0.15f; // Duration to move to the group center (Removed for curved path)
+    public float moveToPowerUpDuration = 0.5f; // Duration of the move towards powerup (Adjusted back)
+    public float powerUpAnimationDelay = 0.05f; // Delay between each block starting its animation
+    public AnimationCurve moveToPowerUpCurve; // Easing for the move
+    public Transform movePowerUpTarget; // Assign the Move PowerUp Button Transform
+    public Transform attackPowerUpTarget; // Assign the Attack PowerUp Button Transform
+    public Transform defensePowerUpTarget; // Assign the Defense PowerUp Button Transform
+    public Transform wallPowerUpTarget; // Assign the Wall PowerUp Button Transform
+    // Add more targets as needed
+
+    [Header("Animation Parent")]
+    [SerializeField] private RectTransform animationPanelParent; // Assign a UI Panel (RectTransform) to parent blocks during animation
 
 
     private bool _isSwapping = false;
     private bool _isFalling = false;
-    private int _activeFallingAnimations = 0; 
+    private int _activeFallingAnimations = 0;
+    private int _activePowerUpAnimations = 0; // Counter for flying animations
     private Vector2 _touchStart;
     private Block _selectedBlock;
     private Block _block1SwappedWith;
     private Block _block2SwappedWith;
 
+    // Event to signal when a block finishes animating to a power-up
+    public static event System.Action<PowerUpInventory.PowerUpType> OnBlockAnimationFinished;
+
+
     private void Start()
     {
         Blocks = new Block[gridWidth, gridHeight];
         InitializeGrid();
-        // Initialize text based on swaps
         if (matchCounterText != null) matchCounterText.text = (swapLimit - currentSwaps).ToString();
         else Debug.LogError("MatchCounterText is not assigned in the Inspector!");
+
+        // Basic check for power-up targets
+        if (movePowerUpTarget == null || attackPowerUpTarget == null || defensePowerUpTarget == null || wallPowerUpTarget == null)
+        {
+            Debug.LogWarning("One or more PowerUp Target Transforms are not assigned in the GridManager Inspector. Animations might not target correctly.");
+        }
+        if (animationPanelParent == null)
+        {
+            Debug.LogError("Animation Panel Parent is not assigned in the GridManager Inspector! Power-up animations might not render correctly.");
+        }
     }
 
     private void InitializeGrid()
@@ -48,7 +80,67 @@ public class GridManager : MonoBehaviour
                 CreateBlock(x, y);
             }
         }
+        // After initial creation, check for and clear any starting matches without animation
+        ClearInitialMatches();
     }
+
+    // New method to clear matches at the start without animation/powerups
+    private void ClearInitialMatches()
+    {
+        bool matchesFound;
+        do
+        {
+            matchesFound = false;
+            List<Block> initialMatches = FindMatches();
+            if (initialMatches.Count >= 3)
+            {
+                matchesFound = true;
+                foreach (Block block in initialMatches)
+                {
+                    if (Blocks[block.column, block.row] == block)
+                    {
+                        Blocks[block.column, block.row] = null;
+                        Destroy(block.gameObject);
+                    }
+                }
+                // Simple immediate fill without animation for startup
+                FillGridAfterInitialClear();
+            }
+        } while (matchesFound);
+    }
+
+    // Simplified fill logic for startup
+    private void FillGridAfterInitialClear()
+    {
+        for (int x = 0; x < gridWidth; x++)
+        {
+            int emptySlots = 0;
+            for (int y = 0; y < gridHeight; y++)
+            {
+                if (Blocks[x, y] == null)
+                {
+                    emptySlots++;
+                }
+                else if (emptySlots > 0)
+                {
+                    Block block = Blocks[x, y];
+                    Blocks[x, y - emptySlots] = block;
+                    Blocks[x, y] = null;
+                    block.row = y - emptySlots;
+                    block.transform.position = new Vector3(block.column, block.row, 0); // Set position directly
+                    block.SyncTargetPosition();
+                }
+            }
+
+            // Fill top slots
+            for (int i = 0; i < emptySlots; i++)
+            {
+                int y = gridHeight - 1 - i;
+                CreateBlock(x, y); // Creates block at correct position
+            }
+        }
+    }
+
 
     private bool WouldCauseMatch(int x, int y, Block.BlockType type)
     {
@@ -63,94 +155,72 @@ public class GridManager : MonoBehaviour
             }
         }
 
-        // If this is a joker being placed, check if it would connect two same-colored blocks
         if (isJokerType)
         {
-            // Check horizontal matches
-            if (x >= 1 && x < gridWidth - 1 && 
+            if (x >= 1 && x < gridWidth - 1 &&
                 Blocks[x - 1, y] != null && Blocks[x + 1, y] != null &&
+                !Blocks[x-1, y].IsJoker && !Blocks[x+1, y].IsJoker && // Jokers don't match jokers via another joker
                 Blocks[x - 1, y].type == Blocks[x + 1, y].type)
             {
                 return true;
             }
-            if (x >= 2 && 
+            if (x >= 2 &&
                 Blocks[x - 1, y] != null && Blocks[x - 2, y] != null &&
+                !Blocks[x-1, y].IsJoker && !Blocks[x-2, y].IsJoker &&
                 Blocks[x - 1, y].type == Blocks[x - 2, y].type)
             {
                 return true;
             }
-            if (x < gridWidth - 2 && 
+            if (x < gridWidth - 2 &&
                 Blocks[x + 1, y] != null && Blocks[x + 2, y] != null &&
+                 !Blocks[x+1, y].IsJoker && !Blocks[x+2, y].IsJoker &&
                 Blocks[x + 1, y].type == Blocks[x + 2, y].type)
             {
                 return true;
             }
 
-            // Check vertical matches
-            if (y >= 1 && y < gridHeight - 1 && 
+            if (y >= 1 && y < gridHeight - 1 &&
                 Blocks[x, y - 1] != null && Blocks[x, y + 1] != null &&
+                 !Blocks[x, y-1].IsJoker && !Blocks[x, y+1].IsJoker &&
                 Blocks[x, y - 1].type == Blocks[x, y + 1].type)
             {
                 return true;
             }
-            if (y >= 2 && 
+            if (y >= 2 &&
                 Blocks[x, y - 1] != null && Blocks[x, y - 2] != null &&
+                 !Blocks[x, y-1].IsJoker && !Blocks[x, y-2].IsJoker &&
                 Blocks[x, y - 1].type == Blocks[x, y - 2].type)
             {
                 return true;
             }
-            if (y < gridHeight - 2 && 
+            if (y < gridHeight - 2 &&
                 Blocks[x, y + 1] != null && Blocks[x, y + 2] != null &&
+                 !Blocks[x, y+1].IsJoker && !Blocks[x, y+2].IsJoker &&
                 Blocks[x, y + 1].type == Blocks[x, y + 2].type)
             {
                 return true;
             }
         }
-        else
+        else // Placing a non-joker
         {
-            // For non-joker blocks, check if they would match with existing blocks including jokers
-            // Horizontal checks
+             // Horizontal checks
             if (x >= 2)
             {
                 Block b1 = Blocks[x - 1, y];
                 Block b2 = Blocks[x - 2, y];
-                if (b1 != null && b2 != null)
-                {
-                    if ((b1.IsJoker && b2.type == type) || 
-                        (b2.IsJoker && b1.type == type) ||
-                        (b1.type == type && b2.type == type))
-                    {
-                        return true;
-                    }
-                }
+                if (b1 != null && b2 != null && AreBlocksMatchingWithPotentialJoker(b1, b2, type)) return true;
             }
             if (x >= 1 && x < gridWidth - 1)
             {
                 Block b1 = Blocks[x - 1, y];
                 Block b2 = Blocks[x + 1, y];
-                if (b1 != null && b2 != null)
-                {
-                    if ((b1.IsJoker && b2.type == type) || 
-                        (b2.IsJoker && b1.type == type) ||
-                        (b1.type == type && b2.type == type))
-                    {
-                        return true;
-                    }
-                }
+                 if (b1 != null && b2 != null && AreBlocksMatchingWithPotentialJoker(b1, b2, type)) return true;
             }
             if (x < gridWidth - 2)
             {
                 Block b1 = Blocks[x + 1, y];
                 Block b2 = Blocks[x + 2, y];
-                if (b1 != null && b2 != null)
-                {
-                    if ((b1.IsJoker && b2.type == type) || 
-                        (b2.IsJoker && b1.type == type) ||
-                        (b1.type == type && b2.type == type))
-                    {
-                        return true;
-                    }
-                }
+                 if (b1 != null && b2 != null && AreBlocksMatchingWithPotentialJoker(b1, b2, type)) return true;
             }
 
             // Vertical checks
@@ -158,57 +228,63 @@ public class GridManager : MonoBehaviour
             {
                 Block b1 = Blocks[x, y - 1];
                 Block b2 = Blocks[x, y - 2];
-                if (b1 != null && b2 != null)
-                {
-                    if ((b1.IsJoker && b2.type == type) || 
-                        (b2.IsJoker && b1.type == type) ||
-                        (b1.type == type && b2.type == type))
-                    {
-                        return true;
-                    }
-                }
+                 if (b1 != null && b2 != null && AreBlocksMatchingWithPotentialJoker(b1, b2, type)) return true;
             }
             if (y >= 1 && y < gridHeight - 1)
             {
                 Block b1 = Blocks[x, y - 1];
                 Block b2 = Blocks[x, y + 1];
-                if (b1 != null && b2 != null)
-                {
-                    if ((b1.IsJoker && b2.type == type) || 
-                        (b2.IsJoker && b1.type == type) ||
-                        (b1.type == type && b2.type == type))
-                    {
-                        return true;
-                    }
-                }
+                 if (b1 != null && b2 != null && AreBlocksMatchingWithPotentialJoker(b1, b2, type)) return true;
             }
             if (y < gridHeight - 2)
             {
                 Block b1 = Blocks[x, y + 1];
                 Block b2 = Blocks[x, y + 2];
-                if (b1 != null && b2 != null)
-                {
-                    if ((b1.IsJoker && b2.type == type) || 
-                        (b2.IsJoker && b1.type == type) ||
-                        (b1.type == type && b2.type == type))
-                    {
-                        return true;
-                    }
-                }
+                 if (b1 != null && b2 != null && AreBlocksMatchingWithPotentialJoker(b1, b2, type)) return true;
             }
         }
 
         return false;
     }
 
+    // Helper for WouldCauseMatch to check if two existing blocks match the new type, considering jokers
+    private bool AreBlocksMatchingWithPotentialJoker(Block b1, Block b2, Block.BlockType newType)
+    {
+        // Case 1: Both existing are non-jokers
+        if (!b1.IsJoker && !b2.IsJoker)
+        {
+            return b1.type == newType && b2.type == newType;
+        }
+        // Case 2: b1 is joker, b2 is non-joker
+        else if (b1.IsJoker && !b2.IsJoker)
+        {
+            return b2.type == newType;
+        }
+        // Case 3: b1 is non-joker, b2 is joker
+        else if (!b1.IsJoker && b2.IsJoker)
+        {
+            return b1.type == newType;
+        }
+        // Case 4: Both existing are jokers - they don't form a match with the new block alone
+        else
+        {
+            return false;
+        }
+    }
+
+
     private Block.BlockType GetRandomBlockType(int x, int y)
     {
         Block blockComponent = blockPrefab.GetComponent<Block>();
-        
-        // Separate valid and invalid types (those that would cause matches)
+        if (blockComponent.blockTypes == null || blockComponent.blockTypes.Length == 0)
+        {
+            Debug.LogError("Block prefab has no block types defined!");
+            return default; // Or handle error appropriately
+        }
+
         List<Block.BlockTypeData> validTypes = new List<Block.BlockTypeData>();
         List<Block.BlockTypeData> invalidTypes = new List<Block.BlockTypeData>();
-        
+
         foreach (var blockTypeData in blockComponent.blockTypes)
         {
             if (!WouldCauseMatch(x, y, blockTypeData.type))
@@ -220,32 +296,32 @@ public class GridManager : MonoBehaviour
                 invalidTypes.Add(blockTypeData);
             }
         }
-        
-        // If there are no valid types, create a match
-        if (validTypes.Count == 0)
+
+        List<Block.BlockTypeData> typesToChooseFrom = validTypes.Count > 0 ? validTypes : invalidTypes;
+
+        if (typesToChooseFrom.Count == 0)
         {
-            Debug.LogWarning($"No valid block types at position ({x}, {y}), will create a match");
-            validTypes = invalidTypes;
+             Debug.LogError($"No block types (valid or invalid) available for position ({x}, {y})! Falling back to first defined type.");
+             // Fallback to the first type defined in the prefab if absolutely necessary
+             return blockComponent.blockTypes[0].type;
         }
-        
-        // Calculate total rarity values
+
+
         int totalRarity = 0;
-        foreach (var blockTypeData in validTypes)
+        foreach (var blockTypeData in typesToChooseFrom)
         {
             totalRarity += blockTypeData.rarity;
         }
-        
-        // Use a two-tier selection system
-        // Give all types a base chance (1-rarityInfluence)
-        // Distribute the remaining probability (rarityInfluence) based on rarity
+
         float randomValue = Random.value;
-        
-        if (rarityInfluence > 0 && randomValue <= rarityInfluence)
+
+        // Rarity-based selection only if totalRarity > 0
+        if (rarityInfluence > 0 && randomValue <= rarityInfluence && totalRarity > 0)
         {
             int randomRarity = Random.Range(1, totalRarity + 1);
             int currentRarity = 0;
-            
-            foreach (var blockTypeData in validTypes)
+
+            foreach (var blockTypeData in typesToChooseFrom)
             {
                 currentRarity += blockTypeData.rarity;
                 if (randomRarity <= currentRarity)
@@ -253,37 +329,36 @@ public class GridManager : MonoBehaviour
                     return blockTypeData.type;
                 }
             }
+             // Fallback within rarity selection if something goes wrong (shouldn't happen)
+            return typesToChooseFrom[typesToChooseFrom.Count - 1].type;
         }
-        else 
+        else // Equal chance selection
         {
-            int randomIndex = Random.Range(0, validTypes.Count);
-            return validTypes[randomIndex].type;
+            int randomIndex = Random.Range(0, typesToChooseFrom.Count);
+            return typesToChooseFrom[randomIndex].type;
         }
-        
-        // Fallback
-        return validTypes[0].type;
     }
 
     private void CreateBlock(int x, int y)
     {
-        GameObject blockObject = Instantiate(blockPrefab, new Vector3(x, y, 0), Quaternion.identity);
+        Vector3 position = new Vector3(x, y, 0);
+        GameObject blockObject = Instantiate(blockPrefab, position, Quaternion.identity);
         blockObject.transform.parent = transform;
 
         Block block = blockObject.GetComponent<Block>();
         Block.BlockType randomType = GetRandomBlockType(x, y);
         block.Initialize(randomType, x, y);
         Blocks[x, y] = block;
-        
-        // Initial position for newly spawned blocks will be set in StartFalling
+        block.SyncTargetPosition(); // Ensure target position is set correctly initially
     }
 
     private void Update()
     {
-        // If blocks are falling or being swapped, don't allow new moves
-        if (_isSwapping || _isFalling) return;
+        // Prevent interaction if swapping, falling, or animating to powerup
+        if (_isSwapping || _isFalling || _activePowerUpAnimations > 0 || !gridActive) return;
 
-        // Handle mouse input
-        if (Input.GetMouseButtonDown(0) && gridActive == true)
+        // --- Mouse Input ---
+        if (Input.GetMouseButtonDown(0))
         {
             _touchStart = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             _selectedBlock = GetBlockAtPosition(_touchStart);
@@ -291,30 +366,15 @@ public class GridManager : MonoBehaviour
         else if (Input.GetMouseButtonUp(0) && _selectedBlock != null)
         {
             Vector2 touchEnd = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            Vector2 direction = touchEnd - _touchStart;
-
-            if (direction.magnitude > 0.5f)
-            {
-                // Determine direction of swipe
-                float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-                Vector2Int swapDirection = angle switch
-                {
-                    > -45 and <= 45 => new Vector2Int(1, 0),   // Right
-                    > 45 and <= 135 => new Vector2Int(0, 1),   // Up
-                    > 135 or <= -135 => new Vector2Int(-1, 0), // Left
-                    _ => new Vector2Int(0, -1)                 // Down
-                };
-
-                TrySwapBlocks(_selectedBlock, swapDirection);
-            }
-            _selectedBlock = null;
+            ProcessSwipeInput(_touchStart, touchEnd);
+            _selectedBlock = null; // Deselect after processing
         }
 
-        // Handle touch input
-        if (Input.touchCount > 0 && gridActive == true)
+        // --- Touch Input ---
+        if (Input.touchCount > 0)
         {
             Touch touch = Input.GetTouch(0);
-            
+
             if (touch.phase == TouchPhase.Began)
             {
                 _touchStart = Camera.main.ScreenToWorldPoint(touch.position);
@@ -323,30 +383,40 @@ public class GridManager : MonoBehaviour
             else if (touch.phase == TouchPhase.Ended && _selectedBlock != null)
             {
                 Vector2 touchEnd = Camera.main.ScreenToWorldPoint(touch.position);
-                Vector2 direction = touchEnd - _touchStart;
-
-                if (direction.magnitude > 0.5f)
-                {
-                    float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-                    Vector2Int swapDirection = angle switch
-                    {
-                        > -45 and <= 45 => new Vector2Int(1, 0),   // Right
-                        > 45 and <= 135 => new Vector2Int(0, 1),   // Up
-                        > 135 or <= -135 => new Vector2Int(-1, 0), // Left
-                        _ => new Vector2Int(0, -1)                 // Down
-                    };
-
-                    TrySwapBlocks(_selectedBlock, swapDirection);
-                }
-                _selectedBlock = null;
+                ProcessSwipeInput(_touchStart, touchEnd);
+                _selectedBlock = null; // Deselect after processing
             }
         }
     }
 
+    // Helper to process swipe input from both mouse and touch
+    private void ProcessSwipeInput(Vector2 startPos, Vector2 endPos)
+    {
+        Vector2 direction = endPos - startPos;
+
+        if (direction.magnitude > 0.5f) // Threshold for swipe detection
+        {
+            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            Vector2Int swapDirection = angle switch
+            {
+                > -45 and <= 45 => new Vector2Int(1, 0),   // Right
+                > 45 and <= 135 => new Vector2Int(0, 1),   // Up
+                > 135 or <= -135 => new Vector2Int(-1, 0), // Left
+                _ => new Vector2Int(0, -1)                 // Down
+            };
+
+            TrySwapBlocks(_selectedBlock, swapDirection);
+        }
+    }
+
+
     private Block GetBlockAtPosition(Vector2 position)
     {
-        int x = Mathf.RoundToInt(position.x);
-        int y = Mathf.RoundToInt(position.y);
+        // Adjust position based on the grid's transform if it's not at origin
+        Vector3 localPos = transform.InverseTransformPoint(position);
+        int x = Mathf.RoundToInt(localPos.x);
+        int y = Mathf.RoundToInt(localPos.y);
+
 
         if (x >= 0 && x < gridWidth && y >= 0 && y < gridHeight)
         {
@@ -357,21 +427,27 @@ public class GridManager : MonoBehaviour
 
     private void TrySwapBlocks(Block block, Vector2Int direction)
     {
+        if (block == null) return;
+
         int newX = block.column + direction.x;
         int newY = block.row + direction.y;
 
         if (newX >= 0 && newX < gridWidth && newY >= 0 && newY < gridHeight)
         {
             Block otherBlock = Blocks[newX, newY];
-            SwapBlocks(block, otherBlock);
+            if (otherBlock != null) // Ensure there is a block to swap with
+            {
+                 SwapBlocks(block, otherBlock);
+            }
         }
     }
 
     private void SwapBlocks(Block block1, Block block2)
     {
+        if (_isSwapping || _isFalling || _activePowerUpAnimations > 0) return; // Prevent swapping during animations
+
         _isSwapping = true;
 
-        // Store the blocks being swapped
         _block1SwappedWith = block1;
         _block2SwappedWith = block2;
 
@@ -379,7 +455,7 @@ public class GridManager : MonoBehaviour
         Blocks[block1.column, block1.row] = block2;
         Blocks[block2.column, block2.row] = block1;
 
-        // Swap grid positions
+        // Swap grid positions (column/row properties)
         int tempColumn = block1.column;
         int tempRow = block1.row;
         block1.column = block2.column;
@@ -387,12 +463,53 @@ public class GridManager : MonoBehaviour
         block2.column = tempColumn;
         block2.row = tempRow;
 
-        // Animate movement
-        block1.SetTargetPosition(new Vector2(block1.column, block1.row));
-        block2.SetTargetPosition(new Vector2(block2.column, block2.row));
+        // Animate movement using the existing coroutine
+        StartCoroutine(AnimateBlockMovement(block1, block1.transform.position, new Vector3(block1.column, block1.row, 0), swapSpeed, false)); // Don't decrement falling counter
+        StartCoroutine(AnimateBlockMovement(block2, block2.transform.position, new Vector3(block2.column, block2.row, 0), swapSpeed, false)); // Don't decrement falling counter
 
-        Invoke(nameof(CheckMatches), swapSpeed);
+
+        // Check for matches after the swap animation duration
+        Invoke(nameof(CheckMatchesAfterSwap), swapSpeed);
     }
+
+    // Renamed CheckMatches to clarify when it's called
+    private void CheckMatchesAfterSwap()
+    {
+        List<Block> matchingBlocks = FindMatches();
+        if (matchingBlocks.Count >= 3)
+        {
+            // Valid swap, increment counter, process match
+            currentSwaps++;
+            if (matchCounterText != null)
+            {
+                matchCounterText.text = (swapLimit - currentSwaps).ToString();
+            }
+            Debug.Log($"Valid swap performed (Match Found). Current Swaps: {currentSwaps}/{swapLimit}");
+
+            // ProcessMatch is now a coroutine
+            StartCoroutine(ProcessMatch(matchingBlocks));
+
+            // Reset swap state immediately after confirming a match
+             _isSwapping = false;
+            _block1SwappedWith = null;
+            _block2SwappedWith = null;
+
+            // Start falling/filling process
+            StartCoroutine(ProcessFallingAndCheckMatches());
+        }
+        else if (_block1SwappedWith != null && _block2SwappedWith != null)
+        {
+            // Invalid swap, swap back
+            SwapBlocksBack(_block1SwappedWith, _block2SwappedWith);
+            // _isSwapping is reset in ResetSwapState after the swap back animation
+        }
+        else
+        {
+             // Should not happen if swap was initiated correctly, but reset just in case
+             ResetSwapState();
+        }
+    }
+
 
     private void SwapBlocksBack(Block block1, Block block2)
     {
@@ -409,8 +526,9 @@ public class GridManager : MonoBehaviour
         block2.row = tempRow;
 
         // Animate movement back
-        block1.SetTargetPosition(new Vector2(block1.column, block1.row));
-        block2.SetTargetPosition(new Vector2(block2.column, block2.row));
+        StartCoroutine(AnimateBlockMovement(block1, block1.transform.position, new Vector3(block1.column, block1.row, 0), swapSpeed, false));
+        StartCoroutine(AnimateBlockMovement(block2, block2.transform.position, new Vector3(block2.column, block2.row, 0), swapSpeed, false));
+
 
         // Reset state after animation completes
         Invoke(nameof(ResetSwapState), swapSpeed);
@@ -423,136 +541,315 @@ public class GridManager : MonoBehaviour
         _block2SwappedWith = null;
     }
 
-    private void CheckMatches()
+    // Changed to Coroutine to allow delays
+    private IEnumerator ProcessMatch(List<Block> matchingBlocks)
     {
-        List<Block> matchingBlocks = FindMatches();
-        if (matchingBlocks.Count >= 3)
-        {
-            currentSwaps++;
-            if (matchCounterText != null)
-            {
-                matchCounterText.text = (swapLimit - currentSwaps).ToString();
-            }
-            Debug.Log($"Valid swap performed (Match Found). Current Swaps: {currentSwaps}/{swapLimit}");
+        if (matchingBlocks == null || matchingBlocks.Count == 0) yield break; // Use yield break for coroutines
 
-            Block representativeBlock = null;
-            foreach (Block block in matchingBlocks)
+        // --- Step 1: Count Power-ups by Type ---
+        Dictionary<PowerUpInventory.PowerUpType, int> powerUpsToGrant = new Dictionary<PowerUpInventory.PowerUpType, int>();
+        foreach (Block block in matchingBlocks)
+        {
+            // Ensure the block hasn't already been processed (e.g., by overlapping matches)
+            if (block != null && Blocks[block.column, block.row] == block)
             {
-                if (!block.IsJoker)
+                PowerUpInventory.PowerUpType type = block.GetPowerUpType();
+                // Add logic here if Jokers should grant specific/different powerups
+                // For now, assume GetPowerUpType() returns the correct type for any block
+
+                if (powerUpsToGrant.ContainsKey(type))
                 {
-                    representativeBlock = block;
-                    break;
+                    powerUpsToGrant[type]++;
+                }
+                else
+                {
+                    powerUpsToGrant.Add(type, 1);
                 }
             }
-            if (representativeBlock == null && matchingBlocks.Count > 0) {
-                 representativeBlock = matchingBlocks[0];
-            }
-
-            if (representativeBlock != null) {
-                int powerUpAmount = matchingBlocks.Count;
-                PowerUpInventory.Instance?.AddPowerUps(representativeBlock.GetPowerUpType(), powerUpAmount);
-                Debug.Log($"Match of {matchingBlocks.Count} blocks (type: {representativeBlock.type}) - Awarded {powerUpAmount} {representativeBlock.GetPowerUpType()} power-ups");
-            }
-
-            _isSwapping = false; 
-            _block1SwappedWith = null;
-            _block2SwappedWith = null;
-
-            foreach (Block block in matchingBlocks)
-            {
-                Vector2Int pos = new Vector2Int(block.column, block.row);
-                Debug.Log($"Destroyed {block.type} block at position ({pos.x}, {pos.y}) with rarity {block.GetRarity()}");
-                Blocks[pos.x, pos.y] = null;
-                Destroy(block.gameObject);
-            }
-            StartCoroutine(ProcessFallingAndCheckMatches());
         }
-        else if (_block1SwappedWith != null && _block2SwappedWith != null)
+
+        // --- Step 2: Grant Counted Power-ups ---
+        if (PowerUpInventory.Instance != null)
         {
-            SwapBlocksBack(_block1SwappedWith, _block2SwappedWith);
-            // _isFalling is reset in ResetSwapState after animation
+            foreach (var kvp in powerUpsToGrant)
+            {
+                PowerUpInventory.Instance.AddPowerUps(kvp.Key, kvp.Value);
+                Debug.Log($"Match Grant: Awarded {kvp.Value} {kvp.Key} power-ups");
+            }
         }
         else
         {
-             ResetSwapState(); 
+            Debug.LogWarning("PowerUpInventory.Instance is null. Cannot grant power-ups.");
+        }
+
+        // --- Step 3: Calculate Grouping Point ---
+        Vector3 groupCenter = Vector3.zero;
+        int validBlockCount = 0;
+        foreach (Block block in matchingBlocks)
+        {
+             // Only consider blocks that are still in the grid for the center calculation
+            if (block != null && Blocks[block.column, block.row] == block)
+            {
+                groupCenter += block.transform.position;
+                validBlockCount++;
+            }
+        }
+        if (validBlockCount > 0)
+        {
+            groupCenter /= validBlockCount;
+        }
+        // Bring the group center forward visually as well
+        groupCenter.z = -1f;
+
+
+        // --- Step 4: Start Animation for Each Block (Targeting Correctly with Delay) ---
+        int animationIndex = 0; // To apply delay progressively
+        foreach (Block block in matchingBlocks)
+        {
+            // Check again if block exists at its position before animating
+            if (block != null && Blocks[block.column, block.row] == block)
+            {
+                // Apply delay before starting the animation for subsequent blocks
+                if (animationIndex > 0 && powerUpAnimationDelay > 0)
+                {
+                    yield return new WaitForSeconds(powerUpAnimationDelay);
+                }
+
+                Blocks[block.column, block.row] = null; // Remove from grid array immediately
+
+                // Get the specific power-up type for *this* block to determine animation target
+                PowerUpInventory.PowerUpType blockPowerUpType = block.GetPowerUpType();
+
+                // Pass the calculated groupCenter to the animation coroutine
+                StartCoroutine(AnimateBlockToPowerUp(block, blockPowerUpType, groupCenter));
+                _activePowerUpAnimations++; // Increment animation counter
+                animationIndex++; // Increment for the next block's delay calculation
+            }
+            else if (block != null && block.gameObject != null) // Check if block exists but is not in the grid array (already processed?)
+            {
+                // This block might have already been cleared by an overlapping match check, just destroy it without animation
+                Debug.LogWarning($"Block {block.type} at ({block.column},{block.row}) was already cleared or missing from grid array. Destroying immediately.");
+                Destroy(block.gameObject);
+            }
+        }
+        // Note: The coroutine ends here. The ProcessFallingAndCheckMatches coroutine will wait for _activePowerUpAnimations to be 0.
+    }
+
+
+    // Added groupCenter parameter
+    private IEnumerator AnimateBlockToPowerUp(Block block, PowerUpInventory.PowerUpType type, Vector3 groupCenter)
+    {
+        if (block == null)
+        {
+            _activePowerUpAnimations--; // Decrement if block is already null
+            yield break;
+        }
+
+        Vector3 startPos = block.transform.position;
+        Transform originalParent = block.transform.parent; // Store original parent
+
+        // Reparent to animation panel and bring forward visually
+        if (animationPanelParent != null)
+        {
+            block.transform.SetParent(animationPanelParent, true); // Reparent to the specified panel, keep world position
+        }
+        else
+        {
+             Debug.LogError("Animation Panel Parent is null in AnimateBlockToPowerUp! Block will not be reparented.");
+        }
+        // Ensure block still exists after potential reparenting error log
+        if (block == null) {
+             _activePowerUpAnimations--; // Decrement if block somehow got destroyed
+             yield break;
+        }
+
+        Vector3 animationStartPos = new Vector3(startPos.x, startPos.y, -1f); // Use Z=-1 for rendering on top
+        block.transform.position = animationStartPos; // Set initial forward position
+
+
+        Vector3 liftPos = animationStartPos + Vector3.up * liftHeight; // Lift straight up from the forward position
+        Vector3 initialScale = block.transform.localScale;
+        Vector3 zeroScale = Vector3.zero;
+
+        // --- Phase 1: Lift Up ---
+        float timeElapsed = 0f;
+        while (timeElapsed < liftDuration)
+        {
+            if (block == null) yield break; // Exit if block destroyed prematurely
+            block.transform.position = Vector3.Lerp(animationStartPos, liftPos, timeElapsed / liftDuration); // Lerp Z as well
+            timeElapsed += Time.deltaTime;
+            yield return null;
+        }
+         if (block == null) yield break;
+        block.transform.position = liftPos; // Ensure final lift position
+
+        // --- Phase 2: Move Towards PowerUp Button & Shrink (Grouping during movement) ---
+        Transform targetTransform = GetPowerUpTargetTransform(type);
+        if (targetTransform == null)
+        {
+            Debug.LogWarning($"No target transform found for PowerUpType {type}. Block will just shrink and disappear.");
+            targetTransform = block.transform; // Fallback to self to avoid null ref
+        }
+
+        // Declare variables needed for the final phase *before* the loop
+        Vector3 powerUpTargetPos; // Calculated world position based on screen target
+        Camera mainCamera = Camera.main;
+        if (mainCamera == null)
+        {
+             Debug.LogError("Main Camera not found! Cannot calculate screen positions for power-up animation.");
+             if (block != null) Destroy(block.gameObject); // Clean up block
+             _activePowerUpAnimations--;
+             yield break;
+        }
+
+        timeElapsed = 0f; // Reset timer for this phase
+        while (timeElapsed < moveToPowerUpDuration)
+        {
+            if (block == null) yield break;
+
+            float t = timeElapsed / moveToPowerUpDuration;
+            float easedT = moveToPowerUpCurve != null && moveToPowerUpCurve.keys.Length > 0 ? moveToPowerUpCurve.Evaluate(t) : t;
+
+            // --- Calculate World Position from UI Target's Screen Position (Recalculate each frame in case UI moves) ---
+            // Note: Removed type declarations (Vector3, Canvas, float) as they are declared outside the loop now.
+            Vector3 screenPoint = targetTransform.position;
+            Canvas targetCanvas = targetTransform.GetComponentInParent<Canvas>();
+            if (targetCanvas != null && targetCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
+            {
+                 screenPoint = mainCamera.WorldToScreenPoint(targetTransform.position);
+            }
+            // Using groupCenter's distance might be more consistent now
+            float distance = Vector3.Distance(groupCenter, mainCamera.transform.position);
+            Vector3 screenPointWithZ = new Vector3(screenPoint.x, screenPoint.y, distance);
+            powerUpTargetPos = mainCamera.ScreenToWorldPoint(screenPointWithZ);
+            // --- End Calculation ---
+
+
+            // Calculate position using nested Lerp for curved path:
+            // Lerp from liftPos towards an intermediate point that itself lerps from groupCenter to powerUpTargetPos
+            Vector3 intermediateTarget = Vector3.Lerp(groupCenter, powerUpTargetPos, easedT);
+            block.transform.position = Vector3.Lerp(liftPos, intermediateTarget, easedT);
+
+            // Scale still lerps from initial to zero over the same duration
+            block.transform.localScale = Vector3.Lerp(initialScale, zeroScale, easedT);
+
+            timeElapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        // --- Cleanup ---
+        // No need to reparent as the object is destroyed
+        if (block != null)
+        {
+            Destroy(block.gameObject);
+        }
+        _activePowerUpAnimations--; // Decrement counter when animation finishes
+        if (_activePowerUpAnimations < 0) _activePowerUpAnimations = 0; // Safety check
+
+        // Signal that this block's animation has finished
+        OnBlockAnimationFinished?.Invoke(type);
+    }
+
+    // Helper to get the correct target transform based on power-up type
+    private Transform GetPowerUpTargetTransform(PowerUpInventory.PowerUpType type)
+    {
+        // Assuming PowerUpInventory.PowerUpType matches the intended logic
+        switch (type)
+        {
+            case PowerUpInventory.PowerUpType.Steps: // Assuming Move maps to Steps
+                return movePowerUpTarget;
+            case PowerUpInventory.PowerUpType.Sword: // Assuming Attack maps to Sword
+                return attackPowerUpTarget;
+            case PowerUpInventory.PowerUpType.Shield: // Assuming Defense maps to Shield
+                return defensePowerUpTarget;
+            case PowerUpInventory.PowerUpType.Wall: // Added Wall type
+                return wallPowerUpTarget;
+            // Add cases for other power-up types if they exist in PowerUpInventory.PowerUpType
+            // case PowerUpInventory.PowerUpType.Health: return healPowerUpTarget;
+            default:
+                Debug.LogWarning($"No specific target defined for PowerUpInventory.PowerUpType: {type}.");
+                return null; // No appropriate target found
         }
     }
 
-    private System.Collections.IEnumerator ProcessFallingAndCheckMatches()
-    {
-        if (_isFalling) yield break; 
-        _isFalling = true;
-        _activeFallingAnimations = 0;
 
-        bool blocksMoved;
+    private IEnumerator ProcessFallingAndCheckMatches()
+    {
+        if (_isFalling) yield break; // Don't run multiple instances
+
+        // Wait for any ongoing power-up animations to finish before starting to fall
+        yield return new WaitUntil(() => _activePowerUpAnimations == 0);
+
+        _isFalling = true;
+        _activeFallingAnimations = 0; // Reset fall counter for this pass
+
+        bool blocksMovedOrMatched;
         do
         {
-            blocksMoved = false;
-            List<System.Collections.IEnumerator> fallAnimations = new List<System.Collections.IEnumerator>();
+            blocksMovedOrMatched = false;
+            List<IEnumerator> fallAnimations = new List<IEnumerator>();
 
-            // Handle existing blocks falling down
+            // --- Step 1: Make existing blocks fall ---
             for (int x = 0; x < gridWidth; x++)
             {
-                int fallTargetY = -1; 
-                for (int y = 0; y < gridHeight; y++)
+                int fallToY = -1; // Lowest empty spot found so far in this column
+                for (int y = 0; y < gridHeight; y++) // Iterate bottom-up
                 {
-                    if (Blocks[x, y] == null && fallTargetY == -1)
+                    if (Blocks[x, y] == null && fallToY == -1)
                     {
-                        fallTargetY = y; // 
+                        fallToY = y; // Found the first empty spot
                     }
-                    else if (Blocks[x, y] != null && fallTargetY != -1)
+                    else if (Blocks[x, y] != null && fallToY != -1)
                     {
-                        // Found a block above an empty spot, make it fall
+                        // Found a block above an empty spot
                         Block block = Blocks[x, y];
-                        Blocks[x, fallTargetY] = block;
-                        Blocks[x, y] = null;
-                        block.row = fallTargetY;
+                        Blocks[x, fallToY] = block; // Move block in the array
+                        Blocks[x, y] = null;        // Clear original spot
+                        block.row = fallToY;        // Update block's row property
 
                         // Start animation
                         Vector3 startPos = block.transform.position;
                         Vector3 endPos = new Vector3(block.column, block.row, 0);
-                        fallAnimations.Add(AnimateBlockMovement(block, startPos, endPos, fallSpeed));
+                        fallAnimations.Add(AnimateBlockMovement(block, startPos, endPos, fallSpeed, true)); // Decrements counter
                         _activeFallingAnimations++;
 
-                        blocksMoved = true;
-                        fallTargetY++;
+                        blocksMovedOrMatched = true;
+                        fallToY++; // Next empty spot is one higher
                     }
                 }
             }
 
-            // Spawn new blocks at the top
+             // --- Step 2: Spawn new blocks ---
             for (int x = 0; x < gridWidth; x++)
             {
-                for (int y = gridHeight - 1; y >= 0; y--)
+                int spawnedCount = 0; // How many blocks spawned in this column for positioning
+                for (int y = 0; y < gridHeight; y++) // Check from bottom up for nulls
                 {
                     if (Blocks[x, y] == null)
                     {
-                        // Create new block at a consistent height above the grid
-                        Vector3 spawnPos = new Vector3(x, gridHeight, 0); // Consistent spawn height above grid
+                        // Spawn new block above the grid
+                        Vector3 spawnPos = new Vector3(x, gridHeight + spawnedCount, 0);
                         GameObject blockObject = Instantiate(blockPrefab, spawnPos, Quaternion.identity);
                         blockObject.transform.parent = transform;
 
                         Block block = blockObject.GetComponent<Block>();
-                        Block.BlockType randomType = GetRandomBlockType(x, y);
+                        Block.BlockType randomType = GetRandomBlockType(x, y); // Get type for the target slot
                         block.Initialize(randomType, x, y); // Initialize with final grid position
-                        Blocks[x, y] = block; // Place in array
+                        Blocks[x, y] = block; // Place in array at the target slot
 
-                        // Start animation
+                        // Start fall animation
                         Vector3 endPos = new Vector3(x, y, 0);
-                        fallAnimations.Add(AnimateBlockMovement(block, spawnPos, endPos, fallSpeed));
+                        fallAnimations.Add(AnimateBlockMovement(block, spawnPos, endPos, fallSpeed, true)); // Decrements counter
                         _activeFallingAnimations++;
 
-                        blocksMoved = true;
-                    }
-                    else
-                    {
-                        // Found a block, no need to check lower in this column for spawning
-                        break;
+                        blocksMovedOrMatched = true;
+                        spawnedCount++;
                     }
                 }
             }
 
-            // Wait for all animations in this pass to complete
+
+            // --- Step 3: Wait for fall/spawn animations ---
             if (fallAnimations.Count > 0)
             {
                 // Start all coroutines for this pass
@@ -560,92 +857,92 @@ public class GridManager : MonoBehaviour
                 {
                     StartCoroutine(animCoroutine);
                 }
-
-                // Wait until all animations are done
+                // Wait until all falling/spawning animations for this pass are done
                 yield return new WaitUntil(() => _activeFallingAnimations == 0);
             }
 
-
-            // After blocks fall/spawn, check for new matches immediately
+            // --- Step 4: Check for new matches after falling/spawning ---
             List<Block> newMatches = FindMatches();
             if (newMatches.Count >= 3)
             {
-                Block representativeBlock = null;
-                foreach (Block block in newMatches)
-                {
-                    if (!block.IsJoker)
-                    {
-                        representativeBlock = block;
-                        break;
-                    }
-                }
-                if (representativeBlock == null && newMatches.Count > 0) {
-                     representativeBlock = newMatches[0];
-                }
+                 Debug.Log($"Cascade Match Found ({newMatches.Count} blocks).");
+                 // ProcessMatch is now a coroutine
+                 StartCoroutine(ProcessMatch(newMatches));
+                 blocksMovedOrMatched = true; // Indicate that changes happened
 
-                if (representativeBlock != null) {
-                    int powerUpAmount = newMatches.Count;
-                    PowerUpInventory.Instance?.AddPowerUps(representativeBlock.GetPowerUpType(), powerUpAmount);
-                    Debug.Log($"Cascade Match of {newMatches.Count} blocks (type: {representativeBlock.type}) - Awarded {powerUpAmount} {representativeBlock.GetPowerUpType()} power-ups");
-                }
-
-                foreach (Block block in newMatches)
-                {
-                    if (Blocks[block.column, block.row] == block) 
-                    {
-                        Blocks[block.column, block.row] = null;
-                        Destroy(block.gameObject);
-                    }
-                }
-                blocksMoved = true;
-            }
-            else
-            {
-                blocksMoved = false;
+                 // Wait for these new powerup animations (started by ProcessMatch) before the next loop iteration
+                 yield return new WaitUntil(() => _activePowerUpAnimations == 0);
             }
 
-        } while (blocksMoved); // Loop if blocks moved (either fell or new matches were cleared)
+
+        } while (blocksMovedOrMatched); // Loop if blocks fell, spawned, or new matches were cleared
 
         _isFalling = false; // All falling and cascading is complete
 
         // Final check for game state transition based on swaps
-        if (GameManager.Instance.State == GameState.Matching && currentSwaps >= swapLimit)
+        if (GameManager.Instance != null && GameManager.Instance.State == GameState.Matching && currentSwaps >= swapLimit)
         {
             GameManager.Instance.UpdateGameState(GameState.Player);
+        }
+         else if (GameManager.Instance == null)
+        {
+            Debug.LogWarning("GameManager.Instance is null. Cannot update game state.");
         }
     }
 
 
-    // Animates a block's movement from startPos to endPos over a given duration.
-    private System.Collections.IEnumerator AnimateBlockMovement(Block block, Vector3 startPos, Vector3 endPos, float duration)
+    // Modified to optionally decrement the falling animation counter and adjust Z for rendering order
+    private IEnumerator AnimateBlockMovement(Block block, Vector3 startPos, Vector3 endPos, float duration, bool decrementCounter)
     {
-        if (block != null) block.IsFalling = true; 
+        if (block != null) block.IsFalling = true;
         float timeElapsed = 0f;
+
+        // Bring block forward visually during animation
+        Vector3 animationStartPos = new Vector3(startPos.x, startPos.y, -1f); // Use Z=-1 for rendering on top
+        Vector3 animationEndPos = new Vector3(endPos.x, endPos.y, -1f); // Keep it forward until the end
+        Vector3 finalEndPos = new Vector3(endPos.x, endPos.y, 0f); // Final position at Z=0
+
+        if (block != null) block.transform.position = animationStartPos; // Set initial forward position
+
 
         while (timeElapsed < duration)
         {
-            if (block == null) yield break;
+            if (block == null)
+            {
+                 // If block destroyed mid-animation, ensure counter is decremented if needed
+                 if (decrementCounter)
+                 {
+                     _activeFallingAnimations--;
+                     if (_activeFallingAnimations < 0) _activeFallingAnimations = 0;
+                 }
+                 yield break;
+            }
+
 
             float t = timeElapsed / duration;
-            float easedT = fallEaseCurve != null && fallEaseCurve.keys.Length > 0 ? fallEaseCurve.Evaluate(t) : t; // Apply easing
+            // Use fallEaseCurve only for falling/spawning, not for swaps
+            float easedT = (decrementCounter && fallEaseCurve != null && fallEaseCurve.keys.Length > 0) ? fallEaseCurve.Evaluate(t) : t;
 
-            block.transform.position = Vector3.LerpUnclamped(startPos, endPos, easedT); // Use LerpUnclamped for potential overshoot
+            block.transform.position = Vector3.LerpUnclamped(animationStartPos, animationEndPos, easedT); // Animate along the forward Z plane
 
             timeElapsed += Time.deltaTime;
             yield return null;
         }
 
-        // Ensure final position is exact
+        // Ensure final position and state at Z=0
         if (block != null)
         {
-             block.transform.position = endPos;
-             block.SyncTargetPosition();
-             block.IsFalling = false; 
+             block.transform.position = finalEndPos; // Set final position with Z=0
+             block.SyncTargetPosition(); // Sync target position which should be Z=0
+             block.IsFalling = false;
         }
 
-        // Decrement counter when animation finishes
-        _activeFallingAnimations--;
-         if (_activeFallingAnimations < 0) _activeFallingAnimations = 0;
+        // Decrement counter if this was a falling/spawning animation
+        if (decrementCounter)
+        {
+            _activeFallingAnimations--;
+            if (_activeFallingAnimations < 0) _activeFallingAnimations = 0;
+        }
     }
 
 
@@ -656,186 +953,146 @@ public class GridManager : MonoBehaviour
         // Check horizontal matches
         for (int y = 0; y < gridHeight; y++)
         {
-            for (int x = 0; x < gridWidth - 2; x++)
+            for (int x = 0; x < gridWidth - 2; /* x incremented inside */)
             {
                 Block block1 = Blocks[x, y];
-                Block block2 = Blocks[x + 1, y];
-                Block block3 = Blocks[x + 2, y];
+                if (block1 == null) { x++; continue; } // Skip if starting block is null
 
-                if (block1 != null && block2 != null && block3 != null)
+                List<Block> currentMatch = new List<Block> { block1 };
+                Block.BlockType matchType = Block.BlockType.Blue; // Use a default valid type as placeholder
+                bool matchTypeDetermined = !block1.IsJoker;
+                if(matchTypeDetermined) matchType = block1.type;
+
+                // Look ahead for matches
+                for (int i = x + 1; i < gridWidth; i++)
                 {
+                    Block nextBlock = Blocks[i, y];
+                    if (nextBlock == null) break; // End of potential match
 
-                    bool isMatch = false;
-                    
-                    if (block1.IsJoker)
+                    bool isPotentialMatch = false;
+                    if (nextBlock.IsJoker)
                     {
-                        isMatch = block2.type == block3.type;
+                        isPotentialMatch = true; // Joker always extends potential match
                     }
-                    else if (block2.IsJoker)
+                    else // nextBlock is not a joker
                     {
-                        isMatch = block1.type == block3.type; 
+                        if (!matchTypeDetermined) // First non-joker determines match type
+                        {
+                            matchType = nextBlock.type;
+                            matchTypeDetermined = true;
+                            isPotentialMatch = true;
+                        }
+                        else // Match type already set
+                        {
+                            isPotentialMatch = nextBlock.type == matchType;
+                        }
                     }
-                    else if (block3.IsJoker)
+
+                    if (isPotentialMatch)
                     {
-                        isMatch = block1.type == block2.type;
+                        currentMatch.Add(nextBlock);
                     }
                     else
                     {
-                        isMatch = block1.type == block2.type && block2.type == block3.type;
+                        break; // Sequence broken
                     }
+                }
 
-                    if (isMatch)
+                // Check if the found sequence is a valid match (length >= 3 and contains at least one non-joker if jokers are involved)
+                bool containsNonJoker = currentMatch.Any(b => !b.IsJoker);
+                if (currentMatch.Count >= 3 && (containsNonJoker || currentMatch.All(b => b.IsJoker))) // Allow all-joker matches if desired, otherwise require containsNonJoker
+                {
+                    foreach (Block b in currentMatch)
                     {
-                        matchingBlocks.Add(block1);
-                        matchingBlocks.Add(block2);
-                        matchingBlocks.Add(block3);
-
-                        // Check for longer matches
-                        for (int i = x + 3; i < gridWidth; i++)
-                        {
-                            Block nextBlock = Blocks[i, y];
-                            if (nextBlock == null) break;
-                            
-                            // For longer matches, if we have a joker in the sequence,
-                            // it must connect to blocks of the same type
-                            bool canExtendMatch = false;
-                            if (nextBlock.IsJoker)
-                            {
-                                // Get the last non-joker block type from the match
-                                Block.BlockType matchType = Block.BlockType.Blue; 
-                                bool foundType = false;
-                                for (int j = i - 1; j >= x && !foundType; j--)
-                                {
-                                    if (!Blocks[j, y].IsJoker)
-                                    {
-                                        matchType = Blocks[j, y].type;
-                                        foundType = true;
-                                    }
-                                }
-                                canExtendMatch = foundType;
-                            }
-                            else
-                            {
-                                // Get the type we're matching against (first non-joker block)
-                                Block.BlockType matchType = Block.BlockType.Blue;
-                                for (int j = i - 1; j >= x; j--)
-                                {
-                                    if (!Blocks[j, y].IsJoker)
-                                    {
-                                        matchType = Blocks[j, y].type;
-                                        break;
-                                    }
-                                }
-                                canExtendMatch = nextBlock.type == matchType;
-                            }
-
-                            if (canExtendMatch)
-                            {
-                                matchingBlocks.Add(nextBlock);
-                            }
-                            else break;
-                        }
+                        matchingBlocks.Add(b);
                     }
+                    x += currentMatch.Count; // Skip checked blocks
+                }
+                else
+                {
+                    x++; // Move to the next block
                 }
             }
         }
 
-        // Check vertical matches
+        // Check vertical matches (similar logic)
         for (int x = 0; x < gridWidth; x++)
         {
-            for (int y = 0; y < gridHeight - 2; y++)
+            for (int y = 0; y < gridHeight - 2; /* y incremented inside */)
             {
-                Block block1 = Blocks[x, y];
-                Block block2 = Blocks[x, y + 1];
-                Block block3 = Blocks[x, y + 2];
+                 Block block1 = Blocks[x, y];
+                if (block1 == null) { y++; continue; }
 
-                if (block1 != null && block2 != null && block3 != null)
+                List<Block> currentMatch = new List<Block> { block1 };
+                Block.BlockType matchType = Block.BlockType.Blue; // Use a default valid type as placeholder
+                bool matchTypeDetermined = !block1.IsJoker;
+                 if(matchTypeDetermined) matchType = block1.type;
+
+                for (int i = y + 1; i < gridHeight; i++)
                 {
-                    // For jokers, we need to ensure they're actually connecting same-colored blocks
-                    bool isMatch = false;
-                    
-                    if (block1.IsJoker)
+                    Block nextBlock = Blocks[x, i];
+                    if (nextBlock == null) break;
+
+                    bool isPotentialMatch = false;
+                    if (nextBlock.IsJoker)
                     {
-                        isMatch = block2.type == block3.type; 
-                    }
-                    else if (block2.IsJoker)
-                    {
-                        isMatch = block1.type == block3.type; 
-                    }
-                    else if (block3.IsJoker)
-                    {
-                        isMatch = block1.type == block2.type; 
+                        isPotentialMatch = true;
                     }
                     else
                     {
-                        // No jokers - all blocks must match
-                        isMatch = block1.type == block2.type && block2.type == block3.type;
-                    }
-
-                    if (isMatch)
-                    {
-                        matchingBlocks.Add(block1);
-                        matchingBlocks.Add(block2);
-                        matchingBlocks.Add(block3);
-
-                        // Check for longer matches
-                        for (int i = y + 3; i < gridHeight; i++)
+                        if (!matchTypeDetermined)
                         {
-                            Block nextBlock = Blocks[x, i];
-                            if (nextBlock == null) break;
-                            
-                            bool canExtendMatch = false;
-                            if (nextBlock.IsJoker)
-                            {
-                                Block.BlockType matchType = Block.BlockType.Blue;
-                                bool foundType = false;
-                                for (int j = i - 1; j >= y && !foundType; j--)
-                                {
-                                    if (!Blocks[x, j].IsJoker)
-                                    {
-                                        matchType = Blocks[x, j].type;
-                                        foundType = true;
-                                    }
-                                }
-                                canExtendMatch = foundType;
-                            }
-                            else
-                            {
-                                // Get the type we're matching against (first non-joker block)
-                                Block.BlockType matchType = Block.BlockType.Blue;
-                                for (int j = i - 1; j >= y; j--)
-                                {
-                                    if (!Blocks[x, j].IsJoker)
-                                    {
-                                        matchType = Blocks[x, j].type;
-                                        break;
-                                    }
-                                }
-                                canExtendMatch = nextBlock.type == matchType;
-                            }
-
-                            if (canExtendMatch)
-                            {
-                                matchingBlocks.Add(nextBlock);
-                            }
-                            else break;
+                            matchType = nextBlock.type;
+                            matchTypeDetermined = true;
+                            isPotentialMatch = true;
+                        }
+                        else
+                        {
+                            isPotentialMatch = nextBlock.type == matchType;
                         }
                     }
+
+                    if (isPotentialMatch)
+                    {
+                        currentMatch.Add(nextBlock);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                bool containsNonJoker = currentMatch.Any(b => !b.IsJoker);
+                if (currentMatch.Count >= 3 && (containsNonJoker || currentMatch.All(b => b.IsJoker)))
+                {
+                    foreach (Block b in currentMatch)
+                    {
+                        matchingBlocks.Add(b);
+                    }
+                    y += currentMatch.Count;
+                }
+                else
+                {
+                    y++;
                 }
             }
         }
+
 
         return matchingBlocks.ToList();
     }
 
-    private bool AreBlocksMatching(Block block1, Block block2)
-    {
-        // If neither block is a joker, just check if they're the same type
-        if (!block1.IsJoker && !block2.IsJoker)
-        {
-            return block1.type == block2.type;
-        }
-        return true;
-    }
+    // This specific function might not be needed anymore with the improved FindMatches logic
+    // private bool AreBlocksMatching(Block block1, Block block2)
+    // {
+    //     if (block1 == null || block2 == null) return false;
+    //     // If neither block is a joker, just check if they're the same type
+    //     if (!block1.IsJoker && !block2.IsJoker)
+    //     {
+    //         return block1.type == block2.type;
+    //     }
+    //     // If at least one is a joker, they are considered matching in a sequence context
+    //     return true;
+    // }
 
 }

@@ -144,28 +144,42 @@ public class PowerUpManager : MonoBehaviour
             }
        }
 
-       // Subscribe to inventory changes
-       PowerUpInventory.OnPowerUpCountChanged += HandlePowerUpCountChanged;
-    }
+       // Subscribe to GridManager's animation finished event
+       GridManager.OnBlockAnimationFinished += HandleBlockAnimationFinished;
+   }
 
-    private void OnDestroy()
-    {
-        // Unsubscribe to prevent errors and memory leaks
-        PowerUpInventory.OnPowerUpCountChanged -= HandlePowerUpCountChanged;
-    }
+   private void OnDestroy()
+   {
+       // Unsubscribe to prevent errors and memory leaks
+       GridManager.OnBlockAnimationFinished -= HandleBlockAnimationFinished;
+   }
 
-    private void HandlePowerUpCountChanged(PowerUpInventory.PowerUpType type, int newCount)
-    {
-        if (_isUsingPowerUp)
+   // This handler now triggers the visual update when a block animation finishes
+   private void HandleBlockAnimationFinished(PowerUpInventory.PowerUpType type)
+   {
+        if (_isUsingPowerUp) // Still check this flag just in case
         {
             return;
         }
-        // Call with default flags (allow animation)
+
+        // --- Check if animation is already running for this type ---
+        if (fillCoroutines.TryGetValue(type, out Coroutine runningCoroutine) && runningCoroutine != null)
+        {
+            // Animation is already in progress (likely from the first block of this type in the match).
+            // Do nothing and let the existing animation complete.
+            // Debug.Log($"Ignoring subsequent arrival for {type}, animation already running.");
+            return;
+        }
+
+        // --- No animation running, start it ---
+        // Call UpdatePowerUpVisual to start the fill animation based on the current inventory count.
+        // This will also store the new coroutine reference in fillCoroutines.
+        // Debug.Log($"First arrival for {type}, starting fill animation.");
         UpdatePowerUpVisual(type);
-    }
+   }
 
 
-    private PowerUpState DetermineStateFromCount(int count)
+   private PowerUpState DetermineStateFromCount(int count)
     {
         if (count >= SUPERCHARGED_THRESHOLD) return PowerUpState.Supercharged;
         if (count >= CHARGED_THRESHOLD) return PowerUpState.Charged;

@@ -1,0 +1,19 @@
+- Game Phases
+There are three game phases. The Match3 Phase, the RPG phase and the enemy phase.
+In this sprint, we want a prototype in which these phases loop and if the player or the enemy dies, the game ends.
+
+- PowerUp Charge System
+There are four powerups. Move, Wall, Attack, and Defend. These powerups need 15 block matches in order to fully charge, and 10 block matches on top of it to supercharge.
+
+- Enemy AI
+The enemy should be able to use the same powerups as the player, but it's random per round what it uses. The enemy can also use a supercharged attack.
+
+- Player & Enemy Health
+The player and the enemy should both have 30 health, and both should have indicators above them to show how much health they have.
+
+- Player Move/Wall/Attack
+When the player uses a Move, Wall or Attack, the camera needs to become a zoomed in top view of the grid. It should then make the tiles it can move to, place a wall, or attack to a different color with an indicator on them. 
+
+- Enemy Behaviour Indicator (Which powerups is it going to use against you?)
+Dependency: Enemy AI
+When the Match3 phase begins, the player gets to see exactly what PowerUps the enemy is going to use against the player in the enemy phase. There should be an indicator for this once the Match3 phase starts.

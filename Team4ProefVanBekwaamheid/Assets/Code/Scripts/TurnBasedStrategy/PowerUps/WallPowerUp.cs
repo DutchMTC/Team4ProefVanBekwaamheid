@@ -49,10 +49,10 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
                     _range = 1;
                     break;
                 case PowerUpState.Charged:
-                    _range = 2;
+                    _range = 1;
                     break;
                 case PowerUpState.Supercharged:
-                    _range = 3;
+                    _range = 1;
                     break;
             }
 

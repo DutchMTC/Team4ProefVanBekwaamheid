@@ -72,7 +72,8 @@ public class PowerUpManager : MonoBehaviour
     // Power Up References
     [SerializeField] private MovementPowerUp _movementPowerUp; // Reference to the PowerUpInventory script
     [SerializeField] private AttackPowerUp _attackPowerUp; 
-    [SerializeField] private WallPowerUp _wallPowerUp; 
+    [SerializeField] private WallPowerUp _wallPowerUp;
+    [SerializeField] private DefensePowerUp _defensePowerUp; // Reference to the PowerUpInventory script
 
 
     private void Awake()
@@ -742,6 +743,7 @@ public class PowerUpManager : MonoBehaviour
 
     private void HandleShield(PowerUpInventory.PowerUpType type, PowerUpState state, PowerUpUser user)
     {
+        _defensePowerUp.DefensePowerUpSelected(state, TileSelection.UserType.Player); // Call the defense power-up selection method
         Debug.Log($"Handling {type} effect. State: {state}, User: {user}");
         // TODO: Pass type, state, user to the actual effect execution script/system
     }

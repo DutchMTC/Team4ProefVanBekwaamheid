@@ -181,6 +181,7 @@ GameObject:
   - component: {fileID: 71067647}
   - component: {fileID: 71067646}
   - component: {fileID: 71067645}
+  - component: {fileID: 71067649}
   m_Layer: 2
   m_Name: Enemy
   m_TagString: Untagged
@@ -300,6 +301,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameManager: {fileID: 1216284609}
+  playerOccupants: {fileID: 428523646}
   powerupDisplayIcons:
   - {fileID: 1589255835}
   - {fileID: 1257768700}
@@ -330,11 +332,23 @@ MonoBehaviour:
       charged: {fileID: 21300000, guid: 4feed9b43fa656e4685d137b58f2e0e9, type: 3}
       supercharged: {fileID: 21300000, guid: 3dc7d927142e9f54b834473164613642, type: 3}
   powerupDisplayParent: {fileID: 1817170674}
-  playerOccupants: {fileID: 428523646}
   verticalOffset: 0
   probabilityToSelectThreePowerups: 0.2
   probabilityCharged: 0.4
   probabilitySupercharged: 0.1
+--- !u!114 &71067649
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 71067641}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8cdeeecf357dc9e4091769631163363a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _baseReduction: 0.3
 --- !u!1 &74103058
 GameObject:
   m_ObjectHideFlags: 0
@@ -2959,6 +2973,32 @@ MonoBehaviour:
   onTimerEnd:
     m_PersistentCalls:
       m_Calls: []
+  objectToShake: {fileID: 1265569331}
+  shakeIntensityCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 20
+      outSlope: 20
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 20
+      inSlope: 20
+      outSlope: 20
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  shakeDuration: 0.15
 --- !u!1 &1302259172
 GameObject:
   m_ObjectHideFlags: 0
@@ -3243,6 +3283,7 @@ MonoBehaviour:
   _movementPowerUp: {fileID: 428523649}
   _attackPowerUp: {fileID: 428523652}
   _wallPowerUp: {fileID: 428523653}
+  _defensePowerUp: {fileID: 0}
 --- !u!114 &1460290667
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3821,6 +3862,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameManager: {fileID: 1216284609}
+  playerOccupants: {fileID: 0}
   powerupDisplayIcons:
   - {fileID: 1589255835}
   - {fileID: 1257768700}
@@ -3851,7 +3893,6 @@ MonoBehaviour:
       charged: {fileID: 21300000, guid: 4feed9b43fa656e4685d137b58f2e0e9, type: 3}
       supercharged: {fileID: 21300000, guid: 3dc7d927142e9f54b834473164613642, type: 3}
   powerupDisplayParent: {fileID: 1817170674}
-  playerOccupants: {fileID: 0}
   verticalOffset: 0
   probabilityToSelectThreePowerups: 0.2
   probabilityCharged: 0.4
@@ -4824,6 +4865,7 @@ GameObject:
   - component: {fileID: 428523649}
   - component: {fileID: 428523652}
   - component: {fileID: 428523653}
+  - component: {fileID: 3469287836536717689}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -4887,6 +4929,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 919132149035406439}
   m_Mesh: {fileID: -5495902117074765545, guid: 83f39fb945e7cb0488c223b7372747e1, type: 3}
+--- !u!114 &3469287836536717689
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 919132149035406439}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8cdeeecf357dc9e4091769631163363a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _baseReduction: 0.3
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

@@ -157,7 +157,7 @@ public class PowerUpManager : MonoBehaviour
 
    // This handler now triggers the visual update when a block animation finishes
    private void HandleBlockAnimationFinished(PowerUpInventory.PowerUpType type)
-   {
+   {    
         if (_isUsingPowerUp) // Still check this flag just in case
         {
             return;

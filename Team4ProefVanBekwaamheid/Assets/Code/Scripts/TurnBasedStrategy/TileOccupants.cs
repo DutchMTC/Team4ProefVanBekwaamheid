@@ -12,20 +12,43 @@ public class TileOccupants : MonoBehaviour
    
     [SerializeField] private int health = 30;       
     
-    void Start()
+    void Awake()
     {
+        // Ensure we have a reference to the GridGenerator as early as possible
         if (_gridGenerator == null)
         {
             _gridGenerator = FindObjectOfType<GridGenerator>();
             if (_gridGenerator == null)
             {
-                Debug.LogError("GridGenerator reference not found!");
+                Debug.LogError("GridGenerator reference not found in Awake!");
+            }
+        }
+    }
+    
+    void Start()
+    {
+        // Double check to make sure we have a GridGenerator reference
+        if (_gridGenerator == null)
+        {
+            _gridGenerator = FindObjectOfType<GridGenerator>();
+            if (_gridGenerator == null)
+            {
+                Debug.LogError("GridGenerator reference not found in Start!");
                 return;
             }
         }
         
+        // Force position update with small delay to ensure GridGenerator is fully initialized
+        Invoke("InitializePosition", 0.1f);
+    }
+    
+    void InitializePosition()
+    {
         FindTileAtCoordinates();
         MoveToTile();
+        
+        // Log position for debugging
+        Debug.Log($"{gameObject.name} initialized at position ({row}, {column})");
     }
 
     public void SetDamageReduction(float reduction)

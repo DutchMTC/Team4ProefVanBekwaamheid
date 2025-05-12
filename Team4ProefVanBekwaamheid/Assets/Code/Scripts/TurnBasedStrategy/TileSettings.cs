@@ -10,39 +10,51 @@ public class TileSettings : MonoBehaviour
         None,
         Player,
         Enemy,
-        Obstacle
+        Obstacle,
+        Item // Added Item type
     }
-    public GameObject tileOccupant;
+    public GameObject tileOccupant { get; private set; } // Made setter private, managed by SetOccupant
 
     // Settings
-    public OccupantType occupantType;
-    public int column;
-    public int row;
+    public OccupantType occupantType { get; private set; } // Made setter private, managed by SetOccupant
+    public int gridX; // Renamed from column
+    public int gridY; // Renamed from row
     internal UnityEvent OccupationChangedEvent;
     private Material _tileMaterial;
     private Color _defaultTileColor = new Color(1.0f, 1.0f, 1.0f, 0.2f);
     private Color _occupiedTileColor = new Color(1.0f, 0f, 0f, 0.5f);
     private Color _playerTileColor = new Color(0f, 0f, 1.0f, 0.5f);
+    private Color _itemTileColor = new Color(0f, 1.0f, 0f, 0.5f); // Color for items
 
     public override bool Equals(object other)
     {
         if (other is TileSettings otherTile)
         {
-            return row == otherTile.row && column == otherTile.column;
+            return gridY == otherTile.gridY && gridX == otherTile.gridX;
         }
         return false;
     }
 
     public override int GetHashCode()
     {
-        return row.GetHashCode() ^ column.GetHashCode();
+        return gridY.GetHashCode() ^ gridX.GetHashCode();
     }
     
-    public void Initzialize(OccupantType occupantType, int column, int row)
+    public void Initzialize(OccupantType initialOccupantType, int initialGridX, int initialGridY, GameObject initialOccupant = null)
     {
-        this.column = column;
-        this.row = row;
-        this.occupantType = occupantType;
+        this.gridX = initialGridX;
+        this.gridY = initialGridY;
+        SetOccupant(initialOccupantType, initialOccupant); // Use SetOccupant for initialization
+    }
+
+    public void SetOccupant(OccupantType newOccupantType, GameObject newOccupant)
+    {
+        if (this.occupantType != newOccupantType || this.tileOccupant != newOccupant)
+        {
+            this.occupantType = newOccupantType;
+            this.tileOccupant = newOccupant;
+            OccupationChangedEvent?.Invoke();
+        }
     }
 
     void Start()
@@ -63,11 +75,12 @@ public class TileSettings : MonoBehaviour
             if (tileOccupants[i] == null) continue; // Skip if the TileOccupant is null
             
             // Check if the TileOccupant is on this tile
-            if (tileOccupants[i].row != row || tileOccupants[i].column != column) continue;
+            if (tileOccupants[i].gridY != gridY || tileOccupants[i].gridX != gridX) continue; // Changed to .gridY and .gridX
             
-            // If it is, set tileOccupant to be that gameobject            
-            tileOccupant = tileOccupants[i].gameObject;
-            //Debug.Log(tileOccupant.name);             
+            // If it is, set tileOccupant to be that gameobject
+            // tileOccupant = tileOccupants[i].gameObject; // This should be handled by SetOccupant
+            SetOccupant(tileOccupants[i].myOccupantType, tileOccupants[i].gameObject); // Corrected to use myOccupantType
+            //Debug.Log(tileOccupant.name);
         }
         
         return objects;
@@ -78,16 +91,19 @@ public class TileSettings : MonoBehaviour
         switch (occupantType)
         {
             case OccupantType.None:
-                _tileMaterial.color = _defaultTileColor; // Default color for empty tiles
+                _tileMaterial.color = _defaultTileColor;
                 break;
             case OccupantType.Player:
-                //_tileMaterial.color = _playerTileColor; // Default color for player tiles
+                //_tileMaterial.color = _playerTileColor;
                 break;
             case OccupantType.Enemy:
-                _tileMaterial.color = _occupiedTileColor; // Color for Occupied tiles
+                _tileMaterial.color = _occupiedTileColor;
                 break;
             case OccupantType.Obstacle:
-                _tileMaterial.color = _occupiedTileColor; // Color for Occupied tiles
+                _tileMaterial.color = _occupiedTileColor;
+                break;
+            case OccupantType.Item:
+                _tileMaterial.color = _itemTileColor; // Set color for Item
                 break;
         }
     }

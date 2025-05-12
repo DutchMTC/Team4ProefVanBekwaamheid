@@ -93,7 +93,7 @@ public class GridGenerator : MonoBehaviour
                 Vector3 tilePosition = new Vector3(isometricX, _gridHeight, isometricZ);
                 GameObject tile = Instantiate(tilePrefab, tilePosition, Quaternion.Euler(0, 45, 0));
                 
-                tile.GetComponent<TileSettings>().Initzialize(TileSettings.OccupantType.None, x, y); // Initialize tile settings
+                tile.GetComponent<TileSettings>().Initzialize(TileSettings.OccupantType.None, x, y, null); // Initialize tile settings with null occupant
                 tile.transform.parent = transform;  // Keep hierarchy organized
             }
         }

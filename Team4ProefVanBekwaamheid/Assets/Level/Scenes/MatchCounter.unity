@@ -221,8 +221,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _gridGenerator: {fileID: 318574812}
   myOccupantType: 2
-  row: 0
-  column: 4
+  gridY: 0
+  gridX: 4
   health: 30
 --- !u!65 &71067644
 BoxCollider:
@@ -986,6 +986,55 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2029677790}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &319818882
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 319818883}
+  - component: {fileID: 319818884}
+  m_Layer: 0
+  m_Name: GridInteractablesManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &319818883
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 319818882}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2029677790}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &319818884
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 319818882}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a409dd3a79fb4ad4fb74882b156e6028, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  itemDatas:
+  - {fileID: 11400000, guid: 21032f32f47e40a41946e62d54f2d6a2, type: 2}
+  - {fileID: 11400000, guid: 907470555e919e34d97e098c1aa473d7, type: 2}
+  numberOfItemsToSpawn: 1
+  respawnDelay: 60
 --- !u!1 &387962147
 GameObject:
   m_ObjectHideFlags: 0
@@ -1100,8 +1149,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _gridGenerator: {fileID: 318574812}
   myOccupantType: 1
-  row: 4
-  column: 0
+  gridY: 4
+  gridX: 0
   health: 30
 --- !u!114 &428523649
 MonoBehaviour:
@@ -1984,8 +2033,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _gridGenerator: {fileID: 318574812}
   myOccupantType: 3
-  row: 3
-  column: 2
+  gridY: 0
+  gridX: 0
   health: 30
 --- !u!135 &849431663
 SphereCollider:
@@ -4560,6 +4609,7 @@ Transform:
   - {fileID: 71067642}
   - {fileID: 849431661}
   - {fileID: 543450652753645277}
+  - {fileID: 319818883}
   m_Father: {fileID: 797258597}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &2043948592
@@ -5185,6 +5235,7 @@ GameObject:
   - component: {fileID: 428523652}
   - component: {fileID: 428523653}
   - component: {fileID: 3469287836536717689}
+  - component: {fileID: 3469287836536717690}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -5205,6 +5256,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _baseReduction: 0.3
+--- !u!65 &3469287836536717690
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 919132149035406439}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.03, y: 0.03, z: 0.07}
+  m_Center: {x: 0, y: 0, z: 0.03}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

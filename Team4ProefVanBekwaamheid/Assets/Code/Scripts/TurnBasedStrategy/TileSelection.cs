@@ -70,7 +70,10 @@ public class TileSelection : MonoBehaviour
         ClearTilesInRange();
         _isSelectionEnabled = true;
         _hasSelectedTile = false;
-        FindTilesInRange(range, currentPosition.x, currentPosition.y, selectionType, userType);
+        // Vector2Int should be (gridX, gridY) where:
+        // currentPosition.x is gridX (column)
+        // currentPosition.y is gridY (row)
+        FindTilesInRange(range, currentPosition.y, currentPosition.x, selectionType, userType);
     }
 
     public void CancelTileSelection()
@@ -80,23 +83,23 @@ public class TileSelection : MonoBehaviour
         _hasSelectedTile = false;
     }
 
-    private void FindTilesInRange(int range, int currentRow, int currentColumn, SelectionType selectionType, UserType userType)
+    private void FindTilesInRange(int range, int currentGridY, int currentGridX, SelectionType selectionType, UserType userType) // Renamed parameters
     {
-        for (int row = currentRow - range; row <= currentRow + range; row++)
+        for (int gridY = currentGridY - range; gridY <= currentGridY + range; gridY++) // Renamed loop variable
         {
-            for (int column = currentColumn - range; column <= currentColumn + range; column++)
+            for (int gridX = currentGridX - range; gridX <= currentGridX + range; gridX++) // Renamed loop variable
             {
-                if (IsTileInBounds(row, column))
+                if (IsTileInBounds(gridY, gridX)) // Used renamed variables
                 {
-                    TileSettings tile = FindTileAtCoordinates(row, column);
-                    if (tile != null && IsValidMovement(currentRow, currentColumn, row, column, range))
+                    TileSettings tile = FindTileAtCoordinates(gridY, gridX); // Used renamed variables
+                    if (tile != null && IsValidMovement(currentGridY, currentGridX, gridY, gridX, range)) // Used renamed variables
                     {
                         bool isValidTile = false;
                         
                         switch (selectionType)
                         {
                             case SelectionType.Movement:
-                                isValidTile = tile.occupantType == TileSettings.OccupantType.None;
+                                isValidTile = tile.occupantType == TileSettings.OccupantType.None || tile.occupantType == TileSettings.OccupantType.Item; // Allow moving onto item tiles
                                 break;
                             
                             case SelectionType.Attack:
@@ -110,7 +113,7 @@ public class TileSelection : MonoBehaviour
                         if (isValidTile)
                         {
                             _tilesInRange.Add(tile);
-                            HighlightTile(row, column);
+                            HighlightTile(gridY, gridX); // Used renamed variables
                         }
                     }
                 }
@@ -166,47 +169,48 @@ public class TileSelection : MonoBehaviour
         _isSelectionEnabled = false;
     }
 
-    private bool IsValidMovement(int startRow, int startCol, int targetRow, int targetCol, int range)
+    private bool IsValidMovement(int startGridY, int startGridX, int targetGridY, int targetGridX, int range) // Renamed parameters
     {
-        int rowDiff = Mathf.Abs(targetRow - startRow);
-        int colDiff = Mathf.Abs(targetCol - startCol);
+        int gridYDiff = Mathf.Abs(targetGridY - startGridY); // Renamed variable
+        int gridXDiff = Mathf.Abs(targetGridX - startGridX); // Renamed variable
         
-        if (rowDiff == 0 && colDiff == 0) return false;
+        if (gridYDiff == 0 && gridXDiff == 0) return false;
 
+        // For range 1, it's strictly orthogonal or diagonal adjacent
         if (range == 1)
         {
-            return (rowDiff == 0 && colDiff == 1) || (colDiff == 0 && rowDiff == 1);
+            // Orthogonal: (0,1) or (1,0)
+            // Diagonal: (1,1)
+            return (gridYDiff == 0 && gridXDiff == 1) || (gridXDiff == 0 && gridYDiff == 1) || (gridYDiff == 1 && gridXDiff == 1);
         }
         
-        bool isOrthogonal = (rowDiff == 0 && colDiff <= range) || (colDiff == 0 && rowDiff <= range);
-        bool isDiagonal = rowDiff == 1 && colDiff == 1;
-        
-        return isOrthogonal || isDiagonal;
+        // For range > 1, use Manhattan distance (diamond shape)
+        return (gridYDiff + gridXDiff) <= range;
     }
 
-    private void HighlightTile(int row, int column)
+    private void HighlightTile(int gridY, int gridX) // Renamed parameters
     {
-        TileSettings tile = FindTileAtCoordinates(row, column);
+        TileSettings tile = FindTileAtCoordinates(gridY, gridX); // Used renamed parameters
         if (tile != null && tile.gameObject.TryGetComponent<Renderer>(out var renderer))
         {
             tile.SetTileColor(_playerTileColor);
         }
     }
 
-    private bool IsTileInBounds(int row, int column)
+    private bool IsTileInBounds(int gridY, int gridX) // Renamed parameters
     {
         if (_gridGenerator == null) return false;
-        return row >= 0 && row < _gridGenerator.height && column >= 0 && column < _gridGenerator.width;
+        return gridY >= 0 && gridY < _gridGenerator.height && gridX >= 0 && gridX < _gridGenerator.width; // Used renamed parameters
     }
 
-    private TileSettings FindTileAtCoordinates(int row, int column)
+    private TileSettings FindTileAtCoordinates(int gridY, int gridX) // Renamed parameters
     {
         if (_gridGenerator == null) return null;
 
         foreach (Transform child in _gridGenerator.transform)
         {
             TileSettings currentTile = child.GetComponent<TileSettings>();
-            if (currentTile != null && currentTile.row == row && currentTile.column == column)
+            if (currentTile != null && currentTile.gridY == gridY && currentTile.gridX == gridX) // Used renamed properties
             {
                 return currentTile;
             }

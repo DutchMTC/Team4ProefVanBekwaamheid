@@ -61,7 +61,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
             }
 
             // Start tile selection process to find valid tiles
-            Vector2Int currentPos = new Vector2Int(_tileOccupants.row, _tileOccupants.column);
+            Vector2Int currentPos = new Vector2Int(_tileOccupants.gridX, _tileOccupants.gridY); // Standardized: (gridX, gridY) -> (column, row)
             _tileSelection.StartTileSelection(_range, currentPos, TileSelection.SelectionType.Attack, userType);
 
             if (userType == TileSelection.UserType.Enemy && _targetOccupantForAI != null)
@@ -70,7 +70,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
                 TileSettings playerTile = _targetOccupantForAI.GetCurrentTile();
                 if (playerTile != null && IsTileInRange(playerTile))
                 {
-                     Debug.Log($"Enemy AI (Attack): Attacking player at ({playerTile.row}, {playerTile.column})");
+                     Debug.Log($"Enemy AI (Attack): Attacking player at ({playerTile.gridY}, {playerTile.gridX})"); // Changed to gridY and gridX
                      Attack(playerTile);
                 }
                 else
@@ -117,8 +117,8 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
         {
             if (targetTile == null || _tileOccupants == null) return false;
 
-            Vector2Int currentPos = new Vector2Int(_tileOccupants.row, _tileOccupants.column);
-            Vector2Int targetPos = new Vector2Int(targetTile.row, targetTile.column);
+            Vector2Int currentPos = new Vector2Int(_tileOccupants.gridY, _tileOccupants.gridX); // Changed to gridY and gridX
+            Vector2Int targetPos = new Vector2Int(targetTile.gridY, targetTile.gridX); // Changed to gridY and gridX
 
             // Simple Manhattan distance check for grid movement
             int distance = Mathf.Abs(currentPos.x - targetPos.x) + Mathf.Abs(currentPos.y - targetPos.y);

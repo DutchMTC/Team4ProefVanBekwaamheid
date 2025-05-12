@@ -55,7 +55,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
             }
 
             // Start tile selection process to find valid tiles
-            Vector2Int currentPos = new Vector2Int(_tileOccupants.row, _tileOccupants.column);
+            Vector2Int currentPos = new Vector2Int(_tileOccupants.gridX, _tileOccupants.gridY); // Standardized: (gridX, gridY) -> (column, row)
             _tileSelection.StartTileSelection(_range, currentPos, TileSelection.SelectionType.Movement, userType);
 
             if (userType == TileSelection.UserType.Enemy && _targetOccupantForAI != null)
@@ -66,7 +66,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
 
                 if (bestTile != null)
                 {
-                    Debug.Log($"Enemy AI (Movement): Moving towards player at ({_targetOccupantForAI.row}, {_targetOccupantForAI.column}). Best tile: ({bestTile.row}, {bestTile.column})");
+                    Debug.Log($"Enemy AI (Movement): Moving towards player at ({_targetOccupantForAI.gridY}, {_targetOccupantForAI.gridX}). Best tile: ({bestTile.gridY}, {bestTile.gridX})"); // Changed to gridY and gridX
                     Move(bestTile);
                 }
                 else
@@ -124,15 +124,22 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
 
         private void Move(TileSettings targetTile)
         {
-            if (targetTile != null && targetTile.occupantType == TileSettings.OccupantType.None)
+            // Allow moving if the tile is None OR an Item
+            if (targetTile != null &&
+                (targetTile.occupantType == TileSettings.OccupantType.None || targetTile.occupantType == TileSettings.OccupantType.Item))
             {
-                _tileOccupants.row = targetTile.row;
-                _tileOccupants.column = targetTile.column;
+                _tileOccupants.gridY = targetTile.gridY; // Changed to gridY
+                _tileOccupants.gridX = targetTile.gridX; // Changed to gridX
                 _tileOccupants.MoveToTile();
             }
             else
             {
-                Debug.Log("Selected tile is occupied or invalid, cannot move here.");
+                if (targetTile == null) {
+                    Debug.Log("Target tile is null, cannot move.");
+                } else {
+                    // Provide more specific feedback if the tile is occupied by something other than None or Item
+                    Debug.Log($"Selected tile is occupied by {targetTile.occupantType} or invalid, cannot move here.");
+                }
             }
         }
 
@@ -141,13 +148,13 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
         {
             TileSettings bestTile = null;
             float minDistanceSq = float.MaxValue;
-            Vector2Int targetPos = new Vector2Int(target.row, target.column);
+            Vector2Int targetPos = new Vector2Int(target.gridX, target.gridY); // Standardized: (gridX, gridY) -> (column, row)
 
             foreach (var tile in selectableTiles)
             {
                 if (tile.occupantType == TileSettings.OccupantType.None) // Ensure tile is empty
                 {
-                    Vector2Int tilePos = new Vector2Int(tile.row, tile.column);
+                    Vector2Int tilePos = new Vector2Int(tile.gridX, tile.gridY); // Standardized: (gridX, gridY) -> (column, row)
                     float distanceSq = Vector2Int.Distance(tilePos, targetPos); // Using squared distance for efficiency
 
                     if (distanceSq < minDistanceSq)

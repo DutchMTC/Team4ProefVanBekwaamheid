@@ -64,7 +64,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
             }
 
             // Start tile selection process to find valid empty tiles within range
-            Vector2Int currentPos = new Vector2Int(_tileOccupants.row, _tileOccupants.column);
+            Vector2Int currentPos = new Vector2Int(_tileOccupants.gridX, _tileOccupants.gridY); // Standardized: (gridX, gridY) -> (column, row)
             _tileSelection.StartTileSelection(_range, currentPos, TileSelection.SelectionType.Movement, userType); // Movement type finds empty tiles
 
             if (userType == TileSelection.UserType.Enemy && _targetOccupantForAI != null)
@@ -85,7 +85,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
                  if (bestTile != null)
                  {
                      // *** DETAILED DEBUG: Log the chosen tile before attempting placement ***
-                     Debug.Log($"Enemy AI (Wall): Found best tile at ({bestTile.row}, {bestTile.column}). Attempting placement...");
+                     Debug.Log($"Enemy AI (Wall): Found best tile at ({bestTile.gridY}, {bestTile.gridX}). Attempting placement..."); // Changed to gridY and gridX
                      PlaceWall(bestTile);
                  }
                  else
@@ -126,15 +126,15 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
                 return; // Exit early if tile is null
             }
 
-            Debug.Log($"Enemy AI (PlaceWall): Attempting to place wall on tile at ({targetTile.row}, {targetTile.column}).");
+            Debug.Log($"Enemy AI (PlaceWall): Attempting to place wall on tile at ({targetTile.gridY}, {targetTile.gridX})."); // Changed to gridY and gridX
             Debug.Log($"Enemy AI (PlaceWall): Checking conditions - Is Tile Null? {targetTile == null}, Occupant Type: {targetTile.occupantType}, Is Prefab Null? {_wallPrefab == null}");
 
             // Original condition check
             if (targetTile.occupantType == TileSettings.OccupantType.None && _wallPrefab != null)
             {
                 Debug.Log("Enemy AI (PlaceWall): Conditions met. Proceeding with instantiation.");
-                Vector2Int userPos = new Vector2Int(_tileOccupants.row, _tileOccupants.column); // Renamed from playerPos for clarity
-                Vector2Int targetPos = new Vector2Int(targetTile.row, targetTile.column);
+                Vector2Int userPos = new Vector2Int(_tileOccupants.gridY, _tileOccupants.gridX); // Changed to gridY and gridX
+                Vector2Int targetPos = new Vector2Int(targetTile.gridY, targetTile.gridX); // Changed to gridY and gridX
                 Vector2Int direction = targetPos - userPos; // Corrected variable name
 
                 float angle = 0f;
@@ -165,8 +165,8 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
 
                 GameObject wallInstance = Instantiate(_wallPrefab, spawnPosition, spawnRotation);
 
-                targetTile.occupantType = TileSettings.OccupantType.Obstacle;
-                targetTile.OccupationChangedEvent.Invoke(); // Ensure visual update if needed
+                targetTile.SetOccupant(TileSettings.OccupantType.Obstacle, wallInstance); // Used SetOccupant
+                // targetTile.OccupationChangedEvent.Invoke(); // Invoke is handled by SetOccupant
 
                 Debug.Log($"Enemy AI (PlaceWall): Successfully placed wall at {targetPos} with rotation {angle} degrees.");
             }
@@ -174,7 +174,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
             {
                  if (targetTile.occupantType != TileSettings.OccupantType.None)
                  {
-                      Debug.LogError($"Enemy AI (PlaceWall): Failed - Tile ({targetTile.row}, {targetTile.column}) is occupied by {targetTile.occupantType}.");
+                      Debug.LogError($"Enemy AI (PlaceWall): Failed - Tile ({targetTile.gridY}, {targetTile.gridX}) is occupied by {targetTile.occupantType}."); // Changed to gridY and gridX
                  }
                  else if (_wallPrefab == null)
                  {
@@ -206,13 +206,13 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
                  return selectableTiles[0]; // Fallback: just pick the first one
              }
 
-             Vector2Int playerPos = new Vector2Int(targetPlayerTile.row, targetPlayerTile.column);
+             Vector2Int playerPos = new Vector2Int(targetPlayerTile.gridY, targetPlayerTile.gridX); // Changed to gridY and gridX
              Debug.Log($"Enemy AI (Wall Finder): Target player at ({playerPos.x}, {playerPos.y}). Checking {selectableTiles.Count} adjacent tiles for closest one.");
 
              foreach (var tile in selectableTiles)
              {
                  // Selectable tiles are adjacent to the enemy and guaranteed empty
-                 Vector2Int tilePos = new Vector2Int(tile.row, tile.column);
+                 Vector2Int tilePos = new Vector2Int(tile.gridY, tile.gridX); // Changed to gridY and gridX
                  float distanceSq = Vector2.Distance(tilePos, playerPos); // Use squared distance for efficiency
 
                  // Debug.Log($"Enemy AI (Wall Finder): Checking tile ({tilePos.x}, {tilePos.y}). DistSq to player: {distanceSq}"); // Optional: Verbose log
@@ -226,7 +226,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
 
              if (bestTile != null)
              {
-                 Debug.Log($"Enemy AI (Wall Finder): Selected tile ({bestTile.row}, {bestTile.column}) as closest to player (DistSq: {minDistanceToPlayerSq}).");
+                 Debug.Log($"Enemy AI (Wall Finder): Selected tile ({bestTile.gridY}, {bestTile.gridX}) as closest to player (DistSq: {minDistanceToPlayerSq})."); // Changed to gridY and gridX
              }
              else
              {

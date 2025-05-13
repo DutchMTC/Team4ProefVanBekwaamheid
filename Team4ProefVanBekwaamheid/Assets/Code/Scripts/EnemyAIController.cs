@@ -23,7 +23,7 @@ public class EnemyAIController : MonoBehaviour
     public List<PowerupSpriteMapping> powerupSpriteMappings;
     [SerializeField] private RectTransform powerupDisplayParent;
 
-    private MovementPowerUp _movementPowerUp;
+    [SerializeField] private MovementPowerUp _movementPowerUp;
     private AttackPowerUp _attackPowerUp;
     private WallPowerUp _wallPowerUp;
     private DefensePowerUp _defensePowerUp;

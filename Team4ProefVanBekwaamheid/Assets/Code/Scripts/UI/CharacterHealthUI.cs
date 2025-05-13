@@ -125,6 +125,9 @@ public class CharacterHealthUI : MonoBehaviour
         float topLayerStartNormalized = mainHealthSlider.value;
         float bottomLayerStartNormalized = damagePreviewSlider.value;
 
+        // Log the values used for sprite determination to help diagnose the issue.
+        Debug.Log($"[CharacterHealthUI] OnHealthChanged: newAbsoluteHealthValue={newAbsoluteHealthValue}, logicalCurrentHealth={logicalCurrentHealth}, maxHealth={maxHealth}, targetNormalizedHealth={targetNormalizedHealth}");
+
         // Update sprites to reflect the target health state immediately
         UpdateHealthBarSprites(targetNormalizedHealth);
 

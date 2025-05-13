@@ -1,17 +1,25 @@
 using UnityEngine;
+// Potentially add: using UnityEngine.Events; if you want to use UnityEvents for damage.
 
 public class TileOccupants : MonoBehaviour
 {
+    [Header("Grid & Occupant Info")]
     [SerializeField] private GridGenerator _gridGenerator;
     public TileSettings.OccupantType myOccupantType;
     public int gridY; // Renamed from row
     public int gridX; // Renamed from column
     private GameObject _selectedTile;
     private TileSettings _tileSettings;
+
+    [Header("Health & Defense")]
+    [SerializeField] private int maxHealth = 30;
+    [SerializeField] private int health = 30; // Current health
     private float _damageReduction = 0f;
-   
-    [SerializeField] private int health = 30;       
-    
+
+    [Header("UI")]
+    [SerializeField] private CharacterHealthUI healthBarUI;
+    // public UnityAction<float> OnHealthChanged; // Alternative: Use UnityEvent
+
     void Awake()
     {
         // Ensure we have a reference to the GridGenerator as early as possible
@@ -20,11 +28,12 @@ public class TileOccupants : MonoBehaviour
             _gridGenerator = FindObjectOfType<GridGenerator>();
             if (_gridGenerator == null)
             {
-                Debug.LogError("GridGenerator reference not found in Awake!");
+                Debug.LogError("GridGenerator reference not found in Awake!", this);
             }
         }
+        health = maxHealth; // Initialize current health to max health
     }
-    
+
     void Start()
     {
         // Double check to make sure we have a GridGenerator reference
@@ -33,15 +42,27 @@ public class TileOccupants : MonoBehaviour
             _gridGenerator = FindObjectOfType<GridGenerator>();
             if (_gridGenerator == null)
             {
-                Debug.LogError("GridGenerator reference not found in Start!");
+                Debug.LogError("GridGenerator reference not found in Start!", this);
                 return;
             }
         }
-        
+
+        // Initialize Health Bar UI
+        if (healthBarUI != null)
+        {
+            // Determine if this is a player character. Adjust this logic if needed.
+            bool isPlayer = (myOccupantType == TileSettings.OccupantType.Player);
+            healthBarUI.Initialize(this, maxHealth, health, isPlayer);
+        }
+        else
+        {
+            Debug.LogWarning($"HealthBarUI not assigned for {gameObject.name}", this);
+        }
+
         // Force position update with small delay to ensure GridGenerator is fully initialized
-        Invoke("InitializePosition", 0.1f);
+        Invoke(nameof(InitializePosition), 0.1f);
     }
-    
+
     void InitializePosition()
     {
         FindTileAtCoordinates();
@@ -54,7 +75,7 @@ public class TileOccupants : MonoBehaviour
     public void SetDamageReduction(float reduction)
     {
         _damageReduction = Mathf.Clamp(reduction, 0f, 0.8f);
-        Debug.Log($"{gameObject.name} defense set to {_damageReduction * 100}%");
+        Debug.Log($"{gameObject.name} defense set to {_damageReduction * 100}%", this);
     }
 
     public void TakeDamage(int amount)
@@ -62,22 +83,58 @@ public class TileOccupants : MonoBehaviour
         int reducedDamage = Mathf.RoundToInt(amount * (1f - _damageReduction));
         int previousHealth = health;
         health -= reducedDamage;
-        
+        health = Mathf.Clamp(health, 0, maxHealth); // Ensure health doesn't go below 0 or above max
+
         string defenseMsg = _damageReduction > 0 ? $"[DEFENSE {_damageReduction * 100}%]" : "[NO DEFENSE]";
         Debug.Log($"{defenseMsg} {gameObject.name} Health: {previousHealth} -> {health} " +
-                 $"(Took {reducedDamage} damage, reduced from {amount})");
-        
+                 $"(Took {reducedDamage} damage, reduced from {amount})", this);
+
+        // Update Health Bar UI
+        if (healthBarUI != null)
+        {
+            healthBarUI.OnHealthChanged(health);
+        }
+        // OnHealthChanged?.Invoke(health); // Alternative: if using UnityEvent
+
         if (health <= 0)
         {
-            Debug.Log($"{gameObject.name} has died from {reducedDamage} damage!");
+            Debug.Log($"{gameObject.name} has died from {reducedDamage} damage!", this);
             Die();
         }
     }
 
     private void Die()
     {
-        Debug.Log($"{gameObject.name} has died.");
+        Debug.Log($"{gameObject.name} has died.", this);
+        // Optional: Notify healthBarUI or other systems about death
+        // if (healthBarUI != null) healthBarUI.HandleDeath();
         Destroy(gameObject);
+    }
+
+    // Public method to get current health if needed by other systems
+    public int GetCurrentHealth()
+    {
+        return health;
+    }
+
+    // Public method to get max health if needed
+    public int GetMaxHealth()
+    {
+        return maxHealth;
+    }
+    
+    // Example method to heal the character
+    public void Heal(int amount)
+    {
+        int previousHealth = health;
+        health += amount;
+        health = Mathf.Clamp(health, 0, maxHealth);
+        Debug.Log($"{gameObject.name} healed. Health: {previousHealth} -> {health}", this);
+
+        if (healthBarUI != null)
+        {
+            healthBarUI.OnHealthChanged(health);
+        }
     }
 
     void Update()

@@ -6,7 +6,24 @@ public class CharacterHealthUI : MonoBehaviour
 {
     [Header("UI References")]
     [SerializeField] private Slider mainHealthSlider;
-    [SerializeField] private Slider damagePreviewSlider;
+    [SerializeField] private Image mainSliderFillImage;
+    [SerializeField] private Image mainSliderBackgroundImage;
+    // mainSliderFillAreaImage is removed as only preview slider has a managed fill area sprite
+    [SerializeField] private Slider damagePreviewSlider; // This is the bottom layer
+    [SerializeField] private Image previewSliderFillImage;
+    [SerializeField] private Image previewSliderBackgroundImage;
+    [SerializeField] private Image previewSliderFillAreaImage;
+
+    [Header("Health State Sprites")]
+    [Tooltip("Sprite for the actual Fill of the sliders.")]
+    [SerializeField] private Sprite fillSpriteFullHealth;
+    [SerializeField] private Sprite fillSpriteMidHealth; // <= 66%
+    [SerializeField] private Sprite fillSpriteLowHealth;  // <= 33%
+    [Tooltip("Sprite for the Background of the sliders.")]
+    [SerializeField] private Sprite backgroundSpriteFullHealth;
+    [SerializeField] private Sprite backgroundSpriteMidHealth;
+    [SerializeField] private Sprite backgroundSpriteLowHealth;
+    // Removed separate Fill Area sprite fields as they will use the Fill sprites.
 
     [Header("Animation Settings")]
     [Tooltip("Curve for the top layer's fast drain.")]
@@ -26,12 +43,15 @@ public class CharacterHealthUI : MonoBehaviour
 
     private float maxHealth;
     private float logicalCurrentHealth;
-    private bool isPlayerCharacter; // Still kept, though not used for direction, might be useful for other logic
+    private bool isPlayerCharacter;
     private Coroutine topLayerFastDrainCoroutine;
     private Coroutine bottomLayerSlowDrainCoroutine;
     private Coroutine shakeCoroutine;
     private RectTransform rectTransform;
     private Vector2 originalAnchoredPosition;
+
+    private const float MID_HEALTH_THRESHOLD = 0.66f;
+    private const float LOW_HEALTH_THRESHOLD = 0.33f;
 
     void Awake()
     {
@@ -59,9 +79,12 @@ public class CharacterHealthUI : MonoBehaviour
         logicalCurrentHealth = initialCurrentHealth;
         isPlayerCharacter = isPlayer;
 
-        if (mainHealthSlider == null || damagePreviewSlider == null)
+        // Adjusted null checks: mainSliderFillAreaImage is no longer required.
+        if (mainHealthSlider == null || damagePreviewSlider == null ||
+            mainSliderFillImage == null || mainSliderBackgroundImage == null ||
+            previewSliderFillImage == null || previewSliderBackgroundImage == null || previewSliderFillAreaImage == null)
         {
-            Debug.LogError("Health sliders not assigned in CharacterHealthUI.", this);
+            Debug.LogError("One or more UI references (Sliders, Fill/Background Images for main slider, or Fill/Background/FillArea Images for preview slider) not assigned in CharacterHealthUI.", this);
             return;
         }
 
@@ -78,8 +101,9 @@ public class CharacterHealthUI : MonoBehaviour
         damagePreviewSlider.direction = direction;
 
         float initialNormalizedHealth = maxHealth > 0 ? logicalCurrentHealth / maxHealth : 0;
-        mainHealthSlider.value = initialNormalizedHealth; // Top layer
-        damagePreviewSlider.value = initialNormalizedHealth; // Bottom layer, initially same as top
+        mainHealthSlider.value = initialNormalizedHealth;
+        damagePreviewSlider.value = initialNormalizedHealth;
+        UpdateHealthBarSprites(initialNormalizedHealth); // Set initial sprites
     }
 
     public void OnHealthChanged(float newAbsoluteHealthValue)
@@ -91,17 +115,19 @@ public class CharacterHealthUI : MonoBehaviour
         if (shakeCoroutine != null)
         {
             StopCoroutine(shakeCoroutine);
-            if(rectTransform != null) rectTransform.anchoredPosition = originalAnchoredPosition; // Reset position if shake was interrupted
+            if(rectTransform != null) rectTransform.anchoredPosition = originalAnchoredPosition;
         }
         
-        float previousLogicalHealthNormalized = logicalCurrentHealth / maxHealth; // Health before this change
+        float previousLogicalHealthNormalized = maxHealth > 0 ? logicalCurrentHealth / maxHealth : 1f;
         logicalCurrentHealth = Mathf.Clamp(newAbsoluteHealthValue, 0, maxHealth);
-        float targetNormalizedHealth = logicalCurrentHealth / maxHealth;
+        float targetNormalizedHealth = maxHealth > 0 ? logicalCurrentHealth / maxHealth : 0f;
 
         float topLayerStartNormalized = mainHealthSlider.value;
         float bottomLayerStartNormalized = damagePreviewSlider.value;
 
-        // Trigger shake only if actual damage is taken (health decreased)
+        // Update sprites to reflect the target health state immediately
+        UpdateHealthBarSprites(targetNormalizedHealth);
+
         if (targetNormalizedHealth < previousLogicalHealthNormalized && shakeIntensity > 0 && shakeDuration > 0 && rectTransform != null)
         {
             shakeCoroutine = StartCoroutine(ShakeHealthBar());
@@ -109,6 +135,9 @@ public class CharacterHealthUI : MonoBehaviour
         
         topLayerFastDrainCoroutine = StartCoroutine(AnimateSlider(
             mainHealthSlider,
+            mainSliderFillImage,
+            mainSliderBackgroundImage,
+            null, // No fill area image for main slider
             topLayerStartNormalized,
             targetNormalizedHealth,
             fastDrainAnimationCurve,
@@ -118,6 +147,9 @@ public class CharacterHealthUI : MonoBehaviour
         
         bottomLayerSlowDrainCoroutine = StartCoroutine(AnimateSlider(
             damagePreviewSlider,
+            previewSliderFillImage,
+            previewSliderBackgroundImage,
+            previewSliderFillAreaImage, // Only preview slider has a fill area image to manage
             bottomLayerStartNormalized,
             targetNormalizedHealth,
             slowDrainAnimationCurve,
@@ -125,6 +157,61 @@ public class CharacterHealthUI : MonoBehaviour
             slowDrainStartDelay
         ));
     }
+
+    // fillAreaImage can be null if not applicable (e.g., for mainHealthSlider)
+    private void UpdateHealthBarSprites(float normalizedHealth, Image fillImage, Image backgroundImage, Image fillAreaImage)
+    {
+        // Adjusted null check for fillAreaImage
+        if (fillImage == null || backgroundImage == null) return;
+        // If fillAreaImage is provided, it must not be null for the logic below to proceed for it.
+        // However, the core fill/background logic can proceed even if fillAreaImage is null.
+
+        Sprite selectedFillSprite;
+        Sprite selectedBackgroundSprite;
+        // Sprite selectedFillAreaSprite; // No longer needed, will use selectedFillSprite
+
+        if (normalizedHealth <= LOW_HEALTH_THRESHOLD)
+        {
+            selectedFillSprite = fillSpriteLowHealth;
+            selectedBackgroundSprite = backgroundSpriteLowHealth;
+        }
+        else if (normalizedHealth <= MID_HEALTH_THRESHOLD)
+        {
+            selectedFillSprite = fillSpriteMidHealth;
+            selectedBackgroundSprite = backgroundSpriteMidHealth;
+        }
+        else
+        {
+            selectedFillSprite = fillSpriteFullHealth;
+            selectedBackgroundSprite = backgroundSpriteFullHealth;
+        }
+
+        if (fillImage.sprite != selectedFillSprite && selectedFillSprite != null)
+        {
+            fillImage.sprite = selectedFillSprite;
+        }
+        if (backgroundImage.sprite != selectedBackgroundSprite && selectedBackgroundSprite != null)
+        {
+            backgroundImage.sprite = selectedBackgroundSprite;
+        }
+        
+        // Fill Area (if provided) now uses the same sprite as the Fill
+        if (fillAreaImage != null) // Check if fillAreaImage is assigned before trying to use it
+        {
+            if (fillAreaImage.sprite != selectedFillSprite && selectedFillSprite != null)
+            {
+                fillAreaImage.sprite = selectedFillSprite;
+            }
+        }
+    }
+    
+    private void UpdateHealthBarSprites(float normalizedHealth)
+    {
+        // mainSliderFillAreaImage is no longer passed here as it's not managed for main slider
+        UpdateHealthBarSprites(normalizedHealth, mainSliderFillImage, mainSliderBackgroundImage, null);
+        UpdateHealthBarSprites(normalizedHealth, previewSliderFillImage, previewSliderBackgroundImage, previewSliderFillAreaImage);
+    }
+
 
     private IEnumerator ShakeHealthBar()
     {
@@ -141,11 +228,11 @@ public class CharacterHealthUI : MonoBehaviour
             rectTransform.anchoredPosition = originalAnchoredPosition + new Vector2(offsetX, offsetY);
             yield return null;
         }
-        rectTransform.anchoredPosition = originalAnchoredPosition; // Reset to original position
+        rectTransform.anchoredPosition = originalAnchoredPosition;
         shakeCoroutine = null;
     }
 
-    private IEnumerator AnimateSlider(Slider slider, float fromNormalized, float toNormalized, AnimationCurve curve, float duration, float delay)
+    private IEnumerator AnimateSlider(Slider slider, Image fillImage, Image backgroundImage, Image fillAreaImage, float fromNormalized, float toNormalized, AnimationCurve curve, float duration, float delay)
     {
         if (delay > 0) yield return new WaitForSeconds(delay);
 
@@ -155,10 +242,15 @@ public class CharacterHealthUI : MonoBehaviour
             timer += Time.deltaTime;
             float progress = Mathf.Clamp01(timer / duration);
             float curveValue = curve.Evaluate(progress);
-            slider.value = Mathf.Lerp(fromNormalized, toNormalized, curveValue);
+            float currentSliderValue = Mathf.Lerp(fromNormalized, toNormalized, curveValue);
+            slider.value = currentSliderValue;
+            // Sprites are now updated before animation starts, so no need to update them here per frame.
+            // UpdateHealthBarSprites(currentSliderValue, fillImage, backgroundImage, fillAreaImage);
             yield return null;
         }
         slider.value = toNormalized;
+        // Sprites are already set to the target state.
+        // UpdateHealthBarSprites(toNormalized, fillImage, backgroundImage, fillAreaImage);
     }
 
     public void UpdateMaxHealth(float newMaxHealth)

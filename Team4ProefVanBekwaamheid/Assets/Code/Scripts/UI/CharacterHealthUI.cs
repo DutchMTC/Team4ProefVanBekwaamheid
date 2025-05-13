@@ -18,14 +18,43 @@ public class CharacterHealthUI : MonoBehaviour
     [Tooltip("Delay before the bottom layer starts its slow drain after top layer starts.")]
     [SerializeField] private float slowDrainStartDelay = 0.1f;
 
+    [Header("Shake Effect Settings")]
+    [Tooltip("How far the health bar can move during shake.")]
+    [SerializeField] private float shakeIntensity = 5f;
+    [Tooltip("How long the shake effect lasts.")]
+    [SerializeField] private float shakeDuration = 0.15f;
+
     private float maxHealth;
     private float logicalCurrentHealth;
-    private bool isPlayerCharacter;
+    private bool isPlayerCharacter; // Still kept, though not used for direction, might be useful for other logic
     private Coroutine topLayerFastDrainCoroutine;
     private Coroutine bottomLayerSlowDrainCoroutine;
+    private Coroutine shakeCoroutine;
+    private RectTransform rectTransform;
+    private Vector2 originalAnchoredPosition;
+
+    void Awake()
+    {
+        rectTransform = GetComponent<RectTransform>();
+        if (rectTransform != null)
+        {
+            originalAnchoredPosition = rectTransform.anchoredPosition;
+        }
+        else
+        {
+            Debug.LogError("CharacterHealthUI requires a RectTransform component on the same GameObject.", this);
+        }
+    }
 
     public void Initialize(TileOccupants stats, float initialMaxHealth, float initialCurrentHealth, bool isPlayer)
     {
+        // Ensure original position is captured if Awake hasn't run or RectTransform was null then.
+        if (rectTransform == null) rectTransform = GetComponent<RectTransform>();
+        if (rectTransform != null && originalAnchoredPosition == Vector2.zero) // A simple check, might need refinement if (0,0) is a valid start
+        {
+            originalAnchoredPosition = rectTransform.anchoredPosition;
+        }
+        
         maxHealth = initialMaxHealth;
         logicalCurrentHealth = initialCurrentHealth;
         isPlayerCharacter = isPlayer;
@@ -59,19 +88,24 @@ public class CharacterHealthUI : MonoBehaviour
 
         if (topLayerFastDrainCoroutine != null) StopCoroutine(topLayerFastDrainCoroutine);
         if (bottomLayerSlowDrainCoroutine != null) StopCoroutine(bottomLayerSlowDrainCoroutine);
-                                         
+        if (shakeCoroutine != null)
+        {
+            StopCoroutine(shakeCoroutine);
+            if(rectTransform != null) rectTransform.anchoredPosition = originalAnchoredPosition; // Reset position if shake was interrupted
+        }
+        
+        float previousLogicalHealthNormalized = logicalCurrentHealth / maxHealth; // Health before this change
         logicalCurrentHealth = Mathf.Clamp(newAbsoluteHealthValue, 0, maxHealth);
         float targetNormalizedHealth = logicalCurrentHealth / maxHealth;
 
-        // Current visual state of the sliders.
-        // For damage, top layer (mainHealthSlider) starts fast drain from its current position.
-        // Bottom layer (damagePreviewSlider) starts slow drain from its current position after a delay.
         float topLayerStartNormalized = mainHealthSlider.value;
         float bottomLayerStartNormalized = damagePreviewSlider.value;
 
-        // If healing, both sliders should move towards the target health.
-        // The "fast drain" for the top layer still applies, but it will be an increase.
-        // The "slow drain" for the bottom layer also applies as an increase.
+        // Trigger shake only if actual damage is taken (health decreased)
+        if (targetNormalizedHealth < previousLogicalHealthNormalized && shakeIntensity > 0 && shakeDuration > 0 && rectTransform != null)
+        {
+            shakeCoroutine = StartCoroutine(ShakeHealthBar());
+        }
         
         topLayerFastDrainCoroutine = StartCoroutine(AnimateSlider(
             mainHealthSlider,
@@ -79,7 +113,7 @@ public class CharacterHealthUI : MonoBehaviour
             targetNormalizedHealth,
             fastDrainAnimationCurve,
             fastDrainDuration,
-            0f // No delay for top layer
+            0f
         ));
         
         bottomLayerSlowDrainCoroutine = StartCoroutine(AnimateSlider(
@@ -90,6 +124,25 @@ public class CharacterHealthUI : MonoBehaviour
             slowDrainDuration,
             slowDrainStartDelay
         ));
+    }
+
+    private IEnumerator ShakeHealthBar()
+    {
+        if (rectTransform == null) yield break;
+
+        float elapsedTime = 0f;
+        originalAnchoredPosition = rectTransform.anchoredPosition; // Re-capture in case it moved due to layout
+
+        while (elapsedTime < shakeDuration)
+        {
+            elapsedTime += Time.deltaTime;
+            float offsetX = Random.Range(-1f, 1f) * shakeIntensity;
+            float offsetY = Random.Range(-1f, 1f) * shakeIntensity;
+            rectTransform.anchoredPosition = originalAnchoredPosition + new Vector2(offsetX, offsetY);
+            yield return null;
+        }
+        rectTransform.anchoredPosition = originalAnchoredPosition; // Reset to original position
+        shakeCoroutine = null;
     }
 
     private IEnumerator AnimateSlider(Slider slider, float fromNormalized, float toNormalized, AnimationCurve curve, float duration, float delay)

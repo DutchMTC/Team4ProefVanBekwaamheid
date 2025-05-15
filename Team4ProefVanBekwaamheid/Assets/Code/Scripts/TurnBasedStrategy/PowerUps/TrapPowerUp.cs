@@ -153,7 +153,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
 
                 GameObject trapInstance = Instantiate(_trapPrefab, spawnPosition, Quaternion.identity);
 
-                targetTile.SetOccupant(TileSettings.OccupantType.Obstacle, trapInstance); // Used SetOccupant
+                targetTile.SetOccupant(TileSettings.OccupantType.Trap, trapInstance); // Used SetOccupant
                 // targetTile.OccupationChangedEvent.Invoke(); // Invoke is handled by SetOccupant
 
                 Debug.Log($"Enemy AI (PlaceTrap): Successfully placed trap at {targetTile.gridY}, {targetTile.gridX}."); // Changed to gridY and gridX

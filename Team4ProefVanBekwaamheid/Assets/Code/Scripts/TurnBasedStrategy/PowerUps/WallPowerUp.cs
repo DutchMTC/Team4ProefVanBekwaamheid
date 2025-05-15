@@ -165,7 +165,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
 
                 GameObject wallInstance = Instantiate(_wallPrefab, spawnPosition, spawnRotation);
 
-                targetTile.SetOccupant(TileSettings.OccupantType.Obstacle, wallInstance); // Used SetOccupant
+                targetTile.SetOccupant(TileSettings.OccupantType.Trap, wallInstance); // Used SetOccupant
                 // targetTile.OccupationChangedEvent.Invoke(); // Invoke is handled by SetOccupant
 
                 Debug.Log($"Enemy AI (PlaceWall): Successfully placed wall at {targetPos} with rotation {angle} degrees.");

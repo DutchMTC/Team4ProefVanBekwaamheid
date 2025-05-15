@@ -20,7 +20,8 @@ public class TileOccupants : MonoBehaviour
     [Header("UI")]
     [SerializeField] private CharacterHealthUI healthBarUI;
     // public UnityAction<float> OnHealthChanged; // Alternative: Use UnityEvent
-    private CharacterAnimationController _animationController;
+    private CharacterAnimationController _animationController; // Used for Player animations
+    private EnemyAIController _enemyAIController; // Used for Enemy animations
  
     void Awake()
     {
@@ -34,7 +35,20 @@ public class TileOccupants : MonoBehaviour
             }
         }
         health = maxHealth; // Initialize current health to max health
-        _animationController = FindObjectOfType<CharacterAnimationController>();
+        
+        if (myOccupantType == TileSettings.OccupantType.Player)
+        {
+            _animationController = GetComponent<CharacterAnimationController>();
+            if (_animationController == null) _animationController = FindObjectOfType<CharacterAnimationController>(); // Fallback if not on same object
+        }
+        else if (myOccupantType == TileSettings.OccupantType.Enemy)
+        {
+            _enemyAIController = GetComponent<EnemyAIController>();
+            if (_enemyAIController == null)
+            {
+                Debug.LogWarning($"EnemyAIController component not found on {gameObject.name}. Enemy animations for damage/death might not play.", this);
+            }
+        }
     }
  
     void Start()
@@ -111,6 +125,15 @@ public class TileOccupants : MonoBehaviour
         }
         // OnHealthChanged?.Invoke(health); // Alternative: if using UnityEvent
 
+        if (myOccupantType == TileSettings.OccupantType.Enemy && _enemyAIController != null && health > 0 && reducedDamage > 0)
+        {
+            _enemyAIController.PlayDamageAnimation();
+        }
+        else if (myOccupantType == TileSettings.OccupantType.Player && _animationController != null && health > 0 && reducedDamage > 0)
+        {
+            _animationController.PlayerDamage(); // Assuming PlayerDamage exists and is public
+        }
+
         if (health <= 0)
         {
             Debug.Log($"{gameObject.name} has died from {reducedDamage} damage!", this);
@@ -138,13 +161,20 @@ public class TileOccupants : MonoBehaviour
     private void Die()
     {
         Debug.Log($"{gameObject.name} has died.", this);
+        float destructionDelay = 0f;
         if (myOccupantType == TileSettings.OccupantType.Player && _animationController != null)
         {
             _animationController.PlayerDeath();
+            destructionDelay = 2f;
+        }
+        else if (myOccupantType == TileSettings.OccupantType.Enemy && _enemyAIController != null)
+        {
+            _enemyAIController.PlayDeathAnimation();
+            destructionDelay = 2f; // Assuming enemy death animation also takes time
         }
         // Optional: Notify healthBarUI or other systems about death
         // if (healthBarUI != null) healthBarUI.HandleDeath();
-        Destroy(gameObject, _animationController != null && myOccupantType == TileSettings.OccupantType.Player ? 2f : 0f); // Delay destruction if animation is playing
+        Destroy(gameObject, destructionDelay); // Delay destruction if animation is playing
     }
  
     // Public method to get current health if needed by other systems

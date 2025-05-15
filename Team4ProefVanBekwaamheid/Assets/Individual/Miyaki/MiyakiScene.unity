@@ -449,7 +449,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 653897027}
   m_FillRect: {fileID: 1912764270}
   m_HandleRect: {fileID: 0}
@@ -657,6 +657,7 @@ MonoBehaviour:
       charged: {fileID: 21300000, guid: 4feed9b43fa656e4685d137b58f2e0e9, type: 3}
       supercharged: {fileID: 21300000, guid: 3dc7d927142e9f54b834473164613642, type: 3}
   powerupDisplayParent: {fileID: 1817170674}
+  characterAnimationController: {fileID: 712886254}
   _movementPowerUp: {fileID: 71067645}
   verticalOffset: 0
   probabilityToSelectThreePowerups: 0.2
@@ -1798,7 +1799,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: ab4df7ecb652edf4fb07a2cd2f249740, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2327,7 +2328,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: ab4df7ecb652edf4fb07a2cd2f249740, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2718,7 +2719,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 1693629111}
   m_FillRect: {fileID: 1669351034}
   m_HandleRect: {fileID: 0}
@@ -3074,7 +3075,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerAnimator: {fileID: 1894640046}
-  enemyAnimator: {fileID: 0}
+  enemyAnimator: {fileID: 1917994909}
 --- !u!1 &746859425
 GameObject:
   m_ObjectHideFlags: 0
@@ -4589,7 +4590,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 258792762}
   m_FillRect: {fileID: 1454135229}
   m_HandleRect: {fileID: 0}
@@ -6590,7 +6591,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 520002927}
   m_FillRect: {fileID: 227642384}
   m_HandleRect: {fileID: 0}
@@ -7483,6 +7484,7 @@ MonoBehaviour:
       charged: {fileID: 21300000, guid: 4feed9b43fa656e4685d137b58f2e0e9, type: 3}
       supercharged: {fileID: 21300000, guid: 3dc7d927142e9f54b834473164613642, type: 3}
   powerupDisplayParent: {fileID: 1817170674}
+  characterAnimationController: {fileID: 0}
   _movementPowerUp: {fileID: 0}
   verticalOffset: 0
   probabilityToSelectThreePowerups: 0.2

@@ -22,6 +22,7 @@ public class EnemyAIController : MonoBehaviour
     public Image[] powerupDisplayIcons;
     public List<PowerupSpriteMapping> powerupSpriteMappings;
     [SerializeField] private RectTransform powerupDisplayParent;
+    [SerializeField] private CharacterAnimationController characterAnimationController; // Added for animations
 
     [SerializeField] private MovementPowerUp _movementPowerUp;
     private AttackPowerUp _attackPowerUp;
@@ -58,6 +59,15 @@ public class EnemyAIController : MonoBehaviour
         _trapPowerUp = GetComponent<TrapPowerUp>();
         _defensePowerUp = GetComponent<DefensePowerUp>();
         _enemyOccupants = GetComponent<TileOccupants>();
+
+        if (characterAnimationController != null)
+        {
+            characterAnimationController.EnemyEntrance();
+        }
+        else
+        {
+            Debug.LogWarning("EnemyAIController: CharacterAnimationController not assigned. Enemy entrance animation will not play.");
+        }
 
         if (_movementPowerUp == null || _attackPowerUp == null || _trapPowerUp == null || _defensePowerUp == null)
         {
@@ -306,6 +316,7 @@ public class EnemyAIController : MonoBehaviour
                             {
                                 Debug.Log($"Enemy AI: Executing Movement ({powerupToExecute.State})");
                                 _movementPowerUp.MovementPowerUpSelected(powerupToExecute.State, TileSelection.UserType.Enemy, playerOccupants);
+                                if (characterAnimationController != null) characterAnimationController.EnemyDash(); // Dash Animation
                                 _hasMovedThisTurn = true;
                                 executedThisPowerup = true;
                             }
@@ -315,6 +326,7 @@ public class EnemyAIController : MonoBehaviour
                             {
                                 Debug.Log($"Enemy AI: Executing Defense ({powerupToExecute.State})");
                                 _defensePowerUp.DefensePowerUpSelected(powerupToExecute.State, TileSelection.UserType.Enemy);
+                                if (characterAnimationController != null) characterAnimationController.EnemyDefense(); // Defense Animation
                                 executedThisPowerup = true;
                             }
                             break;
@@ -323,6 +335,21 @@ public class EnemyAIController : MonoBehaviour
                             {
                                 Debug.Log($"Enemy AI: Executing Attack ({powerupToExecute.State})");
                                 _attackPowerUp.AttackPowerUpSelected(powerupToExecute.State, TileSelection.UserType.Enemy, playerOccupants);
+                                if (characterAnimationController != null)
+                                {
+                                    switch (powerupToExecute.State)
+                                    {
+                                        case PowerUpState.Usable:
+                                            characterAnimationController.EnemyAttackUsable();
+                                            break;
+                                        case PowerUpState.Charged:
+                                            characterAnimationController.EnemyAttackCharged();
+                                            break;
+                                        case PowerUpState.Supercharged:
+                                            characterAnimationController.EnemyAttackSupercharged();
+                                            break;
+                                    }
+                                }
                                 executedThisPowerup = true;
                             }
                             break;
@@ -388,5 +415,29 @@ public class EnemyAIController : MonoBehaviour
         }
 
         _executionCoroutine = null;
+    }
+
+    public void PlayDeathAnimation()
+    {
+        if (characterAnimationController != null)
+        {
+            characterAnimationController.EnemyDeath();
+        }
+        else
+        {
+            Debug.LogWarning("EnemyAIController: CharacterAnimationController not assigned. Enemy death animation will not play.");
+        }
+    }
+
+    public void PlayDamageAnimation()
+    {
+        if (characterAnimationController != null)
+        {
+            characterAnimationController.EnemyDamage();
+        }
+        else
+        {
+            Debug.LogWarning("EnemyAIController: CharacterAnimationController not assigned. Enemy damage animation will not play.");
+        }
     }
 }

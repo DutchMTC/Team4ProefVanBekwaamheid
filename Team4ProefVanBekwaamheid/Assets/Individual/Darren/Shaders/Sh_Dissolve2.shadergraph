@@ -124,7 +124,26 @@
             "m_Id": "382b22f865c74ba395ffb8e7d29f25a4"
         }
     ],
-    "m_GroupDatas": [],
+    "m_GroupDatas": [
+        {
+            "m_Id": "fef7d7a2b30c4fd4b873ec1ee0b3087b"
+        },
+        {
+            "m_Id": "7da9815a0141477a83f7c24196f53552"
+        },
+        {
+            "m_Id": "7cdb928f1dda4ae2b6861c5c8f4ebe2d"
+        },
+        {
+            "m_Id": "2a6414b1e6ac454e82c5e5af45070f6e"
+        },
+        {
+            "m_Id": "50881555b8e1405cbf86633ed52799ce"
+        },
+        {
+            "m_Id": "21143772422b43a59f231656876bc26b"
+        }
+    ],
     "m_StickyNoteDatas": [],
     "m_Edges": [
         {
@@ -494,8 +513,8 @@
     ],
     "m_VertexContext": {
         "m_Position": {
-            "x": 0.0,
-            "y": 0.0
+            "x": 116.79998016357422,
+            "y": -20.00001335144043
         },
         "m_Blocks": [
             {
@@ -873,6 +892,17 @@
 
 {
     "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.GroupData",
+    "m_ObjectId": "21143772422b43a59f231656876bc26b",
+    "m_Title": "AlphaController",
+    "m_Position": {
+        "x": -849.5999755859375,
+        "y": 411.9999694824219
+    }
+}
+
+{
+    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.DynamicValueMaterialSlot",
     "m_ObjectId": "239327d1c1224f70a00ab899a9ab2ef2",
     "m_Id": 2,
@@ -924,7 +954,7 @@
     "m_Type": "UnityEditor.ShaderGraph.MultiplyNode",
     "m_ObjectId": "23aab7a6145f47dba6abb7164e70c6f2",
     "m_Group": {
-        "m_Id": ""
+        "m_Id": "21143772422b43a59f231656876bc26b"
     },
     "m_Name": "Multiply",
     "m_DrawState": {
@@ -1023,6 +1053,17 @@
     },
     "m_Labels": [],
     "m_Space": 3
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.GroupData",
+    "m_ObjectId": "2a6414b1e6ac454e82c5e5af45070f6e",
+    "m_Title": "Adds Edge Color",
+    "m_Position": {
+        "x": -1071.199951171875,
+        "y": 984.8001098632813
+    }
 }
 
 {
@@ -1474,10 +1515,21 @@
 
 {
     "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.GroupData",
+    "m_ObjectId": "50881555b8e1405cbf86633ed52799ce",
+    "m_Title": "Combines Edge Color to Sprite Texture",
+    "m_Position": {
+        "x": -489.6001281738281,
+        "y": 142.39996337890626
+    }
+}
+
+{
+    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.PropertyNode",
     "m_ObjectId": "5227efffcbe74a80ad373f052f54d128",
     "m_Group": {
-        "m_Id": ""
+        "m_Id": "7cdb928f1dda4ae2b6861c5c8f4ebe2d"
     },
     "m_Name": "Property",
     "m_DrawState": {
@@ -1757,7 +1809,7 @@
     "m_Type": "UnityEditor.ShaderGraph.NoiseNode",
     "m_ObjectId": "65184c98b44e4bb896cf8e838504a60b",
     "m_Group": {
-        "m_Id": ""
+        "m_Id": "7cdb928f1dda4ae2b6861c5c8f4ebe2d"
     },
     "m_Name": "Simple Noise",
     "m_DrawState": {
@@ -1892,7 +1944,7 @@
     "m_Type": "UnityEditor.ShaderGraph.ClampNode",
     "m_ObjectId": "768c6b7caf1e47a59376b413aa359e86",
     "m_Group": {
-        "m_Id": ""
+        "m_Id": "2a6414b1e6ac454e82c5e5af45070f6e"
     },
     "m_Name": "Clamp",
     "m_DrawState": {
@@ -1960,17 +2012,17 @@
     "m_Type": "UnityEditor.ShaderGraph.AddNode",
     "m_ObjectId": "783b164107cf4fa1a049b07cac6db987",
     "m_Group": {
-        "m_Id": ""
+        "m_Id": "50881555b8e1405cbf86633ed52799ce"
     },
     "m_Name": "Add",
     "m_DrawState": {
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -475.1998596191406,
+            "x": -464.0,
             "y": 202.39999389648438,
             "width": 208.0,
-            "height": 301.5999755859375
+            "height": 301.60003662109377
         }
     },
     "m_Slots": [
@@ -2043,6 +2095,28 @@
         "y": 0.0,
         "z": 0.0,
         "w": 0.0
+    }
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.GroupData",
+    "m_ObjectId": "7cdb928f1dda4ae2b6861c5c8f4ebe2d",
+    "m_Title": "Creates Dissolve",
+    "m_Position": {
+        "x": -2816.0,
+        "y": 523.2000122070313
+    }
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.GroupData",
+    "m_ObjectId": "7da9815a0141477a83f7c24196f53552",
+    "m_Title": "Inverts slider",
+    "m_Position": {
+        "x": -2800.7998046875,
+        "y": 982.400146484375
     }
 }
 
@@ -2388,7 +2462,7 @@
     "m_Type": "UnityEditor.ShaderGraph.RedirectNodeData",
     "m_ObjectId": "97199a6f85514204b0dc23774854c776",
     "m_Group": {
-        "m_Id": ""
+        "m_Id": "7cdb928f1dda4ae2b6861c5c8f4ebe2d"
     },
     "m_Name": "Redirect Node",
     "m_DrawState": {
@@ -2454,7 +2528,7 @@
     "m_Type": "UnityEditor.ShaderGraph.AddNode",
     "m_ObjectId": "9ffe3f57c9de47868c6fd0f5559c0749",
     "m_Group": {
-        "m_Id": ""
+        "m_Id": "fef7d7a2b30c4fd4b873ec1ee0b3087b"
     },
     "m_Name": "Add",
     "m_DrawState": {
@@ -2786,7 +2860,7 @@
     "m_Type": "UnityEditor.ShaderGraph.PropertyNode",
     "m_ObjectId": "b45d7075b63b4305b5d5b80dd739429f",
     "m_Group": {
-        "m_Id": ""
+        "m_Id": "2a6414b1e6ac454e82c5e5af45070f6e"
     },
     "m_Name": "Property",
     "m_DrawState": {
@@ -2846,7 +2920,7 @@
     "m_Type": "UnityEditor.ShaderGraph.OneMinusNode",
     "m_ObjectId": "b708e743aa37471daf19074632defe95",
     "m_Group": {
-        "m_Id": ""
+        "m_Id": "7da9815a0141477a83f7c24196f53552"
     },
     "m_Name": "One Minus",
     "m_DrawState": {
@@ -2958,7 +3032,7 @@
     "m_Type": "UnityEditor.ShaderGraph.PropertyNode",
     "m_ObjectId": "c5685cbf5918489c8ddf5225ba5c00af",
     "m_Group": {
-        "m_Id": ""
+        "m_Id": "fef7d7a2b30c4fd4b873ec1ee0b3087b"
     },
     "m_Name": "Property",
     "m_DrawState": {
@@ -3090,7 +3164,7 @@
     "m_Type": "UnityEditor.ShaderGraph.StepNode",
     "m_ObjectId": "cbd01e26d0074655a458ce56e7955f48",
     "m_Group": {
-        "m_Id": ""
+        "m_Id": "7cdb928f1dda4ae2b6861c5c8f4ebe2d"
     },
     "m_Name": "Step",
     "m_DrawState": {
@@ -3213,7 +3287,7 @@
     "m_Type": "UnityEditor.ShaderGraph.SubtractNode",
     "m_ObjectId": "e4c59162ae974662ae89786ab0e41349",
     "m_Group": {
-        "m_Id": ""
+        "m_Id": "fef7d7a2b30c4fd4b873ec1ee0b3087b"
     },
     "m_Name": "Subtract",
     "m_DrawState": {
@@ -3332,7 +3406,7 @@
     "m_Type": "UnityEditor.ShaderGraph.StepNode",
     "m_ObjectId": "fbe274539ca04c0098d49f79b042208b",
     "m_Group": {
-        "m_Id": ""
+        "m_Id": "fef7d7a2b30c4fd4b873ec1ee0b3087b"
     },
     "m_Name": "Step",
     "m_DrawState": {
@@ -3399,6 +3473,17 @@
     },
     "m_Property": {
         "m_Id": "5dfb57aaede447b98a8301d1984a01c2"
+    }
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.GroupData",
+    "m_ObjectId": "fef7d7a2b30c4fd4b873ec1ee0b3087b",
+    "m_Title": "Add edge outline",
+    "m_Position": {
+        "x": -2534.399658203125,
+        "y": 1012.7999267578125
     }
 }
 

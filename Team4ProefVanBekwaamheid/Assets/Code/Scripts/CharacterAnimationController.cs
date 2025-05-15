@@ -26,6 +26,20 @@ public class CharacterAnimationController : MonoBehaviour
     private const string PlayerAnimationPrefix = "AN_Player_";
     private const string EnemyAnimationPrefix = "AN_Enemy_";
 
+    void Start()
+    {
+        // Play entrance animation for the player on start
+        if (playerAnimator != null) // Ensure playerAnimator is assigned
+        {
+            PlayerEntrance();
+        }
+        // Optionally, trigger enemy entrance if needed, e.g., if enemies are present at start
+        // if (enemyAnimator != null)
+        // {
+        //     EnemyEntrance();
+        // }
+    }
+ 
     // Method to trigger an animation for a specific animator
     private void TriggerAnimation(Animator animator, AnimationState state, string prefix)
     {

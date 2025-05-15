@@ -15,11 +15,14 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
         private bool _isWaitingForSelection = false;
         private TileSelection.UserType _currentUserType; // Store the user type
         private TileOccupants _targetOccupantForAI; // Store the target for AI
+        private CharacterAnimationController _animationController;
+        private PowerUpState _currentPowerUpState; // Store the current power-up state
 
         void Start()
         {
             _tileSelection = FindObjectOfType<TileSelection>();
             _tileOccupants = GetComponent<TileOccupants>();
+            _animationController = FindObjectOfType<CharacterAnimationController>();
             
             if (_tileSelection == null)
             {
@@ -34,20 +37,24 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
         {
             _currentUserType = userType; // Store user type
             _targetOccupantForAI = targetOccupant; // Store target for AI
-
+            _currentPowerUpState = _state; // Store the current power-up state
+ 
             switch (_state)
             {
                 case PowerUpState.Usable:
                     _range = 1;
                     _currentDamage = _baseDamage;
+                    // Animation moved to Attack method
                     break;
                 case PowerUpState.Charged:
                     _range = 1;
                     _currentDamage = _baseDamage * 2;
+                    // Animation moved to Attack method
                     break;
                 case PowerUpState.Supercharged:
                     _range = 2;
                     _currentDamage = _baseDamage * 3;
+                    // Animation moved to Attack method
                     break;
             }
 
@@ -134,6 +141,23 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
 
             if (targetTile != null && targetTile.occupantType == expectedTargetType)
             {
+                // Trigger animation before dealing damage
+                if (_currentUserType == TileSelection.UserType.Player && _animationController != null)
+                {
+                    switch (_currentPowerUpState)
+                    {
+                        case PowerUpState.Usable:
+                            _animationController.PlayerAttackUsable();
+                            break;
+                        case PowerUpState.Charged:
+                            _animationController.PlayerAttackCharged();
+                            break;
+                        case PowerUpState.Supercharged:
+                            _animationController.PlayerAttackSupercharged();
+                            break;
+                    }
+                }
+
                 // Get the target's health component and apply damage
                 var targetHealth = targetTile.tileOccupant.GetComponent<TileOccupants>();
                 if (targetHealth != null)

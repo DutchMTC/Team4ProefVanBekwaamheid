@@ -19,7 +19,8 @@ public class TileOccupants : MonoBehaviour
     [Header("UI")]
     [SerializeField] private CharacterHealthUI healthBarUI;
     // public UnityAction<float> OnHealthChanged; // Alternative: Use UnityEvent
-
+    private CharacterAnimationController _animationController;
+ 
     void Awake()
     {
         // Ensure we have a reference to the GridGenerator as early as possible
@@ -32,8 +33,9 @@ public class TileOccupants : MonoBehaviour
             }
         }
         health = maxHealth; // Initialize current health to max health
+        _animationController = FindObjectOfType<CharacterAnimationController>();
     }
-
+ 
     void Start()
     {
         // Double check to make sure we have a GridGenerator reference
@@ -106,11 +108,15 @@ public class TileOccupants : MonoBehaviour
     private void Die()
     {
         Debug.Log($"{gameObject.name} has died.", this);
+        if (myOccupantType == TileSettings.OccupantType.Player && _animationController != null)
+        {
+            _animationController.PlayerDeath();
+        }
         // Optional: Notify healthBarUI or other systems about death
         // if (healthBarUI != null) healthBarUI.HandleDeath();
-        Destroy(gameObject);
+        Destroy(gameObject, _animationController != null && myOccupantType == TileSettings.OccupantType.Player ? 2f : 0f); // Delay destruction if animation is playing
     }
-
+ 
     // Public method to get current health if needed by other systems
     public int GetCurrentHealth()
     {

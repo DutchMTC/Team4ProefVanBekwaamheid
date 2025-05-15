@@ -12,11 +12,13 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
         private bool _isWaitingForSelection = false;
         private TileSelection.UserType _currentUserType; // Store the user type
         private TileOccupants _targetOccupantForAI; // Store the target for AI
-
+        private CharacterAnimationController _animationController;
+ 
         void Start()
         {
             _tileSelection = FindObjectOfType<TileSelection>();
             _tileOccupants = GetComponent<TileOccupants>();
+            _animationController = FindObjectOfType<CharacterAnimationController>();
             
             if (_tileSelection == null)
             {
@@ -131,6 +133,10 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
                 _tileOccupants.gridY = targetTile.gridY; // Changed to gridY
                 _tileOccupants.gridX = targetTile.gridX; // Changed to gridX
                 _tileOccupants.MoveToTile();
+                if (_currentUserType == TileSelection.UserType.Player && _animationController != null)
+                {
+                    _animationController.PlayerDash();
+                }
             }
             else
             {

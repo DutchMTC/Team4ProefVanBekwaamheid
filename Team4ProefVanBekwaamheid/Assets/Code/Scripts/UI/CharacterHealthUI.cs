@@ -13,6 +13,7 @@ public class CharacterHealthUI : MonoBehaviour
     [SerializeField] private Image previewSliderFillImage;
     [SerializeField] private Image previewSliderBackgroundImage;
     [SerializeField] private Image previewSliderFillAreaImage;
+    [SerializeField] private GameObject armorIcon; // Added for armor UI
 
     [Header("Health State Sprites")]
     [Tooltip("Sprite for the actual Fill of the sliders.")]
@@ -89,6 +90,11 @@ public class CharacterHealthUI : MonoBehaviour
         {
             Debug.LogError("One or more UI references (Sliders, Fill/Background Images for main slider, or Fill/Background/FillArea Images for preview slider) not assigned in CharacterHealthUI.", this);
             return;
+        }
+
+        if (armorIcon != null)
+        {
+            armorIcon.SetActive(false); // Initially hide armor icon
         }
 
         mainHealthSlider.minValue = 0;
@@ -276,5 +282,13 @@ public class CharacterHealthUI : MonoBehaviour
         // Recalculate and update display based on new max health and current logical health
         // This will trigger an animation if the normalized value changes.
         OnHealthChanged(logicalCurrentHealth);
+    }
+
+    public void UpdateArmorStatus(bool hasArmor)
+    {
+        if (armorIcon != null)
+        {
+            armorIcon.SetActive(hasArmor);
+        }
     }
 }

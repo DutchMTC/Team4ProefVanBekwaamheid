@@ -161,9 +161,10 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Enemy's turn!");
 
-        // Set UI visibility (Timer stays visible during enemy turn)
-        if (_matchCounterUI != null) _matchCounterUI.SetActive(false);
-        if (_timerUI != null) _timerUI.SetActive(true);
+        // UI visibility for _matchCounterUI and _timerUI is now set in OnPlayerTimerEnd
+        // and should persist through the enemy turn.
+        // if (_matchCounterUI != null) _matchCounterUI.SetActive(false); // Removed
+        // if (_timerUI != null) _timerUI.SetActive(true); // Removed
 
         if (_powerUpManager != null) _powerUpManager.SetButtonsInteractable(false); // Disable buttons
 
@@ -306,6 +307,11 @@ public class GameManager : MonoBehaviour
     private void OnPlayerTimerEnd()
     {
         Debug.Log("Player timer ended. Switching to Enemy phase.");
+
+        // Show Match Counter UI and hide Timer UI
+        if (_matchCounterUI != null) _matchCounterUI.SetActive(true);
+        if (_timerUI != null) _timerUI.SetActive(false);
+
         UpdateGameState(GameState.Enemy);
     }
 }

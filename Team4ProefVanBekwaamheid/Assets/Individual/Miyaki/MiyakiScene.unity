@@ -1477,11 +1477,14 @@ MonoBehaviour:
     type: 3}
   fillSpriteLowHealth: {fileID: 21300000, guid: 2d46450e4feabce409e70152bcde50be,
     type: 3}
+  fillSpriteDead: {fileID: 21300000, guid: fcfed0ad0517bfd4c8eac356e9171c63, type: 3}
   backgroundSpriteFullHealth: {fileID: 21300000, guid: 8ee221c7f4e67bd478fd96acab255efa,
     type: 3}
   backgroundSpriteMidHealth: {fileID: 21300000, guid: 318a37db291fad648be8abe85aaba532,
     type: 3}
   backgroundSpriteLowHealth: {fileID: 21300000, guid: 6cd6c32fc03ffcb45849a71be121e776,
+    type: 3}
+  backgroundSpriteDead: {fileID: 21300000, guid: f6e377332fbaaea47a8805b85c0d255e,
     type: 3}
   fastDrainAnimationCurve:
     serializedVersion: 2
@@ -4648,11 +4651,14 @@ MonoBehaviour:
     type: 3}
   fillSpriteLowHealth: {fileID: 21300000, guid: 2d46450e4feabce409e70152bcde50be,
     type: 3}
+  fillSpriteDead: {fileID: 21300000, guid: fcfed0ad0517bfd4c8eac356e9171c63, type: 3}
   backgroundSpriteFullHealth: {fileID: 21300000, guid: 8ee221c7f4e67bd478fd96acab255efa,
     type: 3}
   backgroundSpriteMidHealth: {fileID: 21300000, guid: 318a37db291fad648be8abe85aaba532,
     type: 3}
   backgroundSpriteLowHealth: {fileID: 21300000, guid: 6cd6c32fc03ffcb45849a71be121e776,
+    type: 3}
+  backgroundSpriteDead: {fileID: 21300000, guid: f6e377332fbaaea47a8805b85c0d255e,
     type: 3}
   fastDrainAnimationCurve:
     serializedVersion: 2

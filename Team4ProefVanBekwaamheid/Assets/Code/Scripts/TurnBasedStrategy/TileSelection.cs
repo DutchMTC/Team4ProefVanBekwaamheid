@@ -37,6 +37,7 @@ public class TileSelection : MonoBehaviour
     private HashSet<TileSettings> _tilesInRange = new HashSet<TileSettings>();
     private bool _isSelectionEnabled = false;
     private bool _hasSelectedTile = false;
+    private SelectionType _currentSelectionType; // To store the current selection type
     private List<TileSettings> _currentPath;
 
     public bool IsSelectingTiles => _isSelectionEnabled;
@@ -85,6 +86,7 @@ public class TileSelection : MonoBehaviour
 
     public void StartTileSelection(int range, Vector2Int currentPosition, SelectionType selectionType, UserType userType)
     {
+        _currentSelectionType = selectionType; // Store the selection type
         ClearTilesInRange();
         _isSelectionEnabled = true;
         _hasSelectedTile = false;
@@ -153,15 +155,31 @@ public class TileSelection : MonoBehaviour
             
             if (hitTile != null && _tilesInRange.Contains(hitTile))
             {
-                bool selectionComplete = HandlePathSelection(hitTile);
-                if (selectionComplete)
+                if (_currentSelectionType == SelectionType.Attack)
                 {
-                    ClearTilesInRange();
+                    _hasSelectedTile = true;
+                    _tileSettings = hitTile;
+                    OnTileSelected.Invoke(hitTile);
+                    ClearTilesInRange(); // This also sets _isSelectionEnabled = false
+                }
+                else if (_currentSelectionType == SelectionType.Movement)
+                {
+                    bool selectionComplete = HandlePathSelection(hitTile);
+                    if (selectionComplete)
+                    {
+                        ClearTilesInRange(); // This also sets _isSelectionEnabled = false
+                    }
+                    // If selection is not complete (e.g. no path), selection remains enabled with highlighted tiles.
+                }
+                else
+                {
+                    Debug.LogWarning($"Unknown selection type: {_currentSelectionType}");
+                    _selectedTile = null;
                 }
             }
             else
             {
-                Debug.Log("Selected tile is not in range!");
+                Debug.Log("Selected tile is not in range or not a valid tile!");
                 _selectedTile = null;
             }
         }

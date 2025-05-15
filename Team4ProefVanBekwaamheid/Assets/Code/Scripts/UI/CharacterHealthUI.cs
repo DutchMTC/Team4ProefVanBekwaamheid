@@ -19,10 +19,12 @@ public class CharacterHealthUI : MonoBehaviour
     [SerializeField] private Sprite fillSpriteFullHealth;
     [SerializeField] private Sprite fillSpriteMidHealth; // <= 66%
     [SerializeField] private Sprite fillSpriteLowHealth;  // <= 33%
+    [SerializeField] private Sprite fillSpriteDead;     // <= 0%
     [Tooltip("Sprite for the Background of the sliders.")]
     [SerializeField] private Sprite backgroundSpriteFullHealth;
     [SerializeField] private Sprite backgroundSpriteMidHealth;
     [SerializeField] private Sprite backgroundSpriteLowHealth;
+    [SerializeField] private Sprite backgroundSpriteDead;   // <= 0%
     // Removed separate Fill Area sprite fields as they will use the Fill sprites.
 
     [Header("Animation Settings")]
@@ -52,6 +54,7 @@ public class CharacterHealthUI : MonoBehaviour
 
     private const float MID_HEALTH_THRESHOLD = 0.66f;
     private const float LOW_HEALTH_THRESHOLD = 0.33f;
+    private const float DEAD_HEALTH_THRESHOLD = 0f;
 
     void Awake()
     {
@@ -173,7 +176,12 @@ public class CharacterHealthUI : MonoBehaviour
         Sprite selectedBackgroundSprite;
         // Sprite selectedFillAreaSprite; // No longer needed, will use selectedFillSprite
 
-        if (normalizedHealth <= LOW_HEALTH_THRESHOLD)
+        if (normalizedHealth <= DEAD_HEALTH_THRESHOLD)
+        {
+            selectedFillSprite = fillSpriteDead;
+            selectedBackgroundSprite = backgroundSpriteDead;
+        }
+        else if (normalizedHealth <= LOW_HEALTH_THRESHOLD)
         {
             selectedFillSprite = fillSpriteLowHealth;
             selectedBackgroundSprite = backgroundSpriteLowHealth;

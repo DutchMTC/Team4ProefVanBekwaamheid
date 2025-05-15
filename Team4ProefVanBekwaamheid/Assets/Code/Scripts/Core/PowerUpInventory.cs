@@ -14,13 +14,13 @@ public class PowerUpInventory : MonoBehaviour
         Sword,
         Shield,
         Steps,
-        Wall
+        Trap
     }
 
     [SerializeField] private int _swordCount = 0;
     [SerializeField] private int _shieldCount = 0;
     [SerializeField] private int _stepsCount = 0;
-    [SerializeField] private int _wallCount = 0;
+    [SerializeField] private int _trapCount = 0;
 
     private void Awake()
     {
@@ -52,9 +52,9 @@ public class PowerUpInventory : MonoBehaviour
                 _stepsCount += amount;
                 OnPowerUpCountChanged?.Invoke(type, _stepsCount); // Invoke event
                 break;
-            case PowerUpType.Wall:
-                _wallCount += amount;
-                OnPowerUpCountChanged?.Invoke(type, _wallCount); // Invoke event
+            case PowerUpType.Trap:
+                _trapCount += amount;
+                OnPowerUpCountChanged?.Invoke(type, _trapCount); // Invoke event
                 break;
         }
         // LogInventory(); // Logging can be removed or kept as needed
@@ -67,7 +67,7 @@ public class PowerUpInventory : MonoBehaviour
             PowerUpType.Sword => _swordCount,
             PowerUpType.Shield => _shieldCount,
             PowerUpType.Steps => _stepsCount,
-            PowerUpType.Wall => _wallCount,
+            PowerUpType.Trap => _trapCount,
             _ => 0
         };
     }
@@ -88,9 +88,9 @@ public class PowerUpInventory : MonoBehaviour
                 _stepsCount--;
                 OnPowerUpCountChanged?.Invoke(type, _stepsCount); // Invoke event
                 break;
-            case PowerUpType.Wall when _wallCount > 0:
-                _wallCount--;
-                OnPowerUpCountChanged?.Invoke(type, _wallCount); // Invoke event
+            case PowerUpType.Trap when _trapCount > 0:
+                _trapCount--;
+                OnPowerUpCountChanged?.Invoke(type, _trapCount); // Invoke event
                 break;
         }
         // LogInventory();
@@ -106,7 +106,7 @@ public class PowerUpInventory : MonoBehaviour
             case PowerUpType.Sword: _swordCount = newCount; break;
             case PowerUpType.Shield: _shieldCount = newCount; break;
             case PowerUpType.Steps: _stepsCount = newCount; break;
-            case PowerUpType.Wall: _wallCount = newCount; break;
+            case PowerUpType.Trap: _trapCount = newCount; break;
             default: return; // Exit if type is invalid
         }
         OnPowerUpCountChanged?.Invoke(type, newCount); // Invoke event
@@ -123,7 +123,7 @@ public class PowerUpInventory : MonoBehaviour
             case PowerUpType.Sword: _swordCount = Mathf.Max(0, _swordCount - amount); newCount = _swordCount; break;
             case PowerUpType.Shield: _shieldCount = Mathf.Max(0, _shieldCount - amount); newCount = _shieldCount; break;
             case PowerUpType.Steps: _stepsCount = Mathf.Max(0, _stepsCount - amount); newCount = _stepsCount; break;
-            case PowerUpType.Wall: _wallCount = Mathf.Max(0, _wallCount - amount); newCount = _wallCount; break;
+            case PowerUpType.Trap: _trapCount = Mathf.Max(0, _trapCount - amount); newCount = _trapCount; break;
             default: return; // Exit if type is invalid
         }
         OnPowerUpCountChanged?.Invoke(type, newCount); // Invoke event
@@ -138,13 +138,13 @@ public class PowerUpInventory : MonoBehaviour
        _swordCount = 0;
        _shieldCount = 0;
        _stepsCount = 0;
-       _wallCount = 0;
+       _trapCount = 0;
 
        // Invoke events for each type to notify listeners (like PowerUpManager)
        OnPowerUpCountChanged?.Invoke(PowerUpType.Sword, _swordCount);
        OnPowerUpCountChanged?.Invoke(PowerUpType.Shield, _shieldCount);
        OnPowerUpCountChanged?.Invoke(PowerUpType.Steps, _stepsCount);
-       OnPowerUpCountChanged?.Invoke(PowerUpType.Wall, _wallCount);
+       OnPowerUpCountChanged?.Invoke(PowerUpType.Trap, _trapCount);
 
        Debug.Log("Power-up inventory cleared.");
        // LogInventory(); // Optional: Log after clearing
@@ -156,7 +156,7 @@ public class PowerUpInventory : MonoBehaviour
                   $"Swords: {_swordCount}\n" +
                   $"Shields: {_shieldCount}\n" +
                   $"Steps: {_stepsCount}\n" +
-                  $"Walls: {_wallCount}");
+                  $"Traps: {_trapCount}");
                   
     }
 }

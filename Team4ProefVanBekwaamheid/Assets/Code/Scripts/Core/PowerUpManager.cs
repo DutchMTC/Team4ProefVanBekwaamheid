@@ -36,19 +36,19 @@ public class PowerUpManager : MonoBehaviour
     [Header("UI Button Images")]
     public Image swordButtonImage;
     public Image shieldButtonImage;
-    public Image wallButtonImage;
+    public Image trapButtonImage;
     public Image stepsButtonImage;
 
     [Header("UI Fill Images (Set Type to Filled)")]
     public Image swordFillImage;
     public Image shieldFillImage;
-    public Image wallFillImage;
+    public Image trapFillImage;
     public Image stepsFillImage;
 
     [Header("PowerUp Specific Sprites")]
     public PowerUpSprites swordSprites;
     public PowerUpSprites shieldSprites;
-    public PowerUpSprites wallSprites;
+    public PowerUpSprites trapSprites;
     public PowerUpSprites stepsSprites;
 
     [Header("Animation Settings")]
@@ -72,7 +72,7 @@ public class PowerUpManager : MonoBehaviour
     // Power Up References
     [SerializeField] private MovementPowerUp _movementPowerUp; // Reference to the PowerUpInventory script
     [SerializeField] private AttackPowerUp _attackPowerUp; 
-    [SerializeField] private WallPowerUp _wallPowerUp;
+    [SerializeField] private TrapPowerUp _trapPowerUp;
     [SerializeField] private DefensePowerUp _defensePowerUp; // Reference to the PowerUpInventory script
 
 
@@ -83,7 +83,7 @@ public class PowerUpManager : MonoBehaviour
         {
             { PowerUpInventory.PowerUpType.Sword, swordButtonImage },
             { PowerUpInventory.PowerUpType.Shield, shieldButtonImage },
-            { PowerUpInventory.PowerUpType.Wall, wallButtonImage },
+            { PowerUpInventory.PowerUpType.Trap, trapButtonImage },
             { PowerUpInventory.PowerUpType.Steps, stepsButtonImage }
         };
 
@@ -91,7 +91,7 @@ public class PowerUpManager : MonoBehaviour
         {
             { PowerUpInventory.PowerUpType.Sword, swordSprites },
             { PowerUpInventory.PowerUpType.Shield, shieldSprites },
-            { PowerUpInventory.PowerUpType.Wall, wallSprites },
+            { PowerUpInventory.PowerUpType.Trap, trapSprites },
             { PowerUpInventory.PowerUpType.Steps, stepsSprites }
         };
 
@@ -102,7 +102,7 @@ public class PowerUpManager : MonoBehaviour
         {
             { PowerUpInventory.PowerUpType.Sword, swordFillImage },
             { PowerUpInventory.PowerUpType.Shield, shieldFillImage },
-            { PowerUpInventory.PowerUpType.Wall, wallFillImage },
+            { PowerUpInventory.PowerUpType.Trap, trapFillImage },
             { PowerUpInventory.PowerUpType.Steps, stepsFillImage }
         };
 
@@ -688,10 +688,10 @@ public class PowerUpManager : MonoBehaviour
         TryUsePowerUp(PowerUpInventory.PowerUpType.Shield);
     }
 
-    public void UseWallPowerUp()
+    public void UseTrapPowerUp()
     {
-        Debug.Log("UseWallPowerUp button clicked.");
-        TryUsePowerUp(PowerUpInventory.PowerUpType.Wall);
+        Debug.Log("UseTrapPowerUp button clicked.");
+        TryUsePowerUp(PowerUpInventory.PowerUpType.Trap);
     }
 
     public void UseStepsPowerUp()
@@ -718,8 +718,8 @@ public class PowerUpManager : MonoBehaviour
             case PowerUpInventory.PowerUpType.Shield:
                 HandleShield(type, state, user);
                 break;
-            case PowerUpInventory.PowerUpType.Wall:
-                HandleWall(type, state, user);
+            case PowerUpInventory.PowerUpType.Trap:
+                HandleTrap(type, state, user);
                 break;
             case PowerUpInventory.PowerUpType.Steps:
                 HandleSteps(type, state, user);
@@ -748,9 +748,9 @@ public class PowerUpManager : MonoBehaviour
         // TODO: Pass type, state, user to the actual effect execution script/system
     }
 
-    private void HandleWall(PowerUpInventory.PowerUpType type, PowerUpState state, PowerUpUser user)
+    private void HandleTrap(PowerUpInventory.PowerUpType type, PowerUpState state, PowerUpUser user)
     {
-        _wallPowerUp.WallPowerUpSelected(state, TileSelection.UserType.Player); // Call the wall power-up selection method
+        _trapPowerUp.TrapPowerUpSelected(state, TileSelection.UserType.Player); // Call the trap power-up selection method
         Debug.Log($"Handling {type} effect. State: {state}, User: {user}");
         // TODO: Pass type, state, user to the actual effect execution script/system
     }

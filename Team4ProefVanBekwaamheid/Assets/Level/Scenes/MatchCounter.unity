@@ -178,10 +178,10 @@ GameObject:
   - component: {fileID: 71067644}
   - component: {fileID: 71067643}
   - component: {fileID: 71067648}
-  - component: {fileID: 71067647}
   - component: {fileID: 71067646}
   - component: {fileID: 71067645}
   - component: {fileID: 71067649}
+  - component: {fileID: 71067650}
   m_Layer: 2
   m_Name: Enemy
   m_TagString: Untagged
@@ -223,7 +223,9 @@ MonoBehaviour:
   myOccupantType: 2
   gridY: 0
   gridX: 4
+  maxHealth: 30
   health: 30
+  healthBarUI: {fileID: 0}
 --- !u!65 &71067644
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -272,22 +274,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _range: 1
   _baseDamage: 10
---- !u!114 &71067647
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 71067641}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4b4018ec2838df549b9d6af032b748b3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _range: 0
-  _wallPrefab: {fileID: 4507598483232769260, guid: 90862bad46d4cbe4e9de12bf2e29a56a,
-    type: 3}
-  _positionOffset: {x: 0, y: 0, z: 0}
 --- !u!114 &71067648
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -332,6 +318,7 @@ MonoBehaviour:
       charged: {fileID: 21300000, guid: 4feed9b43fa656e4685d137b58f2e0e9, type: 3}
       supercharged: {fileID: 21300000, guid: 3dc7d927142e9f54b834473164613642, type: 3}
   powerupDisplayParent: {fileID: 1817170674}
+  _movementPowerUp: {fileID: 0}
   verticalOffset: 0
   probabilityToSelectThreePowerups: 0.2
   probabilityCharged: 0.4
@@ -349,6 +336,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _baseReduction: 0.3
+--- !u!114 &71067650
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 71067641}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4949257cfda8864fa2177e977360ff2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _range: 1
+  _baseDamage: 10
+  _trapPrefab: {fileID: 919132149155446097, guid: dc52fc69135f2344c9e509639483cb61,
+    type: 3}
 --- !u!1 &74103058
 GameObject:
   m_ObjectHideFlags: 0
@@ -1151,7 +1154,9 @@ MonoBehaviour:
   myOccupantType: 1
   gridY: 4
   gridX: 0
+  maxHealth: 30
   health: 30
+  healthBarUI: {fileID: 0}
 --- !u!114 &428523649
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1179,22 +1184,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _range: 1
   _baseDamage: 10
---- !u!114 &428523653
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 919132149035406439}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4b4018ec2838df549b9d6af032b748b3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _range: 1
-  _wallPrefab: {fileID: 4507598483232769260, guid: 90862bad46d4cbe4e9de12bf2e29a56a,
-    type: 3}
-  _positionOffset: {x: 0, y: 0, z: 0}
 --- !u!1 &431951362
 GameObject:
   m_ObjectHideFlags: 0
@@ -2035,7 +2024,9 @@ MonoBehaviour:
   myOccupantType: 3
   gridY: 0
   gridX: 0
+  maxHealth: 30
   health: 30
+  healthBarUI: {fileID: 0}
 --- !u!135 &849431663
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -3366,11 +3357,11 @@ MonoBehaviour:
   powerUpInventory: {fileID: 1460290667}
   swordButtonImage: {fileID: 1169407415}
   shieldButtonImage: {fileID: 2062522284}
-  wallButtonImage: {fileID: 544225296}
+  trapButtonImage: {fileID: 544225296}
   stepsButtonImage: {fileID: 853533869}
   swordFillImage: {fileID: 963997353}
   shieldFillImage: {fileID: 679059883}
-  wallFillImage: {fileID: 1464431931}
+  trapFillImage: {fileID: 88222704}
   stepsFillImage: {fileID: 88222704}
   swordSprites:
     unusable: {fileID: 21300000, guid: 968dada4dd95eb04fa69c6f243006cc3, type: 3}
@@ -3382,11 +3373,11 @@ MonoBehaviour:
     usable: {fileID: 21300000, guid: 20ebe8d3fe4b8004f905617c2fb6ad52, type: 3}
     charged: {fileID: 21300000, guid: 14eb20062cc3cf2488339c5e2a657685, type: 3}
     supercharged: {fileID: 21300000, guid: e95ccad5ddfc6f44cba06a76c1aacdb3, type: 3}
-  wallSprites:
-    unusable: {fileID: 21300000, guid: 80a9263cb448fc94f8ed2074c885d5cc, type: 3}
-    usable: {fileID: 21300000, guid: a49d1c1729e0ec446896df353046d59c, type: 3}
-    charged: {fileID: 21300000, guid: 4feed9b43fa656e4685d137b58f2e0e9, type: 3}
-    supercharged: {fileID: 21300000, guid: 3dc7d927142e9f54b834473164613642, type: 3}
+  trapSprites:
+    unusable: {fileID: 21300000, guid: de29c262a707cc64f853130f72261ade, type: 3}
+    usable: {fileID: 21300000, guid: 5b53d848daa4821419bc4ca91f368274, type: 3}
+    charged: {fileID: 21300000, guid: 916c252f01ca9854ea7efc622425e48d, type: 3}
+    supercharged: {fileID: 21300000, guid: bf7a74949fc5fd746b6b9cab2cf45f30, type: 3}
   stepsSprites:
     unusable: {fileID: 21300000, guid: 6484b75c62e1e6f43a1be5e75fbcf9f3, type: 3}
     usable: {fileID: 21300000, guid: f5c2e27045df3654ca63adc038dd924a, type: 3}
@@ -3419,7 +3410,7 @@ MonoBehaviour:
     m_RotationOrder: 4
   _movementPowerUp: {fileID: 428523649}
   _attackPowerUp: {fileID: 428523652}
-  _wallPowerUp: {fileID: 428523653}
+  _trapPowerUp: {fileID: 3469287836536717691}
   _defensePowerUp: {fileID: 3469287836536717689}
 --- !u!114 &1460290667
 MonoBehaviour:
@@ -3436,7 +3427,7 @@ MonoBehaviour:
   _swordCount: 0
   _shieldCount: 0
   _stepsCount: 0
-  _wallCount: 0
+  _trapCount: 0
 --- !u!1 &1462046262
 GameObject:
   m_ObjectHideFlags: 0
@@ -4174,6 +4165,7 @@ MonoBehaviour:
       charged: {fileID: 21300000, guid: 4feed9b43fa656e4685d137b58f2e0e9, type: 3}
       supercharged: {fileID: 21300000, guid: 3dc7d927142e9f54b834473164613642, type: 3}
   powerupDisplayParent: {fileID: 1817170674}
+  _movementPowerUp: {fileID: 0}
   verticalOffset: 0
   probabilityToSelectThreePowerups: 0.2
   probabilityCharged: 0.4
@@ -4435,7 +4427,7 @@ MonoBehaviour:
   movePowerUpTarget: {fileID: 853533868}
   attackPowerUpTarget: {fileID: 1169407414}
   defensePowerUpTarget: {fileID: 2062522283}
-  wallPowerUpTarget: {fileID: 544225295}
+  trapPowerUpTarget: {fileID: 0}
   animationPanelParent: {fileID: 68855577}
 --- !u!4 &1832730704
 Transform:
@@ -5233,9 +5225,9 @@ GameObject:
   - component: {fileID: 428523645}
   - component: {fileID: 428523649}
   - component: {fileID: 428523652}
-  - component: {fileID: 428523653}
   - component: {fileID: 3469287836536717689}
   - component: {fileID: 3469287836536717690}
+  - component: {fileID: 3469287836536717691}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -5277,6 +5269,22 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.03, y: 0.03, z: 0.07}
   m_Center: {x: 0, y: 0, z: 0.03}
+--- !u!114 &3469287836536717691
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 919132149035406439}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4949257cfda8864fa2177e977360ff2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _range: 1
+  _baseDamage: 10
+  _trapPrefab: {fileID: 919132149155446097, guid: dc52fc69135f2344c9e509639483cb61,
+    type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

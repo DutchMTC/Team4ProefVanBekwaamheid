@@ -25,7 +25,7 @@ public class EnemyAIController : MonoBehaviour
 
     [SerializeField] private MovementPowerUp _movementPowerUp;
     private AttackPowerUp _attackPowerUp;
-    private WallPowerUp _wallPowerUp;
+    private TrapPowerUp _trapPowerUp;
     private DefensePowerUp _defensePowerUp;
     private TileOccupants _enemyOccupants;
 
@@ -55,11 +55,11 @@ public class EnemyAIController : MonoBehaviour
         PositionPowerupDisplay();
         _movementPowerUp = GetComponent<MovementPowerUp>();
         _attackPowerUp = GetComponent<AttackPowerUp>();
-        _wallPowerUp = GetComponent<WallPowerUp>();
+        _trapPowerUp = GetComponent<TrapPowerUp>();
         _defensePowerUp = GetComponent<DefensePowerUp>();
         _enemyOccupants = GetComponent<TileOccupants>();
 
-        if (_movementPowerUp == null || _attackPowerUp == null || _wallPowerUp == null || _defensePowerUp == null)
+        if (_movementPowerUp == null || _attackPowerUp == null || _trapPowerUp == null || _defensePowerUp == null)
         {
             Debug.LogError("EnemyAIController: One or more PowerUp script references are missing on this GameObject!");
         }
@@ -281,7 +281,7 @@ public class EnemyAIController : MonoBehaviour
                 PowerUpInventory.PowerUpType.Steps,
                 PowerUpInventory.PowerUpType.Shield,
                 PowerUpInventory.PowerUpType.Sword,
-                PowerUpInventory.PowerUpType.Wall
+                PowerUpInventory.PowerUpType.Trap
             };
 
             List<int> executedIconIndices = new List<int>();
@@ -324,17 +324,17 @@ public class EnemyAIController : MonoBehaviour
                                 executedThisPowerup = true;
                             }
                             break;
-                        case PowerUpInventory.PowerUpType.Wall:
-                            bool canUseWall = !_movementWasChosen || _hasMovedThisTurn;
-                            if (_wallPowerUp != null && canUseWall)
+                        case PowerUpInventory.PowerUpType.Trap:
+                            bool canUseTrap = !_movementWasChosen || _hasMovedThisTurn;
+                            if (_trapPowerUp != null && canUseTrap)
                             {
-                                Debug.Log($"Enemy AI: Executing Wall ({powerupToExecute.State})");
-                                _wallPowerUp.WallPowerUpSelected(powerupToExecute.State, TileSelection.UserType.Enemy, playerOccupants);
+                                Debug.Log($"Enemy AI: Executing Trap ({powerupToExecute.State})");
+                                _trapPowerUp.TrapPowerUpSelected(powerupToExecute.State, TileSelection.UserType.Enemy, playerOccupants);
                                 executedThisPowerup = true;
                             }
-                            else if (!canUseWall)
+                            else if (!canUseTrap)
                             {
-                                Debug.Log($"Enemy AI: Skipping Wall ({powerupToExecute.State}) because Movement was chosen but not executed yet.");
+                                Debug.Log($"Enemy AI: Skipping Trap ({powerupToExecute.State}) because Movement was chosen but not executed yet.");
                             }
                             break;
                     }

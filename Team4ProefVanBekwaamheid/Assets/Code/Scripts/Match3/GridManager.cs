@@ -33,7 +33,7 @@ public class GridManager : MonoBehaviour
     public Transform movePowerUpTarget; // Assign the Move PowerUp Button Transform
     public Transform attackPowerUpTarget; // Assign the Attack PowerUp Button Transform
     public Transform defensePowerUpTarget; // Assign the Defense PowerUp Button Transform
-    public Transform wallPowerUpTarget; // Assign the Wall PowerUp Button Transform
+    public Transform trapPowerUpTarget; // Assign the Trap PowerUp Button Transform
     // Add more targets as needed
 
     [Header("Animation Parent")]
@@ -61,7 +61,7 @@ public class GridManager : MonoBehaviour
         else Debug.LogError("MatchCounterText is not assigned in the Inspector!");
 
         // Basic check for power-up targets
-        if (movePowerUpTarget == null || attackPowerUpTarget == null || defensePowerUpTarget == null || wallPowerUpTarget == null)
+        if (movePowerUpTarget == null || attackPowerUpTarget == null || defensePowerUpTarget == null || trapPowerUpTarget == null)
         {
             Debug.LogWarning("One or more PowerUp Target Transforms are not assigned in the GridManager Inspector. Animations might not target correctly.");
         }
@@ -762,8 +762,8 @@ public class GridManager : MonoBehaviour
                 return attackPowerUpTarget;
             case PowerUpInventory.PowerUpType.Shield: // Assuming Defense maps to Shield
                 return defensePowerUpTarget;
-            case PowerUpInventory.PowerUpType.Wall: // Added Wall type
-                return wallPowerUpTarget;
+            case PowerUpInventory.PowerUpType.Trap: // Added Trap type
+                return trapPowerUpTarget;
             // Add cases for other power-up types if they exist in PowerUpInventory.PowerUpType
             // case PowerUpInventory.PowerUpType.Health: return healPowerUpTarget;
             default:

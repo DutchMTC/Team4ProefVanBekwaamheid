@@ -48,24 +48,28 @@ public class PickupItem : MonoBehaviour
         switch (itemData.itemType)
         {
             case ItemType.Heal:
-                // unitStats.ReceiveHeal(itemData.boostAmount);
-                Debug.Log(unit.name + " picked up " + itemData.itemName + " and received " + itemData.boostAmount + " heal.");
-                // Replace with actual call to unit's ReceiveHeal method
-                if (unit.GetComponent<Health>() != null) // Assuming a Health script exists
+                Debug.Log(unit.name + " picked up " + itemData.itemName + " and attempting to heal for 10.");
+                TileOccupants occupant = unit.GetComponent<TileOccupants>();
+                if (occupant != null)
                 {
-                    // unit.GetComponent<Health>().ReceiveHeal(itemData.boostAmount); 
+                    occupant.Heal(10);
                 }
                 else
                 {
-                    // Attempt to call a generic ReceiveHeal method if Health component is not found
-                    unit.SendMessage("ReceiveHeal", itemData.boostAmount, SendMessageOptions.DontRequireReceiver);
+                    Debug.LogWarning($"{unit.name} does not have a TileOccupants component. Cannot apply heal.");
                 }
                 break;
             case ItemType.Armor:
-                // unitStats.ReceiveArmor(itemData.boostAmount);
-                Debug.Log(unit.name + " picked up " + itemData.itemName + " and received " + itemData.boostAmount + " armor.");
-                // Replace with actual call to unit's ReceiveArmor method
-                 unit.SendMessage("ReceiveArmor", itemData.boostAmount, SendMessageOptions.DontRequireReceiver);
+                Debug.Log(unit.name + " picked up " + itemData.itemName + " and attempting to apply armor.");
+                TileOccupants targetOccupant = unit.GetComponent<TileOccupants>();
+                if (targetOccupant != null)
+                {
+                    targetOccupant.ReceiveArmor();
+                }
+                else
+                {
+                    Debug.LogWarning($"{unit.name} does not have a TileOccupants component. Cannot apply armor.");
+                }
                 break;
         }
     }

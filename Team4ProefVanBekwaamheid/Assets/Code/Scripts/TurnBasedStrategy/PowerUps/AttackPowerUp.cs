@@ -77,6 +77,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
                 TileSettings playerTile = _targetOccupantForAI.GetCurrentTile();
                 if (playerTile != null && IsTileInRange(playerTile))
                 {
+                     Debug.Log($"Enemy AI (Attack): Player target for AI is '{_targetOccupantForAI.gameObject.name}' (InstanceID: {_targetOccupantForAI.gameObject.GetInstanceID()}). Player tile occupant is '{playerTile.tileOccupant?.name}' (InstanceID: {playerTile.tileOccupant?.GetInstanceID()})");
                      Debug.Log($"Enemy AI (Attack): Attacking player at ({playerTile.gridY}, {playerTile.gridX})"); // Changed to gridY and gridX
                      Attack(playerTile);
                 }
@@ -162,6 +163,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
                 var targetHealth = targetTile.tileOccupant.GetComponent<TileOccupants>();
                 if (targetHealth != null)
                 {
+                    Debug.Log($"AttackPowerUp: Applying damage to '{targetHealth.gameObject.name}' (InstanceID: {targetHealth.gameObject.GetInstanceID()}). Has Armor: {targetHealth.GetHasArmorStatus()}");
                     targetHealth.TakeDamage(_currentDamage);
                     Debug.Log($"{_currentUserType} attacked {expectedTargetType} for {_currentDamage} damage!");
                 }

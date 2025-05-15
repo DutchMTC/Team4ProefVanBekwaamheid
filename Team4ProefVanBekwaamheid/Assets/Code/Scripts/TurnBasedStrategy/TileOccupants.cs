@@ -15,6 +15,7 @@ public class TileOccupants : MonoBehaviour
     [SerializeField] private int maxHealth = 30;
     [SerializeField] private int health = 30; // Current health
     private float _damageReduction = 0f;
+    private bool hasArmor = false; // Added for armor mechanic
 
     [Header("UI")]
     [SerializeField] private CharacterHealthUI healthBarUI;
@@ -82,6 +83,18 @@ public class TileOccupants : MonoBehaviour
 
     public void TakeDamage(int amount)
     {
+        if (hasArmor)
+        {
+            hasArmor = false;
+            Debug.Log($"{gameObject.name}'s armor absorbed the hit! Armor destroyed.");
+            // Optionally, notify UI to remove armor icon here
+            if (healthBarUI != null)
+            {
+                healthBarUI.UpdateArmorStatus(false);
+            }
+            return; // No damage taken
+        }
+
         int reducedDamage = Mathf.RoundToInt(amount * (1f - _damageReduction));
         int previousHealth = health;
         health -= reducedDamage;
@@ -103,6 +116,23 @@ public class TileOccupants : MonoBehaviour
             Debug.Log($"{gameObject.name} has died from {reducedDamage} damage!", this);
             Die();
         }
+    }
+
+    public void ReceiveArmor()
+    {
+        hasArmor = true;
+        Debug.Log($"{gameObject.name} received armor!");
+        // Optionally, notify UI to show armor icon here
+        if (healthBarUI != null)
+        {
+            healthBarUI.UpdateArmorStatus(true);
+        }
+    }
+
+    // Helper method for debugging armor status
+    public bool GetHasArmorStatus()
+    {
+        return hasArmor;
     }
 
     private void Die()

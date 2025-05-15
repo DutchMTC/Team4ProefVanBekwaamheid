@@ -1471,6 +1471,7 @@ MonoBehaviour:
   previewSliderFillImage: {fileID: 1454135230}
   previewSliderBackgroundImage: {fileID: 258792762}
   previewSliderFillAreaImage: {fileID: 1704141077}
+  armorIcon: {fileID: 490943945}
   fillSpriteFullHealth: {fileID: 21300000, guid: e4e30d59585233c43a429c6dc388cb7e,
     type: 3}
   fillSpriteMidHealth: {fileID: 21300000, guid: 934803a4e0825f248bd764203e40bc32,
@@ -4658,6 +4659,7 @@ MonoBehaviour:
   previewSliderFillImage: {fileID: 1693629111}
   previewSliderBackgroundImage: {fileID: 1669351035}
   previewSliderFillAreaImage: {fileID: 252349875}
+  armorIcon: {fileID: 266178261}
   fillSpriteFullHealth: {fileID: 21300000, guid: e4e30d59585233c43a429c6dc388cb7e,
     type: 3}
   fillSpriteMidHealth: {fileID: 21300000, guid: 934803a4e0825f248bd764203e40bc32,
@@ -8108,8 +8110,39 @@ PrefabInstance:
     m_RemovedGameObjects:
     - {fileID: -449778490956040517, guid: 2e1003c747741544d9f667ce979161d0, type: 3}
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2107746530153768536, guid: 2e1003c747741544d9f667ce979161d0,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1917994909}
   m_SourcePrefab: {fileID: 100100000, guid: 2e1003c747741544d9f667ce979161d0, type: 3}
+--- !u!1 &1917994908 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2107746530153768536, guid: 2e1003c747741544d9f667ce979161d0,
+    type: 3}
+  m_PrefabInstance: {fileID: 1917994907}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &1917994909
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1917994908}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: f908a22ac59474b429bd4acb9d8f7023, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1991058295
 GameObject:
   m_ObjectHideFlags: 0

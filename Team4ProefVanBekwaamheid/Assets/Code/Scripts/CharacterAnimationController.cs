@@ -1,64 +1,69 @@
 using UnityEngine;
+// Removed: using System.Collections.Generic; as List is no longer used.
 
 public class CharacterAnimationController : MonoBehaviour
 {
     public enum AnimationState
     {
-        AttackTier1,
-        AttackTier2,
-        AttackTier3,
+        AttackUsable,
+        AttackCharged,
+        AttackSupercharged,
         Idle,
         Dash,
-        DashWait,
         DashStop,
         Death,
-        DefenseUp,
+        Defense,
         TrapThrow,
         Entrance,
-        Stuck
+        Stuck,
+        Damage
     }
 
     [Header("Animators")]
     [SerializeField] private Animator playerAnimator;
     [SerializeField] private Animator enemyAnimator;
 
+    private const string PlayerAnimationPrefix = "AN_Player_";
+    private const string EnemyAnimationPrefix = "AN_Enemy_";
+
     // Method to trigger an animation for a specific animator
-    private void TriggerAnimation(Animator animator, AnimationState state)
+    private void TriggerAnimation(Animator animator, AnimationState state, string prefix)
     {
         if (animator == null)
         {
             Debug.LogWarning("Animator is not assigned.");
             return;
         }
-        // Assuming animation state names match the enum names
-        animator.Play(state.ToString());
+
+        string animationName = prefix + state.ToString();
+        animator.Play(animationName);
     }
 
     // Player Animation Triggers
-    public void PlayerAttackTier1() => TriggerAnimation(playerAnimator, AnimationState.AttackTier1);
-    public void PlayerAttackTier2() => TriggerAnimation(playerAnimator, AnimationState.AttackTier2);
-    public void PlayerAttackTier3() => TriggerAnimation(playerAnimator, AnimationState.AttackTier3);
-    public void PlayerIdle() => TriggerAnimation(playerAnimator, AnimationState.Idle);
-    public void PlayerDash() => TriggerAnimation(playerAnimator, AnimationState.Dash);
-    public void PlayerDashWait() => TriggerAnimation(playerAnimator, AnimationState.DashWait);
-    public void PlayerDashStop() => TriggerAnimation(playerAnimator, AnimationState.DashStop);
-    public void PlayerDeath() => TriggerAnimation(playerAnimator, AnimationState.Death);
-    public void PlayerDefenseUp() => TriggerAnimation(playerAnimator, AnimationState.DefenseUp);
-    public void PlayerTrapThrow() => TriggerAnimation(playerAnimator, AnimationState.TrapThrow);
-    public void PlayerEntrance() => TriggerAnimation(playerAnimator, AnimationState.Entrance);
-    public void PlayerStuck() => TriggerAnimation(playerAnimator, AnimationState.Stuck);
+    public void PlayerAttackUsable() => TriggerAnimation(playerAnimator, AnimationState.AttackUsable, PlayerAnimationPrefix);
+    public void PlayerAttackCharged() => TriggerAnimation(playerAnimator, AnimationState.AttackCharged, PlayerAnimationPrefix);
+    public void PlayerAttackSupercharged() => TriggerAnimation(playerAnimator, AnimationState.AttackSupercharged, PlayerAnimationPrefix);
+    public void PlayerIdle() => TriggerAnimation(playerAnimator, AnimationState.Idle, PlayerAnimationPrefix);
+    public void PlayerDash() => TriggerAnimation(playerAnimator, AnimationState.Dash, PlayerAnimationPrefix);
+    public void PlayerDashStop() => TriggerAnimation(playerAnimator, AnimationState.DashStop, PlayerAnimationPrefix);
+    public void PlayerDeath() => TriggerAnimation(playerAnimator, AnimationState.Death, PlayerAnimationPrefix);
+    public void PlayerDefense() => TriggerAnimation(playerAnimator, AnimationState.Defense, PlayerAnimationPrefix);
+    public void PlayerTrapThrow() => TriggerAnimation(playerAnimator, AnimationState.TrapThrow, PlayerAnimationPrefix);
+    public void PlayerEntrance() => TriggerAnimation(playerAnimator, AnimationState.Entrance, PlayerAnimationPrefix);
+    public void PlayerStuck() => TriggerAnimation(playerAnimator, AnimationState.Stuck, PlayerAnimationPrefix);
+    public void PlayerDamage() => TriggerAnimation(playerAnimator, AnimationState.Damage, PlayerAnimationPrefix);
 
     // Enemy Animation Triggers
-    public void EnemyAttackTier1() => TriggerAnimation(enemyAnimator, AnimationState.AttackTier1);
-    public void EnemyAttackTier2() => TriggerAnimation(enemyAnimator, AnimationState.AttackTier2);
-    public void EnemyAttackTier3() => TriggerAnimation(enemyAnimator, AnimationState.AttackTier3);
-    public void EnemyIdle() => TriggerAnimation(enemyAnimator, AnimationState.Idle);
-    public void EnemyDash() => TriggerAnimation(enemyAnimator, AnimationState.Dash);
-    public void EnemyDashWait() => TriggerAnimation(enemyAnimator, AnimationState.DashWait);
-    public void EnemyDashStop() => TriggerAnimation(enemyAnimator, AnimationState.DashStop);
-    public void EnemyDeath() => TriggerAnimation(enemyAnimator, AnimationState.Death);
-    public void EnemyDefenseUp() => TriggerAnimation(enemyAnimator, AnimationState.DefenseUp);
-    public void EnemyTrapThrow() => TriggerAnimation(enemyAnimator, AnimationState.TrapThrow);
-    public void EnemyEntrance() => TriggerAnimation(enemyAnimator, AnimationState.Entrance);
-    public void EnemyStuck() => TriggerAnimation(enemyAnimator, AnimationState.Stuck);
+    public void EnemyAttackUsable() => TriggerAnimation(enemyAnimator, AnimationState.AttackUsable, EnemyAnimationPrefix);
+    public void EnemyAttackCharged() => TriggerAnimation(enemyAnimator, AnimationState.AttackCharged, EnemyAnimationPrefix);
+    public void EnemyAttackSupercharged() => TriggerAnimation(enemyAnimator, AnimationState.AttackSupercharged, EnemyAnimationPrefix);
+    public void EnemyIdle() => TriggerAnimation(enemyAnimator, AnimationState.Idle, EnemyAnimationPrefix);
+    public void EnemyDash() => TriggerAnimation(enemyAnimator, AnimationState.Dash, EnemyAnimationPrefix);
+    public void EnemyDashStop() => TriggerAnimation(enemyAnimator, AnimationState.DashStop, EnemyAnimationPrefix);
+    public void EnemyDeath() => TriggerAnimation(enemyAnimator, AnimationState.Death, EnemyAnimationPrefix);
+    public void EnemyDefense() => TriggerAnimation(enemyAnimator, AnimationState.Defense, EnemyAnimationPrefix);
+    public void EnemyTrapThrow() => TriggerAnimation(enemyAnimator, AnimationState.TrapThrow, EnemyAnimationPrefix);
+    public void EnemyEntrance() => TriggerAnimation(enemyAnimator, AnimationState.Entrance, EnemyAnimationPrefix);
+    public void EnemyStuck() => TriggerAnimation(enemyAnimator, AnimationState.Stuck, EnemyAnimationPrefix);
+    public void EnemyDamage() => TriggerAnimation(enemyAnimator, AnimationState.Damage, EnemyAnimationPrefix);
 }

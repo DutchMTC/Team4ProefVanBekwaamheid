@@ -149,14 +149,9 @@ public class GameManager : MonoBehaviour
 
         if (_powerUpManager != null) _powerUpManager.SetButtonsInteractable(true); // Enable buttons
 
-        if (_playerTimer != null)
-        {
-            _playerTimer.StartTimer();
-        }
-        else
-        {
-             Debug.LogError("GameManager: Player Timer reference not set in Inspector!");
-        }
+        // The _playerTimer.StartTimer() call was here, but it's removed as the timer is now manually ended.
+        // The _playerTimer reference is still needed for the onTimerEnd event.
+        // Ensure _playerTimer is assigned in the Inspector.
 
         DisableMatch3Tiles();
         if (_gridManager != null) _gridManager.gridActive = false; // Disable match 3 grid interaction;

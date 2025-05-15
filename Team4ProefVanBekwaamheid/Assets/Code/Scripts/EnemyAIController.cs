@@ -275,6 +275,8 @@ public class EnemyAIController : MonoBehaviour
         else
         {
             Debug.Log("Enemy AI: Starting powerup execution sequence based on priority...");
+            Debug.Log("Enemy AI: Waiting for 2 seconds before executing first power-up...");
+            yield return new WaitForSeconds(2.0f);
 
             List<PowerUpInventory.PowerUpType> priorityOrder = new List<PowerUpInventory.PowerUpType>
             {

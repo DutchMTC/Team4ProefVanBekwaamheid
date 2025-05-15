@@ -10,7 +10,7 @@ public class TileSettings : MonoBehaviour
         None,
         Player,
         Enemy,
-        Obstacle,
+        Trap,
         Item // Added Item type
     }
     public GameObject tileOccupant { get; private set; } // Made setter private, managed by SetOccupant
@@ -99,7 +99,7 @@ public class TileSettings : MonoBehaviour
             case OccupantType.Enemy:
                 _tileMaterial.color = _occupiedTileColor;
                 break;
-            case OccupantType.Obstacle:
+            case OccupantType.Trap:
                 _tileMaterial.color = _occupiedTileColor;
                 break;
             case OccupantType.Item:

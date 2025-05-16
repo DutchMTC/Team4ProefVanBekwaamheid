@@ -6,6 +6,7 @@ using System.Linq;
 using static PowerUpManager;
 using Team4ProefVanBekwaamheid.TurnBasedStrategy;
 using Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps;
+using System.Collections;
 
 public class EnemyAIController : MonoBehaviour
 {
@@ -23,12 +24,13 @@ public class EnemyAIController : MonoBehaviour
     public List<PowerupSpriteMapping> powerupSpriteMappings;
     [SerializeField] private RectTransform powerupDisplayParent;
     [SerializeField] private CharacterAnimationController characterAnimationController; // Added for animations
-
-    [SerializeField] private MovementPowerUp _movementPowerUp;
+    [SerializeField] private TileSelection _tileSelection;
+ 
     private AttackPowerUp _attackPowerUp;
     private TrapPowerUp _trapPowerUp;
     private DefensePowerUp _defensePowerUp;
     private TileOccupants _enemyOccupants;
+    private GridGenerator _gridGenerator; // Added to get all tiles
 
     [Header("UI Positioning")]
     [SerializeField] private float verticalOffset = 2.0f;
@@ -54,11 +56,29 @@ public class EnemyAIController : MonoBehaviour
     void Start()
     {
         PositionPowerupDisplay();
-        _movementPowerUp = GetComponent<MovementPowerUp>();
         _attackPowerUp = GetComponent<AttackPowerUp>();
         _trapPowerUp = GetComponent<TrapPowerUp>();
         _defensePowerUp = GetComponent<DefensePowerUp>();
         _enemyOccupants = GetComponent<TileOccupants>();
+        
+        // Attempt to find TileSelection if not assigned
+        if (_tileSelection == null)
+        {
+            _tileSelection = FindObjectOfType<TileSelection>();
+            if (_tileSelection == null)
+            {
+                Debug.LogError("EnemyAIController: TileSelection reference not found in scene and not assigned!");
+            }
+        }
+
+        if (_gridGenerator == null)
+        {
+            _gridGenerator = FindObjectOfType<GridGenerator>();
+            if (_gridGenerator == null)
+            {
+                 Debug.LogError("EnemyAIController: GridGenerator reference not found in scene!");
+            }
+        }
 
         if (characterAnimationController != null)
         {
@@ -69,9 +89,9 @@ public class EnemyAIController : MonoBehaviour
             Debug.LogWarning("EnemyAIController: CharacterAnimationController not assigned. Enemy entrance animation will not play.");
         }
 
-        if (_movementPowerUp == null || _attackPowerUp == null || _trapPowerUp == null || _defensePowerUp == null)
+        if (_attackPowerUp == null || _trapPowerUp == null || _defensePowerUp == null)
         {
-            Debug.LogError("EnemyAIController: One or more PowerUp script references are missing on this GameObject!");
+            Debug.LogError("EnemyAIController: One or more PowerUp script references (excluding Movement) are missing on this GameObject!");
         }
         if (_enemyOccupants == null)
         {
@@ -312,13 +332,46 @@ public class EnemyAIController : MonoBehaviour
                     switch (powerupToExecute.Type)
                     {
                         case PowerUpInventory.PowerUpType.Steps:
-                            if (_movementPowerUp != null)
+                            if (_tileSelection != null && _enemyOccupants != null && playerOccupants != null && _gridGenerator != null)
                             {
-                                Debug.Log($"Enemy AI: Executing Movement ({powerupToExecute.State})");
-                                _movementPowerUp.MovementPowerUpSelected(powerupToExecute.State, TileSelection.UserType.Enemy, playerOccupants);
-                                if (characterAnimationController != null) characterAnimationController.EnemyDash(); // Dash Animation
-                                _hasMovedThisTurn = true;
-                                executedThisPowerup = true;
+                                Debug.Log($"Enemy AI: Executing Movement ({powerupToExecute.State}) using new system.");
+                                int moveRange = GetMoveRangeFromState(powerupToExecute.State);
+                                TileSettings targetTile = FindBestMovementTile(moveRange);
+
+                                if (targetTile != null)
+                                {
+                                    TileSettings currentEnemyTile = _tileSelection.FindTileAtCoordinates(_enemyOccupants.gridY, _enemyOccupants.gridX);
+                                    if (currentEnemyTile != null)
+                                    {
+                                        List<TileSettings> path = MovementValidator.FindPath(currentEnemyTile, targetTile, _tileSelection.GetAllTiles());
+                                        if (path != null && path.Count > 0)
+                                        {
+                                            if (_tileSelection.pathVisualizer != null) _tileSelection.pathVisualizer.ShowPath(path);
+                                            // Pass the EnemyAIController's own characterAnimationController instance
+                                            yield return StartCoroutine(_tileSelection.MoveAlongPath(path, _enemyOccupants.gameObject, _enemyOccupants, TileSelection.UserType.Enemy, characterAnimationController));
+                                            // The EnemyDash animation is now called within MoveAlongPath, so we can remove the duplicate call here.
+                                            // if (characterAnimationController != null) characterAnimationController.EnemyDash();
+                                            _hasMovedThisTurn = true;
+                                            executedThisPowerup = true;
+                                        }
+                                        else
+                                        {
+                                            Debug.LogWarning("Enemy AI: No path found to the chosen movement tile.");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Debug.LogError("Enemy AI: Could not find current enemy tile.");
+                                    }
+                                }
+                                else
+                                {
+                                    Debug.Log("Enemy AI: No suitable movement tile found.");
+                                }
+                            }
+                            else
+                            {
+                                Debug.LogError("Enemy AI: TileSelection, EnemyOccupants, PlayerOccupants, or GridGenerator is null. Cannot execute movement.");
                             }
                             break;
                         case PowerUpInventory.PowerUpType.Shield:
@@ -439,5 +492,68 @@ public class EnemyAIController : MonoBehaviour
         {
             Debug.LogWarning("EnemyAIController: CharacterAnimationController not assigned. Enemy damage animation will not play.");
         }
+    }
+
+    private int GetMoveRangeFromState(PowerUpState state)
+    {
+        switch (state)
+        {
+            case PowerUpState.Usable: return 2; // Example range
+            case PowerUpState.Charged: return 3; // Example range
+            case PowerUpState.Supercharged: return 4; // Example range
+            default: return 1;
+        }
+    }
+
+    private TileSettings FindBestMovementTile(int moveRange)
+    {
+        if (_tileSelection == null || _enemyOccupants == null || playerOccupants == null || _gridGenerator == null)
+        {
+            Debug.LogError("FindBestMovementTile: Missing critical references.");
+            return null;
+        }
+
+        List<TileSettings> reachableTiles = new List<TileSettings>();
+        TileSettings currentEnemyTile = _tileSelection.FindTileAtCoordinates(_enemyOccupants.gridY, _enemyOccupants.gridX);
+
+        if (currentEnemyTile == null)
+        {
+            Debug.LogError("FindBestMovementTile: Could not find current enemy tile.");
+            return null;
+        }
+        
+        // Simplified: Get all tiles and filter by range and occupancy
+        // A more robust solution would use pathfinding to check actual reachability within range.
+        var allTiles = _tileSelection.GetAllTiles();
+        foreach (var tile in allTiles)
+        {
+            if (tile.occupantType == TileSettings.OccupantType.None || tile.occupantType == TileSettings.OccupantType.Item || tile.occupantType == TileSettings.OccupantType.Trap)
+            {
+                int distY = Mathf.Abs(tile.gridY - currentEnemyTile.gridY);
+                int distX = Mathf.Abs(tile.gridX - currentEnemyTile.gridX);
+                if ((distX + distY) <= moveRange && (distX + distY) > 0) // Manhattan distance within range and not current tile
+                {
+                     // Check if a path exists (basic check, could be improved)
+                    if (MovementValidator.FindPath(currentEnemyTile, tile, allTiles) != null)
+                    {
+                        reachableTiles.Add(tile);
+                    }
+                }
+            }
+        }
+        
+        if (reachableTiles.Count == 0) return null;
+
+        // Try to move closer to the player
+        TileSettings playerTile = _tileSelection.FindTileAtCoordinates(playerOccupants.gridY, playerOccupants.gridX);
+        if (playerTile != null)
+        {
+            reachableTiles = reachableTiles.OrderBy(t =>
+                Mathf.Abs(t.gridX - playerTile.gridX) + Mathf.Abs(t.gridY - playerTile.gridY) // Manhattan distance to player
+            ).ToList();
+        }
+        
+        // Potentially add randomness or other heuristics here
+        return reachableTiles.FirstOrDefault();
     }
 }

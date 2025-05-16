@@ -661,7 +661,7 @@ MonoBehaviour:
       supercharged: {fileID: 21300000, guid: 3dc7d927142e9f54b834473164613642, type: 3}
   powerupDisplayParent: {fileID: 1817170674}
   characterAnimationController: {fileID: 712886254}
-  _movementPowerUp: {fileID: 71067645}
+  _tileSelection: {fileID: 0}
   verticalOffset: 0
   probabilityToSelectThreePowerups: 0.2
   probabilityCharged: 0.4
@@ -1961,7 +1961,7 @@ MonoBehaviour:
   _height: 5
   _tileWidth: 1.5
   _tileHeight: 1.5
-  _gridHeight: 12.44
+  _gridHeight: 12.47
   _horizontalOffset: 0.95
 --- !u!4 &318574813
 Transform:
@@ -2164,7 +2164,62 @@ MonoBehaviour:
       m_Calls: []
   _topCamera: {fileID: 746859426}
   _gridGenerator: {fileID: 0}
+  characterAnimationController: {fileID: 712886254}
   moveSpeed: 5
+  tilePauseDuration: 0.2
+  movementCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 2
+      outSlope: 2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  rotationDuration: 0.3
+  rotationCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  playerRotationOffset: {x: -90, y: 90, z: 0}
+  enemyRotationOffset: {x: 0, y: 25, z: 0}
+  enemyModelToRotate: {fileID: 1514870309}
+  pathVisualizer: {fileID: 0}
 --- !u!114 &428523646
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7942,7 +7997,7 @@ MonoBehaviour:
       supercharged: {fileID: 21300000, guid: 3dc7d927142e9f54b834473164613642, type: 3}
   powerupDisplayParent: {fileID: 1817170674}
   characterAnimationController: {fileID: 0}
-  _movementPowerUp: {fileID: 0}
+  _tileSelection: {fileID: 0}
   verticalOffset: 0
   probabilityToSelectThreePowerups: 0.2
   probabilityCharged: 0.4
@@ -8568,6 +8623,21 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 71067642}
     m_Modifications:
+    - target: {fileID: 1588619350348201186, guid: 2e1003c747741544d9f667ce979161d0,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1588619350348201186, guid: 2e1003c747741544d9f667ce979161d0,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1588619350348201186, guid: 2e1003c747741544d9f667ce979161d0,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4169122533988961471, guid: 2e1003c747741544d9f667ce979161d0,
         type: 3}
       propertyPath: m_Name
@@ -9711,14 +9781,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 919132149035406439}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.27055082, y: -0.6531675, z: -0.65339553, w: 0.2706453}
+  m_LocalRotation: {x: -0.27059805, y: -0.6532815, z: -0.6532815, w: 0.27059805}
   m_LocalPosition: {x: -4.08, y: 12.44, z: -1.08}
   m_LocalScale: {x: 20, y: 20, z: 20}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 1894640045}
   m_Father: {fileID: 2029677790}
-  m_LocalEulerAnglesHint: {x: -89.98, y: 0, z: -135}
+  m_LocalEulerAnglesHint: {x: -90, y: 0, z: -135}
 --- !u!1 &919132149035406439
 GameObject:
   m_ObjectHideFlags: 0

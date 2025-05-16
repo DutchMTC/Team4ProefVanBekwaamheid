@@ -19,9 +19,24 @@ public class TileSelection : MonoBehaviour
 
     public UnityEvent<TileSettings> OnTileSelected = new UnityEvent<TileSettings>();
       [SerializeField] private Camera _topCamera;
-    [SerializeField] private GridGenerator _gridGenerator;
-    [SerializeField, Range(1f, 20f), Tooltip("Speed at which the player moves between tiles")] 
-    private float moveSpeed = 5f; // Speed for smooth movement
+      [SerializeField] private GridGenerator _gridGenerator;
+      [SerializeField] private CharacterAnimationController characterAnimationController; // Added for dash animations
+      [SerializeField, Range(1f, 20f), Tooltip("Speed at which the player moves between tiles")]
+      private float moveSpeed = 5f; // Speed for smooth movement
+    [SerializeField, Tooltip("Time the player pauses on each tile during movement")]
+    private float tilePauseDuration = 0.2f;
+    [SerializeField, Tooltip("Curve defining the player's movement animation between tiles")]
+    private AnimationCurve movementCurve = AnimationCurve.EaseInOut(0, 0, 1, 1); // Default to an ease-in-out curve
+    [SerializeField, Tooltip("Duration of the rotation towards the next tile")]
+    private float rotationDuration = 0.3f;
+    [SerializeField, Tooltip("Curve defining the rotation animation")]
+    private AnimationCurve rotationCurve = AnimationCurve.EaseInOut(0, 0, 1, 1); // Default to an ease-in-out curve
+    [SerializeField, Tooltip("Rotation offset for the player character (Euler angles)")]
+    private Vector3 playerRotationOffset = Vector3.zero;
+    [SerializeField, Tooltip("Rotation offset for the enemy character (Euler angles)")]
+    private Vector3 enemyRotationOffset = Vector3.zero;
+    [SerializeField, Tooltip("Optional: Specific transform for the enemy model to rotate (if different from the main enemy object)")]
+    private Transform enemyModelToRotate;
     
     // Allows other scripts to modify the movement speed
     public float MoveSpeed
@@ -31,7 +46,7 @@ public class TileSelection : MonoBehaviour
     }
     private GameObject _selectedTile;    private TileSettings _tileSettings;
     private TileOccupants _tileOccupants;
-    private PathVisualizer pathVisualizer;
+    public PathVisualizer pathVisualizer; // Made public
     private Color _playerTileColor = new Color(0f, 0f, 1.0f, 0.5f);
     private Color _defaultTileColor = new Color(1.0f, 1.0f, 1.0f, 0.2f);  
     private HashSet<TileSettings> _tilesInRange = new HashSet<TileSettings>();
@@ -54,7 +69,17 @@ public class TileSelection : MonoBehaviour
             {
                 Debug.LogError("GridGenerator reference not found!");
             }
-        }        pathVisualizer = FindObjectOfType<PathVisualizer>();
+        }
+        if (characterAnimationController == null)
+        {
+            // Attempt to find it if not assigned, assuming one CharacterAnimationController in the scene
+            characterAnimationController = FindObjectOfType<CharacterAnimationController>();
+            if (characterAnimationController == null)
+            {
+                Debug.LogWarning("TileSelection: CharacterAnimationController not found in scene and not assigned. Dash animations might not play.");
+            }
+        }
+        pathVisualizer = FindObjectOfType<PathVisualizer>();
         if (pathVisualizer == null)
         {
             // Create a new GameObject for the PathVisualizer
@@ -223,7 +248,7 @@ public class TileSelection : MonoBehaviour
         return gridY >= 0 && gridY < _gridGenerator.height && gridX >= 0 && gridX < _gridGenerator.width;
     }
 
-    private TileSettings FindTileAtCoordinates(int gridY, int gridX)
+    public TileSettings FindTileAtCoordinates(int gridY, int gridX)
     {
         var tiles = GetAllTiles();
         return tiles.FirstOrDefault(t => t.gridY == gridY && t.gridX == gridX);
@@ -268,7 +293,8 @@ public class TileSelection : MonoBehaviour
             if (pathVisualizer != null)
             {
                 pathVisualizer.ShowPath(_currentPath);
-                StartCoroutine(MoveAlongPath(_currentPath));
+                // Pass UserType.Player for player-controlled movement and the animation controller
+                StartCoroutine(MoveAlongPath(_currentPath, _tileOccupants.gameObject, _tileOccupants, UserType.Player, characterAnimationController));
                 return true;
             }
             return true;
@@ -280,35 +306,88 @@ public class TileSelection : MonoBehaviour
         }
     }
 
-    private System.Collections.IEnumerator MoveAlongPath(List<TileSettings> path)
+    public System.Collections.IEnumerator MoveAlongPath(List<TileSettings> path, GameObject entityToMove, TileOccupants entityOccupants, UserType currentUserType, CharacterAnimationController animController)
     {
-        var playerObject = _tileOccupants.gameObject;
-        
-        // Skip the first tile as it's the player's current position
+        if (path == null || path.Count <= 1)
+        {
+            if (pathVisualizer != null) pathVisualizer.HidePath();
+            yield break; // No path or only start tile
+        }
+
+        // Skip the first tile as it's the entity's current position
         for (int i = 1; i < path.Count; i++)
         {
-            Vector3 startPos = playerObject.transform.position;
+            // Rotate towards the next tile first
+            Vector3 directionToNextTile = path[i].transform.position - entityToMove.transform.position;
+            directionToNextTile.y = 0; // Keep rotation on the Y axis (horizontal plane)
+            if (directionToNextTile != Vector3.zero)
+            {
+                Vector3 currentOffset = (currentUserType == UserType.Player) ? playerRotationOffset : enemyRotationOffset;
+                Transform transformToRotate = entityToMove.transform; // Default to the main entity transform
+
+                if (currentUserType == UserType.Enemy && enemyModelToRotate != null)
+                {
+                    transformToRotate = enemyModelToRotate; // Use specified model for enemy rotation
+                }
+                yield return StartCoroutine(RotateTowardsAsync(transformToRotate, directionToNextTile, rotationDuration, currentOffset));
+            }
+
+            // Trigger Dash animation before moving to *this* specific tile in the path
+            if (animController != null)
+            {
+                if (currentUserType == UserType.Player)
+                {
+                    animController.PlayerDash();
+                }
+                else if (currentUserType == UserType.Enemy)
+                {
+                    animController.EnemyDash();
+                }
+            }
+
+            Vector3 startPos = entityToMove.transform.position;
+            // Use the target tile's X, Y, and Z for the target position.
+            // This ensures movement towards the tile's actual transform position.
+            // If entity pivot is not at its base, an additional Y offset might be needed here
+            // or handled by the entityOccupants.MoveToTile() method.
+            // Reverted Y to maintain entity's current height to prevent sinking
             Vector3 targetPos = new Vector3(
                 path[i].transform.position.x,
-                playerObject.transform.position.y, // Maintain Y position
+                entityToMove.transform.position.y,
                 path[i].transform.position.z
             );
 
             float journeyLength = Vector3.Distance(startPos, targetPos);
             float startTime = Time.time;
 
-            while (Time.time - startTime < journeyLength / moveSpeed)
+            // Ensure journeyLength is not zero to avoid division by zero
+            if (journeyLength == 0)
             {
-                float distanceCovered = (Time.time - startTime) * moveSpeed;
-                float fractionOfJourney = distanceCovered / journeyLength;
-                playerObject.transform.position = Vector3.Lerp(startPos, targetPos, fractionOfJourney);
-                yield return null;
+                entityToMove.transform.position = targetPos; // Snap to target if already there
             }
+            else
+            {
+                while (Time.time - startTime < journeyLength / moveSpeed)
+                {
+                    float distanceCovered = (Time.time - startTime) * moveSpeed;
+                    float fractionOfJourney = distanceCovered / journeyLength;
+                    // Apply the curve to the fraction of the journey
+                    float curvedFraction = movementCurve.Evaluate(fractionOfJourney);
+                    entityToMove.transform.position = Vector3.Lerp(startPos, targetPos, curvedFraction);
+                    yield return null;
+                }
+            }
+            
+            entityToMove.transform.position = targetPos;
+            entityOccupants.gridX = path[i].gridX;
+            entityOccupants.gridY = path[i].gridY;
+            entityOccupants.MoveToTile();
 
-            playerObject.transform.position = targetPos;
-            _tileOccupants.gridX = path[i].gridX;
-            _tileOccupants.gridY = path[i].gridY;
-            _tileOccupants.MoveToTile();
+            // Pause on the tile
+            if (tilePauseDuration > 0)
+            {
+                yield return new WaitForSeconds(tilePauseDuration);
+            }
 
             // Apply effects or handle interactions based on tile type
             if (path[i].occupantType == TileSettings.OccupantType.Trap)
@@ -322,12 +401,38 @@ public class TileSelection : MonoBehaviour
                 path[i].getObjects();
             }
         }        // Finish movement
-        OnTileSelected.Invoke(_tileSettings);
-        _tileSettings.getObjects();
-        pathVisualizer.HidePath();
+        if (path != null && path.Count > 0)
+        {
+            var finalTile = path[path.Count - 1];
+            OnTileSelected.Invoke(finalTile);
+            finalTile.getObjects(); // Interact with the final tile
+        }
+        
+        if (pathVisualizer != null)
+        {
+            pathVisualizer.HidePath();
+        }
     }
 
-    private List<TileSettings> GetAllTiles()
+    private System.Collections.IEnumerator RotateTowardsAsync(Transform entityTransform, Vector3 direction, float duration, Vector3 offset)
+    {
+        Quaternion startRotation = entityTransform.rotation;
+        Quaternion targetLookRotation = Quaternion.LookRotation(direction);
+        // Apply the offset to the target rotation
+        Quaternion targetRotation = targetLookRotation * Quaternion.Euler(offset);
+        float elapsedTime = 0f;
+
+        while (elapsedTime < duration)
+        {
+            elapsedTime += Time.deltaTime;
+            float curveValue = rotationCurve.Evaluate(elapsedTime / duration);
+            entityTransform.rotation = Quaternion.Slerp(startRotation, targetRotation, curveValue);
+            yield return null;
+        }
+        entityTransform.rotation = targetRotation; // Ensure it ends exactly at the target rotation
+    }
+
+    public List<TileSettings> GetAllTiles()
     {
         var tiles = new List<TileSettings>();
         var coordCheck = new Dictionary<Vector2Int, TileSettings>();

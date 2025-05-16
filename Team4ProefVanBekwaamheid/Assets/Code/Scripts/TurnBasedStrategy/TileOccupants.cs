@@ -1,140 +1,281 @@
 using UnityEngine;
+// Potentially add: using UnityEngine.Events; if you want to use UnityEvents for damage.
 
 public class TileOccupants : MonoBehaviour
 {
+    [Header("Grid & Occupant Info")]
     [SerializeField] private GridGenerator _gridGenerator;
     public TileSettings.OccupantType myOccupantType;
-    public int row;
-    public int column;
+    public int gridY; // Renamed from row
+    public int gridX; // Renamed from column
     private GameObject _selectedTile;
     private TileSettings _tileSettings;
-    private Renderer _renderer;
-    private int _initializationAttempts = 0;
-    private const int MAX_INITIALIZATION_ATTEMPTS = 5;
-   
-    [SerializeField] private int health = 30;       
-    
-    void Start()
-    {
-        _renderer = GetComponent<Renderer>();
-        // Wait longer for initialization in builds
-        float delay = Application.isEditor ? 0.1f : 0.3f;
-        Invoke("InitializePosition", delay);
-    }
 
-    private void InitializePosition()
-    {
-        _initializationAttempts++;
-        
-        // Prevent infinite retry loops
-        if (_initializationAttempts > MAX_INITIALIZATION_ATTEMPTS)
-        {
-            Debug.LogError($"Failed to initialize {gameObject.name} after {MAX_INITIALIZATION_ATTEMPTS} attempts");
-            return;
-        }
+    [Header("Health & Defense")]
+    [SerializeField] private int maxHealth = 30;
+    [SerializeField] private int health = 30; // Current health
+    private float _damageReduction = 0f;
+    private bool hasArmor = false; // Added for armor mechanic
 
-        // Ensure GridGenerator is initialized
+    [Header("UI")]
+    [SerializeField] private CharacterHealthUI healthBarUI;
+    // public UnityAction<float> OnHealthChanged; // Alternative: Use UnityEvent
+    private CharacterAnimationController _animationController; // Used for Player animations
+    private EnemyAIController _enemyAIController; // Used for Enemy animations
+ 
+    void Awake()
+    {
+        // Ensure we have a reference to the GridGenerator as early as possible
         if (_gridGenerator == null)
         {
             _gridGenerator = FindObjectOfType<GridGenerator>();
             if (_gridGenerator == null)
             {
-                Debug.LogError("GridGenerator reference not found!");
-                if (_initializationAttempts < MAX_INITIALIZATION_ATTEMPTS)
-                {
-                    Invoke("InitializePosition", 0.2f); // Retry initialization
-                }
-                return;
+                Debug.LogError("GridGenerator reference not found in Awake!", this);
             }
         }
-
-        // First ensure the transform is properly set
-        if (!gameObject.activeInHierarchy)
-        {
-            gameObject.SetActive(true);
-        }
-
-        // Ensure renderer is initialized
-        if (_renderer == null)
-        {
-            _renderer = GetComponent<Renderer>();
-        }
-
-        // Find and initialize the starting tile's occupation state
-        FindTileAtCoordinates();
+        health = maxHealth; // Initialize current health to max health
         
-        if (_selectedTile != null)
+        if (myOccupantType == TileSettings.OccupantType.Player)
         {
-            // Set initial position based on current row/column
-            MoveToTile();
-            
-            // Force rendering update
-            transform.position = transform.position;
-            if (_renderer != null)
-            {
-                StartCoroutine(ForceRendererRefresh());
-            }
+            _animationController = GetComponent<CharacterAnimationController>();
+            if (_animationController == null) _animationController = FindObjectOfType<CharacterAnimationController>(); // Fallback if not on same object
         }
-        else
+        else if (myOccupantType == TileSettings.OccupantType.Enemy)
         {
-            // If we still don't have a valid tile, retry after a short delay
-            Debug.Log($"Retrying initialization - tile not found yet (Attempt {_initializationAttempts}/{MAX_INITIALIZATION_ATTEMPTS})");
-            if (_initializationAttempts < MAX_INITIALIZATION_ATTEMPTS)
+            _enemyAIController = GetComponent<EnemyAIController>();
+            if (_enemyAIController == null)
             {
-                Invoke("InitializePosition", 0.2f);
+                Debug.LogWarning($"EnemyAIController component not found on {gameObject.name}. Enemy animations for damage/death might not play.", this);
             }
         }
     }
-
-    private System.Collections.IEnumerator ForceRendererRefresh()
+ 
+    void Start()
     {
-        _renderer.enabled = false;
-        yield return new WaitForEndOfFrame();
-        _renderer.enabled = true;
-        yield return new WaitForEndOfFrame();
-        // Double-check visibility
-        if (!_renderer.enabled)
+        // Double check to make sure we have a GridGenerator reference
+        if (_gridGenerator == null)
         {
-            _renderer.enabled = true;
-        }
-    }void Update()
-    {
-        // Only search for a new tile if the row or column values have changed
-        if (_selectedTile == null || (_tileSettings != null && (_tileSettings.row != row || _tileSettings.column != column)))
-        {      
-            MoveToTile();
-        }
-    }    public void MoveToTile()
-    {
-        FindTileAtCoordinates(); // Find the tile at the current coordinates
-
-        if (_selectedTile != null && _tileSettings != null)
-        {
-            // Check if the tile is already occupied by something other than this object
-            if (_tileSettings.occupantType != TileSettings.OccupantType.None && 
-                _tileSettings.occupantType != myOccupantType)
+            _gridGenerator = FindObjectOfType<GridGenerator>();
+            if (_gridGenerator == null)
             {
-                Debug.LogWarning($"Cannot move to tile at ({row}, {column}) - tile is occupied by {_tileSettings.occupantType}");
+                Debug.LogError("GridGenerator reference not found in Start!", this);
                 return;
             }
+        }
 
-            // Move this GameObject to the selected tile's position
-            Vector3 selectedTilePos = _selectedTile.transform.position;
-            transform.position = new Vector3(selectedTilePos.x, transform.position.y, selectedTilePos.z);
-            
-            // Update the tile's occupation state
-            _tileSettings.occupantType = myOccupantType;
-            _tileSettings.OccupationChangedEvent.Invoke(); // Trigger the occupation change event
+        // Initialize Health Bar UI
+        if (healthBarUI != null)
+        {
+            // Determine if this is a player character. Adjust this logic if needed.
+            bool isPlayer = (myOccupantType == TileSettings.OccupantType.Player);
+            healthBarUI.Initialize(this, maxHealth, health, isPlayer);
         }
         else
         {
-            Debug.LogWarning($"Cannot move to tile at ({row}, {column}) - tile not found");
+            Debug.LogWarning($"HealthBarUI not assigned for {gameObject.name}", this);
+        }
+
+        // Force position update with small delay to ensure GridGenerator is fully initialized
+        Invoke(nameof(InitializePosition), 0.1f);
+    }
+
+    void InitializePosition()
+    {
+        FindTileAtCoordinates();
+        MoveToTile();
+        
+        // Log position for debugging
+        Debug.Log($"{gameObject.name} initialized at position ({gridY}, {gridX})");
+    }
+
+    public void SetDamageReduction(float reduction)
+    {
+        _damageReduction = Mathf.Clamp(reduction, 0f, 0.8f);
+        Debug.Log($"{gameObject.name} defense set to {_damageReduction * 100}%", this);
+    }
+
+    public void TakeDamage(int amount)
+    {
+        if (hasArmor)
+        {
+            hasArmor = false;
+            Debug.Log($"{gameObject.name}'s armor absorbed the hit! Armor destroyed.");
+            // Optionally, notify UI to remove armor icon here
+            if (healthBarUI != null)
+            {
+                healthBarUI.UpdateArmorStatus(false);
+            }
+            return; // No damage taken
+        }
+
+        int reducedDamage = Mathf.RoundToInt(amount * (1f - _damageReduction));
+        int previousHealth = health;
+        health -= reducedDamage;
+        health = Mathf.Clamp(health, 0, maxHealth); // Ensure health doesn't go below 0 or above max
+
+        string defenseMsg = _damageReduction > 0 ? $"[DEFENSE {_damageReduction * 100}%]" : "[NO DEFENSE]";
+        Debug.Log($"{defenseMsg} {gameObject.name} Health: {previousHealth} -> {health} " +
+                 $"(Took {reducedDamage} damage, reduced from {amount})", this);
+
+        // Update Health Bar UI
+        if (healthBarUI != null)
+        {
+            healthBarUI.OnHealthChanged(health);
+        }
+        // OnHealthChanged?.Invoke(health); // Alternative: if using UnityEvent
+
+        if (myOccupantType == TileSettings.OccupantType.Enemy && _enemyAIController != null && health > 0 && reducedDamage > 0)
+        {
+            _enemyAIController.PlayDamageAnimation();
+        }
+        else if (myOccupantType == TileSettings.OccupantType.Player && _animationController != null && health > 0 && reducedDamage > 0)
+        {
+            _animationController.PlayerDamage(); // Assuming PlayerDamage exists and is public
+        }
+
+        if (health <= 0)
+        {
+            Debug.Log($"{gameObject.name} has died from {reducedDamage} damage!", this);
+            Die();
+        }
+    }
+
+    public void ReceiveArmor()
+    {
+        hasArmor = true;
+        Debug.Log($"{gameObject.name} received armor!");
+        // Optionally, notify UI to show armor icon here
+        if (healthBarUI != null)
+        {
+            healthBarUI.UpdateArmorStatus(true);
+        }
+    }
+
+    // Helper method for debugging armor status
+    public bool GetHasArmorStatus()
+    {
+        return hasArmor;
+    }
+
+    private void Die()
+    {
+        Debug.Log($"{gameObject.name} has died.", this);
+        float destructionDelay = 0f;
+        if (myOccupantType == TileSettings.OccupantType.Player && _animationController != null)
+        {
+            _animationController.PlayerDeath();
+            destructionDelay = 2f;
+        }
+        else if (myOccupantType == TileSettings.OccupantType.Enemy && _enemyAIController != null)
+        {
+            _enemyAIController.PlayDeathAnimation();
+            destructionDelay = 2f; // Assuming enemy death animation also takes time
+        }
+        // Optional: Notify healthBarUI or other systems about death
+        // if (healthBarUI != null) healthBarUI.HandleDeath();
+        Destroy(gameObject, destructionDelay); // Delay destruction if animation is playing
+    }
+ 
+    // Public method to get current health if needed by other systems
+    public int GetCurrentHealth()
+    {
+        return health;
+    }
+
+    // Public method to get max health if needed
+    public int GetMaxHealth()
+    {
+        return maxHealth;
+    }
+    
+    // Example method to heal the character
+    public void Heal(int amount)
+    {
+        int previousHealth = health;
+        health += amount;
+        health = Mathf.Clamp(health, 0, maxHealth);
+        Debug.Log($"{gameObject.name} healed. Health: {previousHealth} -> {health}", this);
+
+        if (healthBarUI != null)
+        {
+            healthBarUI.OnHealthChanged(health);
+        }
+    }
+
+    void Update()
+    {
+        // Check if the occupant has moved or if the tile reference is lost
+        if (_selectedTile == null || _tileSettings == null || _tileSettings.gridY != gridY || _tileSettings.gridX != gridX)
+        {
+            MoveToTile();
+        }
+    }
+
+    public void MoveToTile()
+    {
+        FindTileAtCoordinates();
+
+        if (_selectedTile != null && _tileSettings != null)
+        {
+            GameObject itemObjectToPickup = null;
+            PickupItem pickupItemScript = null;
+
+            // Check if the target tile (_tileSettings from FindTileAtCoordinates) currently holds an item
+            if (_tileSettings.occupantType == TileSettings.OccupantType.Item && _tileSettings.tileOccupant != null)
+            {
+                pickupItemScript = _tileSettings.tileOccupant.GetComponent<PickupItem>();
+                if (pickupItemScript != null)
+                {
+                    itemObjectToPickup = _tileSettings.tileOccupant; // Store reference to the item GameObject
+                    Debug.Log($"Tile ({_tileSettings.gridY}, {_tileSettings.gridX}) has item {itemObjectToPickup.name} with PickupItem script.");
+                }
+                else
+                {
+                    Debug.LogWarning($"Tile at ({_tileSettings.gridY}, {_tileSettings.gridX}) is marked as Item but occupant {_tileSettings.tileOccupant.name} has no PickupItem script.");
+                }
+            }
+            
+            // Validate if the unit can move to the target tile (_tileSettings)
+            // This check is already in place and allows moving to 'Item' tiles.
+            if (_tileSettings.occupantType != TileSettings.OccupantType.None &&
+                _tileSettings.occupantType != TileSettings.OccupantType.Item &&
+                _tileSettings.occupantType != myOccupantType)
+            {
+                Debug.LogWarning($"Cannot move to tile at ({gridY}, {gridX}) - tile is occupied by {_tileSettings.occupantType} and is not an item or self.");
+                return;
+            }
+
+            // Actual movement and tile occupation
+            Vector3 selectedTilePos = _selectedTile.transform.position;
+            // Consider using a y-offset for the unit if needed, or ensure tile pivot is at its base.
+            // For now, matching x and z, keeping unit's current y.
+            transform.position = new Vector3(selectedTilePos.x, transform.position.y, selectedTilePos.z);
+            
+            // Set the unit as the occupant of the new tile.
+            // FindTileAtCoordinates already cleared this unit from its previous tile.
+            _tileSettings.SetOccupant(myOccupantType, this.gameObject);
+            // Note: _tileSettings is the new tile the unit is moving to.
+            // The internal gridY and gridX are already set to this tile's coordinates by FindTileAtCoordinates
+            // if the call originated from Update(). If it originated from a power-up, gridY/gridX were set before calling MoveToTile.
+
+            // If an item was on this tile, activate its pickup AFTER the unit has officially moved and occupied the tile.
+            if (itemObjectToPickup != null && pickupItemScript != null)
+            {
+                Debug.Log($"Unit {this.gameObject.name} moved to item tile. Activating pickup for {itemObjectToPickup.name}.");
+                pickupItemScript.ActivatePickup(this.gameObject);
+                // ItemManager will handle destroying the item.
+                // The tile's occupant is now this unit.
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"Cannot move to tile at ({gridY}, {gridX}) - tile not found");
         }
     }
 
     private void FindTileAtCoordinates()
     {
-        // Ensure GridGenerator is initialized
         if (_gridGenerator == null)
         {
             _gridGenerator = FindObjectOfType<GridGenerator>();
@@ -145,57 +286,36 @@ public class TileOccupants : MonoBehaviour
             }
         }
 
-        // Clear occupancy of old tile if we're moving
-        if (_tileSettings != null)
+        if (_tileSettings != null) // If this occupant was previously on a tile
         {
-            _tileSettings.occupantType = TileSettings.OccupantType.None;
-            _tileSettings.OccupationChangedEvent.Invoke(); // Trigger the occupation change event
-        }
-
-        // Search through all tiles in the grid
-        foreach (Transform child in _gridGenerator.transform)
-        {
-            TileSettings currentTile = child.GetComponent<TileSettings>();
-            if (currentTile != null && currentTile.row == row && currentTile.column == column)
+            // Only clear the occupant if this specific game object was the occupant
+            if (_tileSettings.tileOccupant == this.gameObject)
             {
-                _selectedTile = child.gameObject;
-                _tileSettings = currentTile;
-                // Set the tile's occupant type based on what this GameObject represents
-                _tileSettings.occupantType = myOccupantType;
-                Debug.Log($"Selected tile at grid position ({row}, {column}). Set occupant type to: {myOccupantType}");
-                return;
+                _tileSettings.SetOccupant(TileSettings.OccupantType.None, null);
             }
         }
 
-        // If we didn't find a tile at those coordinates
-        _selectedTile = null;
-        _tileSettings = null;
-        Debug.LogWarning($"No tile found at grid position ({row}, {column})");
+        _selectedTile = null; // Reset before searching
+        _tileSettings = null; // Reset before searching
+
+        foreach (Transform child in _gridGenerator.transform)
+        {
+            TileSettings currentTile = child.GetComponent<TileSettings>();
+            if (currentTile != null && currentTile.gridY == gridY && currentTile.gridX == gridX)
+            {
+                _selectedTile = child.gameObject;
+                _tileSettings = currentTile;
+                // Do not set occupant here. MoveToTile will handle it after validation.
+                return;
+            }
+        }
+        
+        // If loop completes, no tile was found
+        Debug.LogWarning($"No tile found at grid position ({gridY}, {gridX})");
     }
 
-    /// <summary>
-    /// Returns the TileSettings of the tile this occupant is currently on.
-    /// </summary>
-    /// <returns>The current TileSettings, or null if not on a valid tile.</returns>
     public TileSettings GetCurrentTile()
     {
-        // Ensure the tile reference is up-to-date, although MoveToTile should handle this.
-        // FindTileAtCoordinates(); // Optional: Uncomment if you suspect the reference might become stale.
         return _tileSettings;
-    }
-
-    public void TakeDamage(int amount)
-    {
-        health -= amount;
-        if (health <= 0)
-        {
-            Die();
-        }
-    }
-
-    private void Die()
-    {
-        Debug.Log(gameObject.name + " has died.");
-        Destroy(gameObject);
     }
 }

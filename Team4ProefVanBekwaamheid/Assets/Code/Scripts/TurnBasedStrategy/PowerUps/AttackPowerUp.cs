@@ -15,11 +15,14 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
         private bool _isWaitingForSelection = false;
         private TileSelection.UserType _currentUserType; // Store the user type
         private TileOccupants _targetOccupantForAI; // Store the target for AI
+        private CharacterAnimationController _animationController;
+        private PowerUpState _currentPowerUpState; // Store the current power-up state
 
         void Start()
         {
             _tileSelection = FindObjectOfType<TileSelection>();
             _tileOccupants = GetComponent<TileOccupants>();
+            _animationController = FindObjectOfType<CharacterAnimationController>();
             
             if (_tileSelection == null)
             {
@@ -34,20 +37,24 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
         {
             _currentUserType = userType; // Store user type
             _targetOccupantForAI = targetOccupant; // Store target for AI
-
+            _currentPowerUpState = _state; // Store the current power-up state
+ 
             switch (_state)
             {
                 case PowerUpState.Usable:
                     _range = 1;
                     _currentDamage = _baseDamage;
+                    // Animation moved to Attack method
                     break;
                 case PowerUpState.Charged:
                     _range = 1;
                     _currentDamage = _baseDamage * 2;
+                    // Animation moved to Attack method
                     break;
                 case PowerUpState.Supercharged:
                     _range = 2;
                     _currentDamage = _baseDamage * 3;
+                    // Animation moved to Attack method
                     break;
             }
 
@@ -61,7 +68,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
             }
 
             // Start tile selection process to find valid tiles
-            Vector2Int currentPos = new Vector2Int(_tileOccupants.row, _tileOccupants.column);
+            Vector2Int currentPos = new Vector2Int(_tileOccupants.gridX, _tileOccupants.gridY); // Standardized: (gridX, gridY) -> (column, row)
             _tileSelection.StartTileSelection(_range, currentPos, TileSelection.SelectionType.Attack, userType);
 
             if (userType == TileSelection.UserType.Enemy && _targetOccupantForAI != null)
@@ -70,7 +77,8 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
                 TileSettings playerTile = _targetOccupantForAI.GetCurrentTile();
                 if (playerTile != null && IsTileInRange(playerTile))
                 {
-                     Debug.Log($"Enemy AI (Attack): Attacking player at ({playerTile.row}, {playerTile.column})");
+                     Debug.Log($"Enemy AI (Attack): Player target for AI is '{_targetOccupantForAI.gameObject.name}' (InstanceID: {_targetOccupantForAI.gameObject.GetInstanceID()}). Player tile occupant is '{playerTile.tileOccupant?.name}' (InstanceID: {playerTile.tileOccupant?.GetInstanceID()})");
+                     Debug.Log($"Enemy AI (Attack): Attacking player at ({playerTile.gridY}, {playerTile.gridX})"); // Changed to gridY and gridX
                      Attack(playerTile);
                 }
                 else
@@ -117,8 +125,8 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
         {
             if (targetTile == null || _tileOccupants == null) return false;
 
-            Vector2Int currentPos = new Vector2Int(_tileOccupants.row, _tileOccupants.column);
-            Vector2Int targetPos = new Vector2Int(targetTile.row, targetTile.column);
+            Vector2Int currentPos = new Vector2Int(_tileOccupants.gridY, _tileOccupants.gridX); // Changed to gridY and gridX
+            Vector2Int targetPos = new Vector2Int(targetTile.gridY, targetTile.gridX); // Changed to gridY and gridX
 
             // Simple Manhattan distance check for grid movement
             int distance = Mathf.Abs(currentPos.x - targetPos.x) + Mathf.Abs(currentPos.y - targetPos.y);
@@ -134,10 +142,28 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
 
             if (targetTile != null && targetTile.occupantType == expectedTargetType)
             {
+                // Trigger animation before dealing damage
+                if (_currentUserType == TileSelection.UserType.Player && _animationController != null)
+                {
+                    switch (_currentPowerUpState)
+                    {
+                        case PowerUpState.Usable:
+                            _animationController.PlayerAttackUsable();
+                            break;
+                        case PowerUpState.Charged:
+                            _animationController.PlayerAttackCharged();
+                            break;
+                        case PowerUpState.Supercharged:
+                            _animationController.PlayerAttackSupercharged();
+                            break;
+                    }
+                }
+
                 // Get the target's health component and apply damage
                 var targetHealth = targetTile.tileOccupant.GetComponent<TileOccupants>();
                 if (targetHealth != null)
                 {
+                    Debug.Log($"AttackPowerUp: Applying damage to '{targetHealth.gameObject.name}' (InstanceID: {targetHealth.gameObject.GetInstanceID()}). Has Armor: {targetHealth.GetHasArmorStatus()}");
                     targetHealth.TakeDamage(_currentDamage);
                     Debug.Log($"{_currentUserType} attacked {expectedTargetType} for {_currentDamage} damage!");
                 }

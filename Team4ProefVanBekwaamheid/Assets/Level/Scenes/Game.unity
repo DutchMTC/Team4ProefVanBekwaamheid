@@ -170,9 +170,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _gridGenerator: {fileID: 318574812}
-  _myOccupantType: 2
+  myOccupantType: 0
   row: 0
   column: 4
+  health: 30
 --- !u!65 &71067644
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -824,6 +825,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 972ec7357e70230428f4ca799de6616c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  OnTileSelected:
+    m_PersistentCalls:
+      m_Calls: []
   _topCamera: {fileID: 746859426}
   _gridGenerator: {fileID: 0}
 --- !u!114 &428523646
@@ -839,9 +843,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _gridGenerator: {fileID: 318574812}
-  _myOccupantType: 1
+  myOccupantType: 0
   row: 4
   column: 0
+  health: 30
 --- !u!114 &428523649
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1515,9 +1520,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _gridGenerator: {fileID: 318574812}
-  _myOccupantType: 3
+  myOccupantType: 0
   row: 3
   column: 2
+  health: 30
 --- !u!135 &849431663
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -2698,6 +2704,10 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  _movementPowerUp: {fileID: 0}
+  _attackPowerUp: {fileID: 0}
+  _wallPowerUp: {fileID: 0}
+  _defensePowerUp: {fileID: 0}
 --- !u!114 &1460290667
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3160,6 +3170,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameManager: {fileID: 1216284609}
+  playerOccupants: {fileID: 0}
   powerupDisplayIcons: []
   powerupSpriteMappings: []
   powerupDisplayParent: {fileID: 0}
@@ -3315,6 +3326,21 @@ MonoBehaviour:
   currentSwaps: 0
   matchCounterText: {fileID: 1302259174}
   gridActive: 1
+  liftHeight: 0.5
+  liftDuration: 0.2
+  moveToPowerUpDuration: 0.5
+  powerUpAnimationDelay: 0.05
+  moveToPowerUpCurve:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  movePowerUpTarget: {fileID: 0}
+  attackPowerUpTarget: {fileID: 0}
+  defensePowerUpTarget: {fileID: 0}
+  wallPowerUpTarget: {fileID: 0}
+  animationPanelParent: {fileID: 0}
 --- !u!4 &1832730704
 Transform:
   m_ObjectHideFlags: 0

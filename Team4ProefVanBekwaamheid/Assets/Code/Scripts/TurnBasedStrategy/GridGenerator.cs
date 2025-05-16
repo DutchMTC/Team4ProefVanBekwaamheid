@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic; // Add this line for using List
 
 public class GridGenerator : MonoBehaviour
 {
@@ -93,7 +94,7 @@ public class GridGenerator : MonoBehaviour
                 Vector3 tilePosition = new Vector3(isometricX, _gridHeight, isometricZ);
                 GameObject tile = Instantiate(tilePrefab, tilePosition, Quaternion.Euler(0, 45, 0));
                 
-                tile.GetComponent<TileSettings>().Initzialize(TileSettings.OccupantType.None, x, y); // Initialize tile settings
+                tile.GetComponent<TileSettings>().Initzialize(TileSettings.OccupantType.None, x, y, null); // Initialize tile settings with null occupant
                 tile.transform.parent = transform;  // Keep hierarchy organized
             }
         }
@@ -106,6 +107,20 @@ public class GridGenerator : MonoBehaviour
             Destroy(child.gameObject);
         }
         GenerateGrid();
+    }
+
+    public List<TileSettings> GetAllTiles() // Add this method
+    {
+        var tiles = new List<TileSettings>();
+        foreach (Transform child in transform)
+        {
+            var tile = child.GetComponent<TileSettings>();
+            if (tile != null)
+            {
+                tiles.Add(tile);
+            }
+        }
+        return tiles;
     }
 
 #if UNITY_EDITOR

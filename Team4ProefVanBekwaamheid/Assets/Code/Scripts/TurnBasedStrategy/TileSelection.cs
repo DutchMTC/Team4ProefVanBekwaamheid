@@ -2,13 +2,15 @@ using UnityEngine;
 using UnityEngine.Events;
 using System.Collections.Generic;
 using System.Linq;
+using Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps;
 
 public class TileSelection : MonoBehaviour
 {
     public enum SelectionType
     {
         Movement,
-        Attack
+        Attack,
+        Trap
     }
 
     public enum UserType
@@ -144,6 +146,9 @@ public class TileSelection : MonoBehaviour
                                     isValidTile = tile.occupantType == TileSettings.OccupantType.Enemy;
                                 else
                                     isValidTile = tile.occupantType == TileSettings.OccupantType.Player;
+                                break;                            case SelectionType.Trap:
+                                isValidTile = tile.occupantType == TileSettings.OccupantType.None || 
+                                            tile.occupantType == TileSettings.OccupantType.Item;
                                 break;
                         }
 
@@ -195,6 +200,14 @@ public class TileSelection : MonoBehaviour
                         ClearTilesInRange(); // This also sets _isSelectionEnabled = false
                     }
                     // If selection is not complete (e.g. no path), selection remains enabled with highlighted tiles.
+                }                else if (_currentSelectionType == SelectionType.Trap)
+                {
+                    // For trap placement, directly handle the selection since we don't need path finding
+                    Debug.Log("Placing trap on selected tile...");
+                    _hasSelectedTile = true;
+                    _tileSettings = hitTile;
+                    OnTileSelected.Invoke(hitTile);
+                    ClearTilesInRange(); // This also sets _isSelectionEnabled = false
                 }
                 else
                 {
@@ -387,13 +400,15 @@ public class TileSelection : MonoBehaviour
             if (tilePauseDuration > 0)
             {
                 yield return new WaitForSeconds(tilePauseDuration);
-            }
-
-            // Apply effects or handle interactions based on tile type
+            }            // Apply effects or handle interactions based on tile type
             if (path[i].occupantType == TileSettings.OccupantType.Trap)
             {
                 // Handle trap tile effects
-                // TODO: Implement trap damage or effects
+                var trapBehavior = path[i].tileOccupant?.GetComponent<TrapBehavior>();
+                if (trapBehavior != null)
+                {
+                    trapBehavior.OnCharacterEnterTile(entityOccupants);
+                }
             }
             else if (path[i].occupantType == TileSettings.OccupantType.Item)
             {

@@ -126,10 +126,21 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
 
         private void Move(TileSettings targetTile)
         {
-            // Allow moving if the tile is None OR an Item
             if (targetTile != null &&
-                (targetTile.occupantType == TileSettings.OccupantType.None || targetTile.occupantType == TileSettings.OccupantType.Item))
+                (targetTile.occupantType == TileSettings.OccupantType.None || 
+                 targetTile.occupantType == TileSettings.OccupantType.Item ||
+                 targetTile.occupantType == TileSettings.OccupantType.Trap))
             {
+                // Check for trap before moving
+                if (targetTile.occupantType == TileSettings.OccupantType.Trap)
+                {
+                    var trapBehavior = targetTile.tileOccupant?.GetComponent<TrapBehavior>();
+                    if (trapBehavior != null)
+                    {
+                        trapBehavior.OnCharacterEnterTile(_tileOccupants);
+                    }
+                }
+
                 _tileOccupants.gridY = targetTile.gridY; // Changed to gridY
                 _tileOccupants.gridX = targetTile.gridX; // Changed to gridX
                 _tileOccupants.MoveToTile();

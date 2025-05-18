@@ -76,11 +76,9 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
                 _isWaitingForSelection = false;
                 _tileSelection.OnTileSelected.RemoveListener(HandleTileSelected);
                 return;
-            }
-
-            // Start tile selection process to find valid empty tiles within range
+            }            // Start tile selection process to find valid empty tiles within range
             Vector2Int currentPos = new Vector2Int(_tileOccupants.gridX, _tileOccupants.gridY); // Standardized: (gridX, gridY) -> (column, row)
-            _tileSelection.StartTileSelection(_range, currentPos, TileSelection.SelectionType.Movement, userType); // Movement type finds empty tiles
+            _tileSelection.StartTileSelection(_range, currentPos, TileSelection.SelectionType.Trap, userType); // Use Trap type for proper handling
 
             if (userType == TileSelection.UserType.Enemy && _targetOccupantForAI != null)
             {
@@ -133,21 +131,19 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
         }
 
         private void PlaceTrap(TileSettings targetTile)
-        {
-            // *** DETAILED DEBUG: Log received tile and condition checks ***
+        {            // *** DETAILED DEBUG: Log received tile and condition checks ***
             if (targetTile == null)
             {
-                Debug.LogError("Enemy AI (PlaceTrap): Received NULL targetTile!");
+                Debug.LogError($"{_currentUserType} (PlaceTrap): Received NULL targetTile!");
                 return; // Exit early if tile is null
             }
 
-            Debug.Log($"Enemy AI (PlaceTrap): Attempting to place trap on tile at ({targetTile.gridY}, {targetTile.gridX})."); // Changed to gridY and gridX
-            Debug.Log($"Enemy AI (PlaceTrap): Checking conditions - Is Tile Null? {targetTile == null}, Occupant Type: {targetTile.occupantType}, Is Prefab Null? {_trapPrefab == null}");
+            Debug.Log($"{_currentUserType} (PlaceTrap): Attempting to place trap on tile at ({targetTile.gridY}, {targetTile.gridX}).");
+            Debug.Log($"{_currentUserType} (PlaceTrap): Checking conditions - Is Tile Null? {targetTile == null}, Occupant Type: {targetTile.occupantType}, Is Prefab Null? {_trapPrefab == null}");
 
             // Original condition check
             if (targetTile.occupantType == TileSettings.OccupantType.None && _trapPrefab != null)
-            {
-                Debug.Log("Enemy AI (PlaceTrap): Conditions met. Proceeding with instantiation.");
+            {                Debug.Log($"{_currentUserType} (PlaceTrap): Conditions met. Proceeding with instantiation.");
 
                 Vector3 spawnPosition = targetTile.transform.position;
 
@@ -156,7 +152,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
                 targetTile.SetOccupant(TileSettings.OccupantType.Trap, trapInstance); // Used SetOccupant
                 // targetTile.OccupationChangedEvent.Invoke(); // Invoke is handled by SetOccupant
 
-                Debug.Log($"Enemy AI (PlaceTrap): Successfully placed trap at {targetTile.gridY}, {targetTile.gridX}."); // Changed to gridY and gridX
+                Debug.Log($"{_currentUserType} (PlaceTrap): Successfully placed trap at {targetTile.gridY}, {targetTile.gridX}.");
             }
             else // Log specific reason for failure
             {

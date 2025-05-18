@@ -16,7 +16,12 @@ public class TileSettings : MonoBehaviour
     public GameObject tileOccupant { get; private set; } // Made setter private, managed by SetOccupant
 
     // Settings
-    public OccupantType occupantType { get; private set; } // Made setter private, managed by SetOccupant
+    [SerializeField] private OccupantType _occupantType; // Will be shown in inspector
+    public OccupantType occupantType 
+    { 
+        get => _occupantType;
+        private set => _occupantType = value;
+    }
     public int gridX; // Renamed from column
     public int gridY; // Renamed from row
     internal UnityEvent OccupationChangedEvent;

@@ -17,6 +17,11 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
         private TileSelection.UserType _currentUserType; // Store the user type
         private TileOccupants _targetOccupantForAI; // Store the target for AI
 
+        // Add trap limit tracking
+        private const int MAX_TRAPS = 3;
+        private static int _activeTrapCount = 0;
+        public static bool CanPlaceTrap => _activeTrapCount < MAX_TRAPS;
+
         void Start()
         {
             _tileSelection = FindObjectOfType<TileSelection>();
@@ -51,6 +56,13 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
         // Added optional targetOccupant parameter for AI
         public void TrapPowerUpSelected(PowerUpState _state, TileSelection.UserType userType, TileOccupants targetOccupant = null)
         {
+            // First check if we can place more traps
+            if (!CanPlaceTrap)
+            {
+                Debug.LogWarning($"{userType} (TrapPowerUp): Maximum number of traps ({MAX_TRAPS}) already placed!");
+                return;
+            }
+
             _currentUserType = userType; // Store user type
             _targetOccupantForAI = targetOccupant; // Store target for AI
 
@@ -131,11 +143,18 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
         }
 
         private void PlaceTrap(TileSettings targetTile)
-        {            // *** DETAILED DEBUG: Log received tile and condition checks ***
+        {
+            // *** DETAILED DEBUG: Log received tile and condition checks ***
             if (targetTile == null)
             {
                 Debug.LogError($"{_currentUserType} (PlaceTrap): Received NULL targetTile!");
                 return; // Exit early if tile is null
+            }
+
+            if (!CanPlaceTrap)
+            {
+                Debug.LogError($"{_currentUserType} (PlaceTrap): Cannot place more traps, limit of {MAX_TRAPS} reached!");
+                return;
             }
 
             Debug.Log($"{_currentUserType} (PlaceTrap): Attempting to place trap on tile at ({targetTile.gridY}, {targetTile.gridX}).");
@@ -143,16 +162,24 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
 
             // Original condition check
             if (targetTile.occupantType == TileSettings.OccupantType.None && _trapPrefab != null)
-            {                Debug.Log($"{_currentUserType} (PlaceTrap): Conditions met. Proceeding with instantiation.");
-
-                Vector3 spawnPosition = targetTile.transform.position;
-
-                GameObject trapInstance = Instantiate(_trapPrefab, spawnPosition, Quaternion.identity);
-
-                targetTile.SetOccupant(TileSettings.OccupantType.Trap, trapInstance); // Used SetOccupant
-                // targetTile.OccupationChangedEvent.Invoke(); // Invoke is handled by SetOccupant
-
-                Debug.Log($"{_currentUserType} (PlaceTrap): Successfully placed trap at {targetTile.gridY}, {targetTile.gridX}.");
+            {                Debug.Log($"{_currentUserType} (PlaceTrap): Conditions met. Proceeding with instantiation.");                Vector3 spawnPosition = targetTile.transform.position;                GameObject trapInstance = Instantiate(_trapPrefab, spawnPosition, Quaternion.identity, targetTile.transform);
+                
+                // Initialize the trap with current damage value
+                var trapBehaviour = trapInstance.GetComponent<TrapBehaviour>();
+                if (trapBehaviour != null)
+                {
+                    trapBehaviour.Initialize(_currentDamage);
+                    IncrementTrapCount();
+                }
+                else
+                {
+                    Debug.LogError($"{_currentUserType} (PlaceTrap): Trap prefab is missing TrapBehaviour component!");
+                    Destroy(trapInstance);
+                    return;
+                }
+                
+                targetTile.SetOccupant(TileSettings.OccupantType.Trap, trapInstance);
+                Debug.Log($"{_currentUserType} (PlaceTrap): Successfully placed trap with damage {_currentDamage} at {targetTile.gridY}, {targetTile.gridX}). Active traps: {_activeTrapCount}/{MAX_TRAPS}");
             }
             else // Log specific reason for failure
             {
@@ -228,6 +255,19 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
             return Mathf.Abs(posA.x - posB.x) + Mathf.Abs(posA.y - posB.y);
         }
 
+        // Method to increment trap count when a trap is placed
+        public static void IncrementTrapCount()
+        {
+            _activeTrapCount++;
+            Debug.Log($"TrapPowerUp: Active trap count increased to {_activeTrapCount}");
+        }
+
+        // Method to decrement trap count when a trap is destroyed
+        public static void DecrementTrapCount()
+        {
+            _activeTrapCount = Mathf.Max(0, _activeTrapCount - 1);
+            Debug.Log($"TrapPowerUp: Active trap count decreased to {_activeTrapCount}");
+        }
 
         void OnDestroy()
         {

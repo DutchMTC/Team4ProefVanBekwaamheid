@@ -1,4 +1,5 @@
 using UnityEngine;
+using Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps;
 // Potentially add: using UnityEngine.Events; if you want to use UnityEvents for damage.
 
 public class TileOccupants : MonoBehaviour
@@ -221,13 +222,17 @@ public class TileOccupants : MonoBehaviour
             GameObject itemObjectToPickup = null;
             PickupItem pickupItemScript = null;
 
-            // Check if the target tile (_tileSettings from FindTileAtCoordinates) currently holds an item
+            // Store trap information before moving
+            bool hasTrap = _tileSettings.occupantType == TileSettings.OccupantType.Trap;
+            GameObject trapObject = hasTrap ? _tileSettings.tileOccupant : null;
+
+            // Check if the target tile currently holds an item
             if (_tileSettings.occupantType == TileSettings.OccupantType.Item && _tileSettings.tileOccupant != null)
             {
                 pickupItemScript = _tileSettings.tileOccupant.GetComponent<PickupItem>();
                 if (pickupItemScript != null)
                 {
-                    itemObjectToPickup = _tileSettings.tileOccupant; // Store reference to the item GameObject
+                    itemObjectToPickup = _tileSettings.tileOccupant;
                     Debug.Log($"Tile ({_tileSettings.gridY}, {_tileSettings.gridX}) has item {itemObjectToPickup.name} with PickupItem script.");
                 }
                 else
@@ -236,36 +241,41 @@ public class TileOccupants : MonoBehaviour
                 }
             }
             
-            // Validate if the unit can move to the target tile (_tileSettings)
-            // This check is already in place and allows moving to 'Item' tiles.
+            // Validate if the unit can move to the target tile
             if (_tileSettings.occupantType != TileSettings.OccupantType.None &&
                 _tileSettings.occupantType != TileSettings.OccupantType.Item &&
+                _tileSettings.occupantType != TileSettings.OccupantType.Trap &&
                 _tileSettings.occupantType != myOccupantType)
             {
-                Debug.LogWarning($"Cannot move to tile at ({gridY}, {gridX}) - tile is occupied by {_tileSettings.occupantType} and is not an item or self.");
+                Debug.LogWarning($"Cannot move to tile at ({gridY}, {gridX}) - tile is occupied by {_tileSettings.occupantType}.");
                 return;
             }
 
-            // Actual movement and tile occupation
+            // Move to the new position
             Vector3 selectedTilePos = _selectedTile.transform.position;
-            // Consider using a y-offset for the unit if needed, or ensure tile pivot is at its base.
-            // For now, matching x and z, keeping unit's current y.
             transform.position = new Vector3(selectedTilePos.x, transform.position.y, selectedTilePos.z);
             
-            // Set the unit as the occupant of the new tile.
-            // FindTileAtCoordinates already cleared this unit from its previous tile.
-            _tileSettings.SetOccupant(myOccupantType, this.gameObject);
-            // Note: _tileSettings is the new tile the unit is moving to.
-            // The internal gridY and gridX are already set to this tile's coordinates by FindTileAtCoordinates
-            // if the call originated from Update(). If it originated from a power-up, gridY/gridX were set before calling MoveToTile.
+            // Handle trap if present
+            if (hasTrap && trapObject != null)
+            {
+                var trapBehaviour = trapObject.GetComponent<TrapBehaviour>();
+                if (trapBehaviour != null)
+                {
+                    Debug.Log($"Character stepping on trap at ({_tileSettings.gridY}, {_tileSettings.gridX})");
+                    trapBehaviour.OnCharacterEnterTile(this);
+                }
+            }
+            else
+            {
+                // Only set occupant if there was no trap (trap handling will clear the tile)
+                _tileSettings.SetOccupant(myOccupantType, this.gameObject);
+            }
 
-            // If an item was on this tile, activate its pickup AFTER the unit has officially moved and occupied the tile.
+            // Handle item pickup after movement
             if (itemObjectToPickup != null && pickupItemScript != null)
             {
-                Debug.Log($"Unit {this.gameObject.name} moved to item tile. Activating pickup for {itemObjectToPickup.name}.");
-                pickupItemScript.ActivatePickup(this.gameObject);
-                // ItemManager will handle destroying the item.
-                // The tile's occupant is now this unit.
+                Debug.Log($"Unit {gameObject.name} moved to item tile. Activating pickup for {itemObjectToPickup.name}.");
+                pickupItemScript.ActivatePickup(gameObject);
             }
         }
         else

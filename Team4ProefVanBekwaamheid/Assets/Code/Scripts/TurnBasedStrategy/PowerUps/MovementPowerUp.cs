@@ -95,33 +95,6 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
 
             // Player Logic: Move to the selected tile
             Move(selectedTile);
-
-            // AI logic is handled directly in MovementPowerUpSelected, so this part is no longer needed here.
-            /*
-            if (_currentUserType == TileSelection.UserType.Enemy && _targetOccupantForAI != null)
-            {
-                 List<TileSettings> selectableTiles = _tileSelection.GetSelectableTiles();
-                 TileSettings bestTile = FindBestMoveTileTowardsTarget(selectableTiles, _targetOccupantForAI);
-                 // Debug.LogWarning("Enemy AI (Movement): AI targeting needs TileSelection.GetSelectableTiles() or equivalent."); // Removed warning
-
-                 if (bestTile != null)
-                 {
-                     Debug.Log($"Enemy AI (Movement): Moving towards player at ({_targetOccupantForAI.row}, {_targetOccupantForAI.column}). Best tile: ({bestTile.row}, {bestTile.column})");
-                     Move(bestTile);
-                 }
-                 else
-                 {
-                     Debug.LogWarning("Enemy AI (Movement): Could not find a valid tile to move towards the player.");
-                     // Optionally, pick a random valid tile or do nothing
-                     Move(selectedTile); // Fallback to originally selected (might be null or invalid for AI)
-                 }
-                 _tileSelection.CancelTileSelection(); // Ensure selection mode is exited
-            }
-            else // Player Logic
-            {
-                 // This is handled above
-            }
-            */
         }
 
         private void Move(TileSettings targetTile)
@@ -134,10 +107,19 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
                 // Check for trap before moving
                 if (targetTile.occupantType == TileSettings.OccupantType.Trap)
                 {
-                    var trapBehavior = targetTile.tileOccupant?.GetComponent<TrapBehavior>();
-                    if (trapBehavior != null)
+                    Debug.Log($"MovementPowerUp: Found trap on tile ({targetTile.gridX}, {targetTile.gridY})");
+                    
+                    // Try to find TrapBehaviour (with 'u' spelling)
+                    var trapBehaviour = targetTile.GetComponentInChildren<TrapBehaviour>(true);
+                    if (trapBehaviour != null)
                     {
-                        trapBehavior.OnCharacterEnterTile(_tileOccupants);
+                        Debug.Log("MovementPowerUp: Found TrapBehaviour, triggering OnCharacterEnterTile");
+                        trapBehaviour.OnCharacterEnterTile(_tileOccupants);
+                    }
+                    else
+                    {
+                        Debug.LogError($"MovementPowerUp: No TrapBehaviour component found on trap at ({targetTile.gridX}, {targetTile.gridY})");
+                        Debug.LogError("MovementPowerUp: Make sure PF_Trap prefab has TrapBehaviour (with 'u' spelling) component attached");
                     }
                 }
 

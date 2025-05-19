@@ -400,14 +400,15 @@ public class TileSelection : MonoBehaviour
             if (tilePauseDuration > 0)
             {
                 yield return new WaitForSeconds(tilePauseDuration);
-            }            // Apply effects or handle interactions based on tile type
+            }
+            // Apply effects or handle interactions based on tile type
             if (path[i].occupantType == TileSettings.OccupantType.Trap)
             {
                 // Handle trap tile effects
-                var trapBehavior = path[i].tileOccupant?.GetComponent<TrapBehavior>();
-                if (trapBehavior != null)
+                var trapBehaviour = path[i].tileOccupant?.GetComponent<TrapBehaviour>();
+                if (trapBehaviour != null)
                 {
-                    trapBehavior.OnCharacterEnterTile(entityOccupants);
+                    trapBehaviour.OnCharacterEnterTile(entityOccupants);
                 }
             }
             else if (path[i].occupantType == TileSettings.OccupantType.Item)

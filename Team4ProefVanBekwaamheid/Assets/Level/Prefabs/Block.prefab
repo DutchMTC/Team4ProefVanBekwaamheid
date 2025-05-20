@@ -53,7 +53,7 @@ MonoBehaviour:
     powerUpType: 0
   - type: 0
     rarity: 100
-    sprite: {fileID: 21300000, guid: b6f3d2fbdc0e06543af94cb3f1f9537d, type: 3}
+    sprite: {fileID: 21300000, guid: 81a8876872196fd4e96d74096de98efd, type: 3}
     isJoker: 0
     powerUpType: 2
   - type: 2

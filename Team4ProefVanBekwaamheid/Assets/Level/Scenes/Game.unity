@@ -700,7 +700,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 6484b75c62e1e6f43a1be5e75fbcf9f3, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 939c9bc15ba4be94591fc6cded50ce13, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2075,10 +2075,10 @@ MonoBehaviour:
     charged: {fileID: 21300000, guid: 916c252f01ca9854ea7efc622425e48d, type: 3}
     supercharged: {fileID: 21300000, guid: bf7a74949fc5fd746b6b9cab2cf45f30, type: 3}
   stepsSprites:
-    unusable: {fileID: 21300000, guid: 6484b75c62e1e6f43a1be5e75fbcf9f3, type: 3}
-    usable: {fileID: 21300000, guid: f5c2e27045df3654ca63adc038dd924a, type: 3}
-    charged: {fileID: 21300000, guid: 36b2861e22c98644990bdbbb91900254, type: 3}
-    supercharged: {fileID: 21300000, guid: eb6efc18b9098504d938a55f2ac73e64, type: 3}
+    unusable: {fileID: 21300000, guid: 939c9bc15ba4be94591fc6cded50ce13, type: 3}
+    usable: {fileID: 21300000, guid: 21c594d3a3d535c4cbd5fc42aec4ed89, type: 3}
+    charged: {fileID: 21300000, guid: aae9a06f63361d14b9df991bf2db28fe, type: 3}
+    supercharged: {fileID: 21300000, guid: 86e853c4cd67d624ca41bfcfba54e506, type: 3}
   fillAnimationDuration: 0.5
   fillAnimationCurve:
     serializedVersion: 2
@@ -5111,10 +5111,10 @@ MonoBehaviour:
       supercharged: {fileID: 21300000, guid: e95ccad5ddfc6f44cba06a76c1aacdb3, type: 3}
   - type: 2
     sprites:
-      unusable: {fileID: 21300000, guid: 6484b75c62e1e6f43a1be5e75fbcf9f3, type: 3}
-      usable: {fileID: 21300000, guid: f5c2e27045df3654ca63adc038dd924a, type: 3}
-      charged: {fileID: 21300000, guid: 36b2861e22c98644990bdbbb91900254, type: 3}
-      supercharged: {fileID: 21300000, guid: eb6efc18b9098504d938a55f2ac73e64, type: 3}
+      unusable: {fileID: 21300000, guid: 939c9bc15ba4be94591fc6cded50ce13, type: 3}
+      usable: {fileID: 21300000, guid: 21c594d3a3d535c4cbd5fc42aec4ed89, type: 3}
+      charged: {fileID: 21300000, guid: aae9a06f63361d14b9df991bf2db28fe, type: 3}
+      supercharged: {fileID: 21300000, guid: 86e853c4cd67d624ca41bfcfba54e506, type: 3}
   - type: 3
     sprites:
       unusable: {fileID: 21300000, guid: de29c262a707cc64f853130f72261ade, type: 3}
@@ -5477,8 +5477,8 @@ MonoBehaviour:
     normalSprite: {fileID: 21300000, guid: f5ec4ced71557ea4982212607dd0fa46, type: 3}
     disabledSprite: {fileID: 21300000, guid: 226a3f48890ffe441a9885498ccddad8, type: 3}
   - type: 0
-    normalSprite: {fileID: 21300000, guid: b6f3d2fbdc0e06543af94cb3f1f9537d, type: 3}
-    disabledSprite: {fileID: 21300000, guid: 6484b75c62e1e6f43a1be5e75fbcf9f3, type: 3}
+    normalSprite: {fileID: 21300000, guid: 81a8876872196fd4e96d74096de98efd, type: 3}
+    disabledSprite: {fileID: 21300000, guid: 939c9bc15ba4be94591fc6cded50ce13, type: 3}
   - type: 3
     normalSprite: {fileID: 21300000, guid: 312938d66a237c845ac5d959bd143f2e, type: 3}
     disabledSprite: {fileID: 21300000, guid: de29c262a707cc64f853130f72261ade, type: 3}
@@ -7422,8 +7422,8 @@ MonoBehaviour:
   _topCamera: {fileID: 84001778}
   _gridGenerator: {fileID: 0}
   characterAnimationController: {fileID: 154450978}
-  moveSpeed: 5
-  tilePauseDuration: 0.2
+  moveSpeed: 7
+  tilePauseDuration: 0.1
   movementCurve:
     serializedVersion: 2
     m_Curve:

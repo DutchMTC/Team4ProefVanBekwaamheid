@@ -162,7 +162,12 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
 
             // Original condition check
             if (targetTile.occupantType == TileSettings.OccupantType.None && _trapPrefab != null)
-            {                Debug.Log($"{_currentUserType} (PlaceTrap): Conditions met. Proceeding with instantiation.");                Vector3 spawnPosition = targetTile.transform.position;                GameObject trapInstance = Instantiate(_trapPrefab, spawnPosition, Quaternion.identity, targetTile.transform);
+            {                Debug.Log($"{_currentUserType} (PlaceTrap): Conditions met. Proceeding with instantiation.");
+                Vector3 spawnPosition = targetTile.transform.position;
+                // Instantiate without parenting first to maintain original scale and rotation
+                GameObject trapInstance = Instantiate(_trapPrefab, spawnPosition, _trapPrefab.transform.rotation);
+                // Then set the parent while keeping world position/rotation/scale
+                trapInstance.transform.SetParent(targetTile.transform, true);
                 
                 // Initialize the trap with current damage value
                 var trapBehaviour = trapInstance.GetComponent<TrapBehaviour>();

@@ -16,7 +16,8 @@ public class CharacterAnimationController : MonoBehaviour
         TrapThrow,
         Entrance,
         Stuck,
-        Damage
+        Damage,
+        Start // Added Start animation state
     }
 
     [Header("Animators")]
@@ -66,6 +67,7 @@ public class CharacterAnimationController : MonoBehaviour
     public void PlayerEntrance() => TriggerAnimation(playerAnimator, AnimationState.Entrance, PlayerAnimationPrefix);
     public void PlayerStuck() => TriggerAnimation(playerAnimator, AnimationState.Stuck, PlayerAnimationPrefix);
     public void PlayerDamage() => TriggerAnimation(playerAnimator, AnimationState.Damage, PlayerAnimationPrefix);
+    public void PlayerStart() => TriggerAnimation(playerAnimator, AnimationState.Start, PlayerAnimationPrefix);
 
     // Enemy Animation Triggers
     public void EnemyAttackUsable() => TriggerAnimation(enemyAnimator, AnimationState.AttackUsable, EnemyAnimationPrefix);
@@ -80,4 +82,5 @@ public class CharacterAnimationController : MonoBehaviour
     public void EnemyEntrance() => TriggerAnimation(enemyAnimator, AnimationState.Entrance, EnemyAnimationPrefix);
     public void EnemyStuck() => TriggerAnimation(enemyAnimator, AnimationState.Stuck, EnemyAnimationPrefix);
     public void EnemyDamage() => TriggerAnimation(enemyAnimator, AnimationState.Damage, EnemyAnimationPrefix);
+    public void EnemyStart() => TriggerAnimation(enemyAnimator, AnimationState.Start, EnemyAnimationPrefix);
 }

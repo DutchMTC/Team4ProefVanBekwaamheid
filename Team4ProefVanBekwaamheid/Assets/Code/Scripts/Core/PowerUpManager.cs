@@ -586,6 +586,39 @@ public class PowerUpManager : MonoBehaviour
            fillCoroutines[type] = null;
       }
   }
+  
+  // New private coroutine to animate fill to a target and set visibility
+  private IEnumerator AnimateFillToTargetCoroutine(PowerUpInventory.PowerUpType type, Image image, float targetFillAmount, bool setVisibleAfterAnimation, System.Action onComplete)
+  {
+      if (image == null)
+      {
+          onComplete?.Invoke(); // Invoke onComplete even if image is null to clean up dictionary
+          yield break;
+      }
+  
+      // Ensure image is active to see the animation if it's not already and there's a change in fill.
+      if (!image.gameObject.activeSelf && image.fillAmount != targetFillAmount)
+      {
+          image.gameObject.SetActive(true);
+      }
+      
+      float startFillAmount = image.fillAmount;
+      float elapsedTime = 0f;
+  
+      while (elapsedTime < fillAnimationDuration)
+      {
+          elapsedTime += Time.deltaTime;
+          float timeFraction = Mathf.Clamp01(elapsedTime / fillAnimationDuration);
+          float curveValue = fillAnimationCurve.Evaluate(timeFraction);
+          image.fillAmount = Mathf.LerpUnclamped(startFillAmount, targetFillAmount, curveValue);
+          yield return null;
+      }
+  
+      image.fillAmount = targetFillAmount;
+      image.gameObject.SetActive(setVisibleAfterAnimation);
+  
+      onComplete?.Invoke();
+  }
 
 
     /// Updates the visuals for all power-up buttons.
@@ -754,6 +787,53 @@ public class PowerUpManager : MonoBehaviour
         Debug.Log($"Handling {type} effect. State: {state}, User: {user}");
         // TODO: Pass type, state, user to the actual effect execution script/system
     }
+    
+        /// <summary>
+        /// Animates all power-up fills to disappear (fill to 0, then hide).
+        /// Call this when the Player phase begins.
+        /// </summary>
+        public void AnimateFillsToDisappearForPlayerPhase()
+        {
+            Debug.Log("Animating power-up fills to disappear for Player Phase.");
+            foreach (PowerUpInventory.PowerUpType type in System.Enum.GetValues(typeof(PowerUpInventory.PowerUpType)))
+            {
+                if (System.Enum.IsDefined(typeof(PowerUpInventory.PowerUpType), type))
+                {
+                    if (powerUpFillImageMap.TryGetValue(type, out Image fillImage) && fillImage != null)
+                    {
+                        // Stop any existing fill animation for this type and clear its registration
+                        if (fillCoroutines.TryGetValue(type, out Coroutine oldCoroutine) && oldCoroutine != null)
+                        {
+                            StopCoroutine(oldCoroutine);
+                            fillCoroutines[type] = null;
+                        }
+    
+                        // Only animate if it's currently visible and has some fill
+                        if (fillImage.gameObject.activeSelf && fillImage.fillAmount > 0)
+                        {
+                            Coroutine newCoroutineInstance = null;
+                            newCoroutineInstance = StartCoroutine(AnimateFillToTargetCoroutine(type, fillImage, 0f, false,
+                                () => { // OnComplete action
+                                    // Only nullify if this specific coroutine instance is still the one registered
+                                    if (fillCoroutines.TryGetValue(type, out Coroutine currentRegistered) && currentRegistered == newCoroutineInstance)
+                                    {
+                                        fillCoroutines[type] = null;
+                                    }
+                                }
+                            ));
+                            fillCoroutines[type] = newCoroutineInstance; // Register the new coroutine
+                        }
+                        else if (fillImage.gameObject.activeSelf && fillImage.fillAmount == 0f)
+                        {
+                            // Already at 0 fill and active, just ensure it's hidden
+                            fillImage.gameObject.SetActive(false);
+                            // fillCoroutines[type] should be null from the stop logic above if one was running
+                        }
+                        // If not activeSelf, it's already considered hidden.
+                    }
+                }
+            }
+        }
 
     private void HandleSteps(PowerUpInventory.PowerUpType type, PowerUpState state, PowerUpUser user)
     {

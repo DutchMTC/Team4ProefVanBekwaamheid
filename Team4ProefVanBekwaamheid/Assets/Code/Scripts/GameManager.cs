@@ -133,7 +133,7 @@ public class GameManager : MonoBehaviour
         }
 
         // Hide powerup info only if coming from Player phase
-        if (_previousGameState == GameState.Player)
+        if (_previousGameState == GameState.Enemy)
         {
             if (_powerUpInfoAnimator != null)
             {
@@ -206,9 +206,13 @@ public class GameManager : MonoBehaviour
         // Set UI visibility
         if (_matchCounterUI != null) _matchCounterUI.SetActive(false);
         if (_timerUI != null) _timerUI.SetActive(true);
-
-        if (_powerUpManager != null) _powerUpManager.SetButtonsInteractable(true); // Enable buttons
-
+ 
+        if (_powerUpManager != null)
+        {
+            _powerUpManager.SetButtonsInteractable(true); // Enable buttons
+            _powerUpManager.AnimateFillsToDisappearForPlayerPhase(); // Animate fills to disappear
+        }
+ 
         // The _playerTimer.StartTimer() call was here, but it's removed as the timer is now manually ended.
         // The _playerTimer reference is still needed for the onTimerEnd event.
         // Ensure _playerTimer is assigned in the Inspector.

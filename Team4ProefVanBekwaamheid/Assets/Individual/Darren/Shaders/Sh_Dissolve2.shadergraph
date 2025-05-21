@@ -838,8 +838,8 @@
     "m_ObjectId": "21143772422b43a59f231656876bc26b",
     "m_Title": "AlphaController",
     "m_Position": {
-        "x": -849.0000610351563,
-        "y": 413.0
+        "x": -849.0,
+        "y": 412.99993896484377
     }
 }
 
@@ -979,8 +979,8 @@
     "m_ObjectId": "2a6414b1e6ac454e82c5e5af45070f6e",
     "m_Title": "Adds Edge Color",
     "m_Position": {
-        "x": -1071.0001220703125,
-        "y": 986.0001220703125
+        "x": -1071.0,
+        "y": 986.0
     }
 }
 
@@ -1973,7 +1973,7 @@
     "m_ObjectId": "7cdb928f1dda4ae2b6861c5c8f4ebe2d",
     "m_Title": "Creates Dissolve",
     "m_Position": {
-        "x": -2815.000244140625,
+        "x": -2815.0,
         "y": 524.0
     }
 }
@@ -1984,8 +1984,8 @@
     "m_ObjectId": "7da9815a0141477a83f7c24196f53552",
     "m_Title": "Inverts slider",
     "m_Position": {
-        "x": -2800.000244140625,
-        "y": 983.0001220703125
+        "x": -2800.0,
+        "y": 982.9998779296875
     }
 }
 
@@ -3251,8 +3251,8 @@
     "m_ObjectId": "fef7d7a2b30c4fd4b873ec1ee0b3087b",
     "m_Title": "Add edge outline",
     "m_Position": {
-        "x": -2534.000244140625,
-        "y": 1014.0001220703125
+        "x": -2534.0,
+        "y": 1014.0
     }
 }
 

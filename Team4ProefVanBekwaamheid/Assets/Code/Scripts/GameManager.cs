@@ -16,8 +16,9 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance;
 
     public GameState State { get; private set; }
+    private GameState _previousGameState; // To track the previous state
     public static event Action<GameState> OnGameStateChanged;
-
+ 
     [Header("Component References")]
     [SerializeField] private GridManager _gridManager;
     [SerializeField] private EnemyAIController _enemyAIController;
@@ -27,6 +28,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private PowerUpManager _powerUpManager; // Add reference
     [SerializeField] private UnityEngine.UI.Image _phaseTransitionImage; // UI Image for phase animation
     [SerializeField] private Animator _phaseTransitionAnimator; // Animator for phase transition
+    [SerializeField] private Animator _matchGridCoverAnimator; // Animator for the Match3 grid cover
+    [SerializeField] private Animator _powerUpInfoAnimator; // Animator for the PowerUp information UI
  
     [Header("Phase Animation Sprites")]
     [SerializeField] private Sprite _matchingPhaseSprite;
@@ -53,9 +56,11 @@ public class GameManager : MonoBehaviour
         {
             Debug.LogError("GameManager: Player Timer reference not set in Inspector!");
         }
+        // Initialize previous state to something different from Matching to avoid issues on first run
+        _previousGameState = GameState.Start;
         UpdateGameState(GameState.Matching);
     }
-
+ 
     void OnDestroy()
     {
         // Unsubscribe from the timer event when the GameManager is destroyed
@@ -72,23 +77,24 @@ public class GameManager : MonoBehaviour
     /// <exception cref="ArgumentOutOfRangeException"></exception>
     public void UpdateGameState(GameState newState)
     {
+        _previousGameState = State; // Store current state as previous before updating
         State = newState;
         // Handle game state changes here
         switch (newState)
         {
             case GameState.Matching:
                 // Handle matching logic
-                PlayPhaseAnimation(_matchingPhaseSprite);
+                if (_previousGameState != GameState.Start) PlayPhaseAnimation(_matchingPhaseSprite);
                 HandleMatching();
                 break;
             case GameState.Player:
                 // Handle player turn logic
-                PlayPhaseAnimation(_playerPhaseSprite);
+                if (_previousGameState != GameState.Start) PlayPhaseAnimation(_playerPhaseSprite);
                 HandlePlayerTurn();
                 break;
             case GameState.Enemy:
                 // Handle enemy turn logic
-                PlayPhaseAnimation(_enemyPhaseSprite);
+                if (_previousGameState != GameState.Start) PlayPhaseAnimation(_enemyPhaseSprite);
                 HandleEnemyTurn();
                 break;
             case GameState.Win:
@@ -113,6 +119,32 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Matching phase!");
 
+        // Hide cover if not the initial game start
+        if (_previousGameState != GameState.Start)
+        {
+            if (_matchGridCoverAnimator != null)
+            {
+                //_matchGridCoverAnimator.SetTrigger("CoverHide");
+            }
+            else
+            {
+                Debug.LogWarning("GameManager: Match Grid Cover Animator reference not set.");
+            }
+        }
+
+        // Hide powerup info only if coming from Player phase
+        if (_previousGameState == GameState.Player)
+        {
+            if (_powerUpInfoAnimator != null)
+            {
+                _powerUpInfoAnimator.SetTrigger("PowerUpHide");
+            }
+            else
+            {
+                Debug.LogWarning("GameManager: PowerUp Info Animator reference not set.");
+            }
+        }
+ 
         // Restore power-up visuals from inventory
         if (_powerUpManager != null)
         {
@@ -153,6 +185,24 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Player's turn!");
 
+        if (_matchGridCoverAnimator != null)
+        {
+            //_matchGridCoverAnimator.SetTrigger("CoverShow");
+        }
+        else
+        {
+            Debug.LogWarning("GameManager: Match Grid Cover Animator reference not set.");
+        }
+
+        if (_powerUpInfoAnimator != null)
+        {
+            _powerUpInfoAnimator.SetTrigger("PowerUpShow");
+        }
+        else
+        {
+            Debug.LogWarning("GameManager: PowerUp Info Animator reference not set.");
+        }
+ 
         // Set UI visibility
         if (_matchCounterUI != null) _matchCounterUI.SetActive(false);
         if (_timerUI != null) _timerUI.SetActive(true);
@@ -331,7 +381,7 @@ public class GameManager : MonoBehaviour
         {
             _phaseTransitionImage.sprite = phaseSprite;
             _phaseTransitionImage.gameObject.SetActive(true); // Ensure it's active
-            _phaseTransitionAnimator.SetTrigger("PhaseSwitch");
+            _phaseTransitionAnimator.SetTrigger("AN_PhaseSwitch");
         }
         else
         {

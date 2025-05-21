@@ -6043,12 +6043,12 @@ Light:
   m_InnerSpotAngle: 21.80208
   m_CookieSize: 10
   m_Shadows:
-    m_Type: 2
+    m_Type: 1
     m_Resolution: -1
     m_CustomResolution: -1
     m_Strength: 0.392
     m_Bias: 4.62
-    m_NormalBias: 0.38
+    m_NormalBias: 0.92
     m_NearPlane: 6.73
     m_CullingMatrixOverride:
       e00: 1

@@ -25,10 +25,17 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject _matchCounterUI;
     [SerializeField] private GameObject _timerUI;
     [SerializeField] private PowerUpManager _powerUpManager; // Add reference
+    [SerializeField] private UnityEngine.UI.Image _phaseTransitionImage; // UI Image for phase animation
+    [SerializeField] private Animator _phaseTransitionAnimator; // Animator for phase transition
+ 
+    [Header("Phase Animation Sprites")]
+    [SerializeField] private Sprite _matchingPhaseSprite;
+    [SerializeField] private Sprite _playerPhaseSprite;
+    [SerializeField] private Sprite _enemyPhaseSprite;
 
     [Header("Tile Sprites")]
     public List<TileSpriteSet> tileSprites; // List to hold sprite sets for each block type
-
+ 
     void Awake()
     {
         Instance = this;
@@ -71,14 +78,17 @@ public class GameManager : MonoBehaviour
         {
             case GameState.Matching:
                 // Handle matching logic
+                PlayPhaseAnimation(_matchingPhaseSprite);
                 HandleMatching();
                 break;
             case GameState.Player:
                 // Handle player turn logic
+                PlayPhaseAnimation(_playerPhaseSprite);
                 HandlePlayerTurn();
                 break;
             case GameState.Enemy:
                 // Handle enemy turn logic
+                PlayPhaseAnimation(_enemyPhaseSprite);
                 HandleEnemyTurn();
                 break;
             case GameState.Win:
@@ -314,8 +324,24 @@ public class GameManager : MonoBehaviour
 
         UpdateGameState(GameState.Enemy);
     }
+ 
+    private void PlayPhaseAnimation(Sprite phaseSprite)
+    {
+        if (_phaseTransitionImage != null && _phaseTransitionAnimator != null && phaseSprite != null)
+        {
+            _phaseTransitionImage.sprite = phaseSprite;
+            _phaseTransitionImage.gameObject.SetActive(true); // Ensure it's active
+            _phaseTransitionAnimator.SetTrigger("PhaseSwitch");
+        }
+        else
+        {
+            if (_phaseTransitionImage == null) Debug.LogWarning("GameManager: Phase Transition Image reference not set.");
+            if (_phaseTransitionAnimator == null) Debug.LogWarning("GameManager: Phase Transition Animator reference not set.");
+            if (phaseSprite == null) Debug.LogWarning("GameManager: Phase Sprite is null for the current phase.");
+        }
+    }
 }
-
+ 
 public enum GameState
 {
     Start,

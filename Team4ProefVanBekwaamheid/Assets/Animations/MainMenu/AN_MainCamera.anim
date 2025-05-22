@@ -785,7 +785,7 @@ AnimationClip:
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
-  - time: 6.5
+  - time: 5.5333333
     functionName: SwitchToGameScene
     data: 
     objectReferenceParameter: {fileID: 0}

@@ -142,11 +142,11 @@ public class TileSelection : MonoBehaviour
                         bool isValidTile = false;
                         
                         switch (selectionType)
-                        {
-                            case SelectionType.Movement:
+                        {                            case SelectionType.Movement:
                                 isValidTile = tile.occupantType == TileSettings.OccupantType.None || 
                                             tile.occupantType == TileSettings.OccupantType.Item ||
-                                            tile.occupantType == TileSettings.OccupantType.Trap;
+                                            tile.occupantType == TileSettings.OccupantType.Trap ||
+                                            tile.occupantType == TileSettings.OccupantType.Decoy;
                                 break;
                             
                             case SelectionType.Attack:

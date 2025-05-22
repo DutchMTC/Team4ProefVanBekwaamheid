@@ -166,7 +166,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
             Debug.Log($"{_currentUserType} (PlaceTrap): Attempting to place trap on tile at ({targetTile.gridY}, {targetTile.gridX}).");
             Debug.Log($"{_currentUserType} (PlaceTrap): Checking conditions - Is Tile Null? {targetTile == null}, Occupant Type: {targetTile.occupantType}, Is Prefab Null? {_trapPrefab == null}");
 
-            if (targetTile.occupantType == TileSettings.OccupantType.None && _trapPrefab != null)
+            if ((targetTile.occupantType == TileSettings.OccupantType.None || targetTile.occupantType == TileSettings.OccupantType.Decoy) && targetTile.occupantType != TileSettings.OccupantType.Item && _trapPrefab != null)
             {
                 Debug.Log($"{_currentUserType} (PlaceTrap): Conditions met. Proceeding with instantiation.");
                 Vector3 spawnPosition = targetTile.transform.position;
@@ -204,9 +204,11 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
                                 t.occupantType == TileSettings.OccupantType.None &&
                                 Mathf.Abs(t.gridX - targetTile.gridX) + Mathf.Abs(t.gridY - targetTile.gridY) == 2
                             ).ToList();
-                        }                        // If we found any valid tiles, place the decoy
+                        }                        // If we found any valid tiles, place the decoy                        // Filter out any item tiles from adjacent tiles
+                        adjacentTiles.RemoveAll(tile => tile.occupantType == TileSettings.OccupantType.Item);
+                        
                         if (adjacentTiles.Count > 0)
-                        {                            TileSettings decoyTile = adjacentTiles[Random.Range(0, adjacentTiles.Count)];
+                        {TileSettings decoyTile = adjacentTiles[Random.Range(0, adjacentTiles.Count)];
                             Vector3 decoyPosition = decoyTile.transform.position + new Vector3(0, -1f, 0);
                             GameObject decoyLeaf = Instantiate(_leafPrefab, decoyPosition, _leafPrefab.transform.rotation);
                             decoyLeaf.transform.SetParent(decoyTile.transform, true);

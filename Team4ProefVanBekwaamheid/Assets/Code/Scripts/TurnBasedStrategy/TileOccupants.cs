@@ -240,12 +240,25 @@ public class TileOccupants : MonoBehaviour
                     Debug.LogWarning($"Tile at ({_tileSettings.gridY}, {_tileSettings.gridX}) is marked as Item but occupant {_tileSettings.tileOccupant.name} has no PickupItem script.");
                 }
             }
-            
-            // Validate if the unit can move to the target tile
+
+            // Check for decoy and trigger fade-out
+            if (_tileSettings.occupantType == TileSettings.OccupantType.Decoy && _tileSettings.tileOccupant != null)
+            {
+                LeafBehaviour leafBehaviour = _tileSettings.tileOccupant.GetComponent<LeafBehaviour>();
+                if (leafBehaviour != null)
+                {
+                    Debug.Log($"Found decoy leaf at ({_tileSettings.gridY}, {_tileSettings.gridX}), starting fade out");
+                    leafBehaviour.StartFadeOut(1f);
+                    _tileSettings.SetOccupant(TileSettings.OccupantType.None, null);
+                }
+            }
+
+            // Validate if the unit can move to the target tile            
             if (_tileSettings.occupantType != TileSettings.OccupantType.None &&
-                _tileSettings.occupantType != TileSettings.OccupantType.Item &&
-                _tileSettings.occupantType != TileSettings.OccupantType.Trap &&
-                _tileSettings.occupantType != myOccupantType)
+            _tileSettings.occupantType != TileSettings.OccupantType.Item &&
+            _tileSettings.occupantType != TileSettings.OccupantType.Trap &&
+            _tileSettings.occupantType != TileSettings.OccupantType.Decoy &&
+            _tileSettings.occupantType != myOccupantType)
             {
                 Debug.LogWarning($"Cannot move to tile at ({gridY}, {gridX}) - tile is occupied by {_tileSettings.occupantType}.");
                 return;

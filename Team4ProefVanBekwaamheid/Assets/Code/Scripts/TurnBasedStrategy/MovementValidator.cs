@@ -146,10 +146,10 @@ public class MovementValidator : MonoBehaviour
 
         return neighbors;
     }    private static bool IsWalkable(TileSettings tile)
-    {
-        var isWalkable = tile.occupantType == TileSettings.OccupantType.None ||
+    {        var isWalkable = tile.occupantType == TileSettings.OccupantType.None ||
                         tile.occupantType == TileSettings.OccupantType.Item ||
-                        tile.occupantType == TileSettings.OccupantType.Trap;
+                        tile.occupantType == TileSettings.OccupantType.Trap ||
+                        tile.occupantType == TileSettings.OccupantType.Decoy;
         if (!isWalkable) {
             Debug.Log($"Tile at ({tile.gridX}, {tile.gridY}) is not walkable: {tile.occupantType}");
         }

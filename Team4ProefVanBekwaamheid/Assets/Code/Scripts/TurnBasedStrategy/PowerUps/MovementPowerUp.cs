@@ -98,11 +98,11 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
         }
 
         private void Move(TileSettings targetTile)
-        {
-            if (targetTile != null &&
+        {            if (targetTile != null &&
                 (targetTile.occupantType == TileSettings.OccupantType.None || 
                  targetTile.occupantType == TileSettings.OccupantType.Item ||
-                 targetTile.occupantType == TileSettings.OccupantType.Trap))
+                 targetTile.occupantType == TileSettings.OccupantType.Trap ||
+                 targetTile.occupantType == TileSettings.OccupantType.Decoy))
             {
                 // Check for trap before moving
                 if (targetTile.occupantType == TileSettings.OccupantType.Trap)

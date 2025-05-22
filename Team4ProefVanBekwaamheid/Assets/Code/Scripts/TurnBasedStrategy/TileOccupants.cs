@@ -316,7 +316,6 @@ public class TileOccupants : MonoBehaviour
                 if (leafBehaviour != null)
                 {
                     leafBehaviour.StartFadeOut(1f);
-                    _tileSettings.SetOccupant(TileSettings.OccupantType.None, null);
                 }
             }
 
@@ -348,8 +347,10 @@ public class TileOccupants : MonoBehaviour
                     TileSettings tileThatHadTrap = _tileSettings;
                     // Immediately mark the tile as not having an active trap to prevent re-triggering.
                     // The TrapBehaviour itself will handle the trap object's lifecycle.
-                    tileThatHadTrap.SetOccupant(TileSettings.OccupantType.None, null);
 
+// Occupy the tile immediately before processing trap effects
+                    // to prevent re-triggering if MoveToTile is called again for this tile.
+                    _tileSettings.SetOccupant(myOccupantType, this.gameObject);
                     StartCoroutine(HandleTrapDamage(trapBehaviour, tileThatHadTrap));
                     StartCoroutine(PlayStuckAnimationAfterDelay(0.25f)); // Moved to a new coroutine with delay
                 }
@@ -385,7 +386,9 @@ public class TileOccupants : MonoBehaviour
         if (_tileSettings != null) // If this occupant was previously on a tile
         {
             // Only clear the occupant if this specific game object was the occupant
-            if (_tileSettings.tileOccupant == this.gameObject)
+            // AND if the character is actually moving to a new tile.
+            if (_tileSettings.tileOccupant == this.gameObject &&
+                (_tileSettings.gridX != this.gridX || _tileSettings.gridY != this.gridY))
             {
                 _tileSettings.SetOccupant(TileSettings.OccupantType.None, null);
             }

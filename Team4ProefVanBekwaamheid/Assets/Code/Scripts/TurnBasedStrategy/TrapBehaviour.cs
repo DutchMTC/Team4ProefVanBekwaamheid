@@ -119,7 +119,6 @@ public class TrapBehaviour : MonoBehaviour
         }
         
         // Clean up the trap
-        _parentTile.SetOccupant(TileSettings.OccupantType.None, null);
         TrapPowerUp.DecrementTrapCount();
         Destroy(gameObject);
     }
@@ -153,7 +152,6 @@ public class TrapBehaviour : MonoBehaviour
         }
 
         // Clean up the trap
-        _parentTile.SetOccupant(TileSettings.OccupantType.None, null);
         TrapPowerUp.DecrementTrapCount();
         Destroy(gameObject);
     }

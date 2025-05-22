@@ -95,41 +95,44 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
 
             // Player Logic: Move to the selected tile
             Move(selectedTile);
+        }    private void Move(TileSettings targetTile)
+    {
+        if (targetTile == null)
+        {
+            Debug.Log("Target tile is null, cannot move.");
+            return;
         }
 
-        private void Move(TileSettings targetTile)
-        {            if (targetTile != null &&
-                (targetTile.occupantType == TileSettings.OccupantType.None || 
-                 targetTile.occupantType == TileSettings.OccupantType.Item ||
-                 targetTile.occupantType == TileSettings.OccupantType.Trap ||
-                 targetTile.occupantType == TileSettings.OccupantType.Decoy))
+        if (targetTile.occupantType == TileSettings.OccupantType.None || 
+            targetTile.occupantType == TileSettings.OccupantType.Item ||
+            targetTile.occupantType == TileSettings.OccupantType.Trap ||
+            targetTile.occupantType == TileSettings.OccupantType.Decoy)
+        {
+            // Check for trap before moving
+            if (targetTile.occupantType == TileSettings.OccupantType.Trap)
             {
-                // Check for trap before moving
-                if (targetTile.occupantType == TileSettings.OccupantType.Trap)
+                Debug.Log($"MovementPowerUp: Found trap on tile ({targetTile.gridX}, {targetTile.gridY})");
+                
+                var trapBehaviour = targetTile.GetComponentInChildren<TrapBehaviour>(true);
+                if (trapBehaviour != null)
                 {
-                    Debug.Log($"MovementPowerUp: Found trap on tile ({targetTile.gridX}, {targetTile.gridY})");
-                    
-                    // Try to find TrapBehaviour (with 'u' spelling)
-                    var trapBehaviour = targetTile.GetComponentInChildren<TrapBehaviour>(true);
-                    if (trapBehaviour != null)
+                    Debug.Log("MovementPowerUp: Found TrapBehaviour, triggering OnCharacterEnterTile");
+                    trapBehaviour.OnCharacterEnterTile(_tileOccupants);
+                    // Don't proceed with movement if this is an enemy - trap will handle state change
+                    if (_currentUserType == TileSelection.UserType.Enemy)
                     {
-                        Debug.Log("MovementPowerUp: Found TrapBehaviour, triggering OnCharacterEnterTile");
-                        trapBehaviour.OnCharacterEnterTile(_tileOccupants);
-                    }
-                    else
-                    {
-                        Debug.LogError($"MovementPowerUp: No TrapBehaviour component found on trap at ({targetTile.gridX}, {targetTile.gridY})");
-                        Debug.LogError("MovementPowerUp: Make sure PF_Trap prefab has TrapBehaviour (with 'u' spelling) component attached");
+                        return;
                     }
                 }
+            }
 
-                _tileOccupants.gridY = targetTile.gridY; // Changed to gridY
-                _tileOccupants.gridX = targetTile.gridX; // Changed to gridX
-                _tileOccupants.MoveToTile();
-                if (_currentUserType == TileSelection.UserType.Player && _animationController != null)
-                {
-                    _animationController.PlayerDash();
-                }
+            _tileOccupants.gridY = targetTile.gridY;
+            _tileOccupants.gridX = targetTile.gridX;
+            _tileOccupants.MoveToTile();
+            if (_currentUserType == TileSelection.UserType.Player && _animationController != null)
+            {
+                _animationController.PlayerDash();
+            }
             }
             else
             {
@@ -140,34 +143,48 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
                     Debug.Log($"Selected tile is occupied by {targetTile.occupantType} or invalid, cannot move here.");
                 }
             }
-        }
-
-        // AI Helper: Find the best tile to move towards the target
+        }        // AI Helper: Find the best tile to move towards the target
         private TileSettings FindBestMoveTileTowardsTarget(List<TileSettings> selectableTiles, TileOccupants target)
         {
-            TileSettings bestTile = null;
-            float minDistanceSq = float.MaxValue;
-            Vector2Int targetPos = new Vector2Int(target.gridX, target.gridY); // Standardized: (gridX, gridY) -> (column, row)
-
-            foreach (var tile in selectableTiles)
+            if (selectableTiles == null || target == null || _tileOccupants == null)
             {
-                if (tile.occupantType == TileSettings.OccupantType.None) // Ensure tile is empty
-                {
-                    Vector2Int tilePos = new Vector2Int(tile.gridX, tile.gridY); // Standardized: (gridX, gridY) -> (column, row)
-                    float distanceSq = Vector2Int.Distance(tilePos, targetPos); // Using squared distance for efficiency
+                Debug.LogError("MovementPowerUp: Missing required references for finding best move tile");
+                return null;
+            }
 
-                    if (distanceSq < minDistanceSq)
+            TileSettings bestTile = null;
+            float minDistanceToTarget = float.MaxValue;
+            Vector2Int targetPos = new Vector2Int(target.gridX, target.gridY);
+            Vector2Int currentPos = new Vector2Int(_tileOccupants.gridX, _tileOccupants.gridY);
+
+            foreach (TileSettings tile in selectableTiles)
+            {
+                if (tile == null) continue;
+
+                Vector2Int tilePos = new Vector2Int(tile.gridX, tile.gridY);
+                
+                // Verify the tile is within movement range
+                int distance = Mathf.Abs(tilePos.x - currentPos.x) + Mathf.Abs(tilePos.y - currentPos.y);
+                if (distance > _range)
+                {
+                    continue;
+                }
+
+                // Only consider empty tiles
+                if (tile.occupantType == TileSettings.OccupantType.None)
+                {
+                    float distanceToTarget = Vector2.Distance(tilePos, targetPos);
+                    if (distanceToTarget < minDistanceToTarget)
                     {
-                        minDistanceSq = distanceSq;
+                        minDistanceToTarget = distanceToTarget;
                         bestTile = tile;
                     }
                 }
             }
-            return bestTile;
-        }
 
+            return bestTile;        }
 
-        void OnDestroy()
+        private void OnDestroy()
         {
             if (_tileSelection != null)
             {

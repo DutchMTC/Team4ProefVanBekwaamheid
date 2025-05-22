@@ -1152,6 +1152,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerAnimator: {fileID: 1549750275}
   enemyAnimator: {fileID: 1789669737}
+  sfxManager: {fileID: 0}
 --- !u!1001 &181763749
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8681,7 +8682,7 @@ MonoBehaviour:
     m_RotationOrder: 4
   playerRotationOffset: {x: -90, y: 90, z: 0}
   enemyRotationOffset: {x: 0, y: 25, z: 0}
-  enemyModelToRotate: {fileID: 939605188}
+  enemyModelToRotate: {fileID: 2110333418}
 --- !u!1 &1601236584
 GameObject:
   m_ObjectHideFlags: 0

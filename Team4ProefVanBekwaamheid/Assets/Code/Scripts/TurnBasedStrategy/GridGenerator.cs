@@ -91,7 +91,7 @@ public class GridGenerator : MonoBehaviour
                 float isometricX = (x - y) * _tileWidth * 0.5f + _horizontalOffset;
                 float isometricZ = (x + y) * _tileHeight * 0.5f;
                 
-                Vector3 tilePosition = new Vector3(isometricX, _gridHeight, isometricZ);
+                Vector3 tilePosition = new Vector3(isometricX, _gridHeight + 0.01f, isometricZ);
                 GameObject tile = Instantiate(tilePrefab, tilePosition, Quaternion.Euler(0, 45, 0));
                 
                 tile.GetComponent<TileSettings>().Initzialize(TileSettings.OccupantType.None, x, y, null); // Initialize tile settings with null occupant

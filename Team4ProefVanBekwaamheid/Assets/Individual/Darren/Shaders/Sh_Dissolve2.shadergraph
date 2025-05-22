@@ -839,7 +839,7 @@
     "m_Title": "AlphaController",
     "m_Position": {
         "x": -849.0,
-        "y": 412.99993896484377
+        "y": 413.0
     }
 }
 
@@ -1985,7 +1985,7 @@
     "m_Title": "Inverts slider",
     "m_Position": {
         "x": -2800.0,
-        "y": 982.9998779296875
+        "y": 983.0
     }
 }
 

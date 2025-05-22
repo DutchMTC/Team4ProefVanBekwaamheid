@@ -18,6 +18,11 @@ public class TileOccupants : MonoBehaviour
     private float _damageReduction = 0f;
     private bool hasArmor = false; // Added for armor mechanic
 
+    [Header("Damage Delays")]
+    [SerializeField] private float usableAttackDamageDelay = 0f;
+    [SerializeField] private float chargedAttackDamageDelay = 0f;
+    [SerializeField] private float superchargedAttackDamageDelay = 0f;
+ 
     [Header("UI")]
     [SerializeField] private CharacterHealthUI healthBarUI;
     // public UnityAction<float> OnHealthChanged; // Alternative: Use UnityEvent
@@ -98,47 +103,102 @@ public class TileOccupants : MonoBehaviour
 
     public void TakeDamage(int amount)
     {
+        StartCoroutine(ApplyDamageAfterDelay(amount));
+    }
+
+    private System.Collections.IEnumerator ApplyDamageAfterDelay(int amount)
+    {
+        // 1. ARMOR CHECK
         if (hasArmor)
         {
             hasArmor = false;
             Debug.Log($"{gameObject.name}'s armor absorbed the hit! Armor destroyed.");
-            // Optionally, notify UI to remove armor icon here
             if (healthBarUI != null)
             {
                 healthBarUI.UpdateArmorStatus(false);
             }
-            return; // No damage taken
+            yield break; // No health damage, no animation, no delay.
         }
-
+ 
+        // 2. CALCULATE REDUCED DAMAGE
         int reducedDamage = Mathf.RoundToInt(amount * (1f - _damageReduction));
-        int previousHealth = health;
-        health -= reducedDamage;
-        health = Mathf.Clamp(health, 0, maxHealth); // Ensure health doesn't go below 0 or above max
-
-        string defenseMsg = _damageReduction > 0 ? $"[DEFENSE {_damageReduction * 100}%]" : "[NO DEFENSE]";
-        Debug.Log($"{defenseMsg} {gameObject.name} Health: {previousHealth} -> {health} " +
-                 $"(Took {reducedDamage} damage, reduced from {amount})", this);
-
-        // Update Health Bar UI
-        if (healthBarUI != null)
+ 
+        // 3. IF ACTUAL DAMAGE WILL BE DEALT
+        if (reducedDamage > 0)
         {
-            healthBarUI.OnHealthChanged(health);
+            // 3a. CALCULATE DELAY
+            float delay = 0f;
+            if (amount >= 25) { delay = superchargedAttackDamageDelay; }
+            else if (amount >= 15) { delay = chargedAttackDamageDelay; }
+            else if (amount >= 10) { delay = usableAttackDamageDelay; }
+            
+            // 3b. APPLY DELAY
+            if (delay > 0)
+            {
+                Debug.Log($"ApplyDamageAfterDelay: Waiting for {delay} seconds. Current health: {health}, Reduced Damage: {reducedDamage}");
+                yield return new WaitForSeconds(delay);
+                Debug.Log("ApplyDamageAfterDelay: Resumed after delay.");
+            }
+
+            // 3c. Ensure object still exists and is active after delay
+            if (this == null || !gameObject.activeInHierarchy)
+            {
+                Debug.LogWarning("ApplyDamageAfterDelay: Object became null or inactive after delay. Exiting.");
+                yield break;
+            }
+            Debug.Log($"ApplyDamageAfterDelay: Object still active. Current health before applying damage: {health}");
+
+            // 3d. APPLY HEALTH CHANGE
+            int previousHealth = health;
+            health -= reducedDamage;
+            health = Mathf.Clamp(health, 0, maxHealth);
+
+            string defenseMsg = _damageReduction > 0 ? $"[DEFENSE {_damageReduction * 100}%]" : "[NO DEFENSE]";
+            Debug.Log($"{defenseMsg} {gameObject.name} Health: {previousHealth} -> {health} " +
+                      $"(Took {reducedDamage} damage, reduced from {amount})", this);
+ 
+            // 3e. UPDATE UI
+            if (healthBarUI != null)
+            {
+                healthBarUI.OnHealthChanged(health);
+            }
+ 
+            // 3f. PLAY ANIMATION (if still alive and damage was dealt)
+            Debug.Log($"ApplyDamageAfterDelay: Checking animation conditions. Health: {health}, ReducedDamage: {reducedDamage}, OccupantType: {myOccupantType}, EnemyCtrl: {_enemyAIController != null}, PlayerCtrl: {_animationController != null}");
+            if (health > 0) // Check health *after* damage is applied
+            {
+                if (myOccupantType == TileSettings.OccupantType.Enemy && _enemyAIController != null)
+                {
+                    Debug.Log("ApplyDamageAfterDelay: Playing Enemy Damage Animation.");
+                    _enemyAIController.PlayDamageAnimation();
+                }
+                else if (myOccupantType == TileSettings.OccupantType.Player && _animationController != null)
+                {
+                    Debug.Log("ApplyDamageAfterDelay: Playing Player Damage Animation.");
+                    _animationController.PlayerDamage();
+                }
+                else
+                {
+                    Debug.LogWarning("ApplyDamageAfterDelay: Animation conditions met (health > 0) but controller missing or wrong type.");
+                }
+            }
+            else
+            {
+                Debug.Log("ApplyDamageAfterDelay: Animation skipped (health <= 0).");
+            }
+ 
+            // 3g. CHECK FOR DEATH
+            if (health <= 0)
+            {
+                // Death animation is handled in Die(), so no specific animation call here unless needed before Die()
+                Debug.Log($"{gameObject.name} has died from {reducedDamage} damage!", this);
+                Die();
+            }
         }
-        // OnHealthChanged?.Invoke(health); // Alternative: if using UnityEvent
-
-        if (myOccupantType == TileSettings.OccupantType.Enemy && _enemyAIController != null && health > 0 && reducedDamage > 0)
+        // 4. IF NO DAMAGE DEALT (BUT ATTACK OCCURRED)
+        else if (amount > 0) // Check if there was an intent to damage
         {
-            _enemyAIController.PlayDamageAnimation();
-        }
-        else if (myOccupantType == TileSettings.OccupantType.Player && _animationController != null && health > 0 && reducedDamage > 0)
-        {
-            _animationController.PlayerDamage(); // Assuming PlayerDamage exists and is public
-        }
-
-        if (health <= 0)
-        {
-            Debug.Log($"{gameObject.name} has died from {reducedDamage} damage!", this);
-            Die();
+            Debug.Log($"{gameObject.name} took no damage. Attack amount {amount} was fully mitigated by defense or other factors.", this);
         }
     }
 

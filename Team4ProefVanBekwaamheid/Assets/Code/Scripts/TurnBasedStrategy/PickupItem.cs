@@ -52,7 +52,7 @@ public class PickupItem : MonoBehaviour
                 TileOccupants occupant = unit.GetComponent<TileOccupants>();
                 if (occupant != null)
                 {
-                    occupant.Heal(10);
+                    occupant.Heal(30);
                 }
                 else
                 {

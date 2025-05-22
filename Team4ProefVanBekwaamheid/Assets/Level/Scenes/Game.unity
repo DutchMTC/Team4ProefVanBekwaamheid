@@ -5869,7 +5869,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _range: 1
   _baseDamage: 10
+  _decoyAmount: 0
   _trapPrefab: {fileID: 8415200219741149987, guid: b67f22d8c671f4445997e8e19010da47,
+    type: 3}
+  _leafPrefab: {fileID: 3060071306941238005, guid: 7cf1f3753a191a345bf2d753d3d2397b,
     type: 3}
 --- !u!114 &939605190
 MonoBehaviour:
@@ -5977,8 +5980,8 @@ MonoBehaviour:
   myOccupantType: 2
   gridY: 0
   gridX: 4
-  maxHealth: 30
-  health: 30
+  maxHealth: 100
+  health: 100
   healthBarUI: {fileID: 1937977755}
 --- !u!65 &939605195
 BoxCollider:
@@ -8574,8 +8577,8 @@ MonoBehaviour:
   myOccupantType: 1
   gridY: 4
   gridX: 0
-  maxHealth: 30
-  health: 30
+  maxHealth: 100
+  health: 100
   healthBarUI: {fileID: 389566553}
 --- !u!4 &1557919041
 Transform:
@@ -8634,7 +8637,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _range: 1
   _baseDamage: 10
+  _decoyAmount: 0
   _trapPrefab: {fileID: 8415200219741149987, guid: b67f22d8c671f4445997e8e19010da47,
+    type: 3}
+  _leafPrefab: {fileID: 3060071306941238005, guid: 7cf1f3753a191a345bf2d753d3d2397b,
     type: 3}
 --- !u!114 &1557919045
 MonoBehaviour:

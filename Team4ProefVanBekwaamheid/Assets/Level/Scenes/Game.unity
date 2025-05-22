@@ -11998,7 +11998,7 @@ GameObject:
   - component: {fileID: 1904655126}
   - component: {fileID: 1904655127}
   m_Layer: 0
-  m_Name: SFX Manager.
+  m_Name: SFX Manager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -12032,8 +12032,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mainMenuMusic: {fileID: 8300000, guid: c2fee7a952bc524459e7c522a31c25bd, type: 3}
-  matchPhaseMusic: {fileID: 8300000, guid: 55333782cd1922b479834dcd3c84c09c, type: 3}
-  battlePhaseMusic: {fileID: 8300000, guid: deae3079e1419ee42b423d981d0ec9ca, type: 3}
+  matchPhaseMusic: {fileID: 8300000, guid: deae3079e1419ee42b423d981d0ec9ca, type: 3}
+  battlePhaseMusic: {fileID: 8300000, guid: 55333782cd1922b479834dcd3c84c09c, type: 3}
   winSFX: {fileID: 8300000, guid: e0c064e7d308d774faced9b76a5720eb, type: 3}
   gameOverSFX: {fileID: 8300000, guid: 46ca3722eee5f0347b388170ed1186ca, type: 3}
   enemyDeathSFX: {fileID: 8300000, guid: 65776e58917fcec419822a7cb6651377, type: 3}
@@ -14727,7 +14727,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!1 &5926571876940691115
 GameObject:
   m_ObjectHideFlags: 0

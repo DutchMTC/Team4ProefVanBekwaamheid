@@ -4,7 +4,8 @@ using UnityEngine;
 using UnityEngine.Events;
 
 public class TileSettings : MonoBehaviour
-{    public enum OccupantType
+{    
+    public enum OccupantType
     {
         None,
         Player,
@@ -26,10 +27,11 @@ public class TileSettings : MonoBehaviour
     public int gridY; // Renamed from row
     internal UnityEvent OccupationChangedEvent;
     private Material _tileMaterial;
-    private Color _defaultTileColor = new Color(1.0f, 1.0f, 1.0f, 0.2f);
-    private Color _occupiedTileColor = new Color(1.0f, 0f, 0f, 0.5f);
-    private Color _playerTileColor = new Color(0f, 0f, 1.0f, 0.5f);
-    private Color _itemTileColor = new Color(0f, 1.0f, 0f, 0.5f); // Color for items
+    private Color _defaultTileColor = new Color(1.0f, 1.0f, 1.0f, 0.0f); // Completely transparent for empty tiles
+    private Color _occupiedTileColor = new Color(1.0f, 0f, 0f, 0.5f); // Red for enemies/traps/decoys
+    private Color _playerTileColor = new Color(0f, 0f, 1.0f, 0.5f); // Blue for player
+    private Color _selectableTileColor = new Color(0f, 0f, 1.0f, 0.5f); // Blue for selectable movement tiles
+    private Color _itemTileColor = new Color(0f, 1.0f, 0f, 0.5f); // Green for items
 
     public override bool Equals(object other)
     {
@@ -94,28 +96,75 @@ public class TileSettings : MonoBehaviour
         switch (occupantType)
         {
             case OccupantType.None:
-                _tileMaterial.color = _defaultTileColor;
+                _tileMaterial.color = _defaultTileColor; // Invisible
                 break;
             case OccupantType.Player:
-                //_tileMaterial.color = _playerTileColor;
+                _tileMaterial.color = _playerTileColor; // Blue
                 break;
             case OccupantType.Enemy:
-                _tileMaterial.color = _occupiedTileColor;
+                _tileMaterial.color = _occupiedTileColor; // Red
                 break;
             case OccupantType.Trap:
-                _tileMaterial.color = _defaultTileColor; // Changed to default color to hide trap
+                _tileMaterial.color = _occupiedTileColor; // Red like enemy
                 break;
             case OccupantType.Decoy:
-                _tileMaterial.color = _defaultTileColor; // Make decoy look like a regular tile
+                _tileMaterial.color = _occupiedTileColor; // Red like enemy
                 break;
             case OccupantType.Item:
-                _tileMaterial.color = _itemTileColor; // Set color for Item
+                _tileMaterial.color = _itemTileColor; // Green
                 break;
         }
     }
 
     public void SetTileColor(Color color)
     {
-        _tileMaterial.color = color; // Set the tile color to the specified color
+        if (_tileMaterial != null)
+        {
+            _tileMaterial.color = color;
+        }
+    }
+
+    // Add method to reset tile color based on occupant
+    public void ResetTileColor()
+    {
+        OnOccupationChange();
+    }
+
+    public void UpdateTileColor()
+    {
+        if (_tileMaterial == null)
+        {
+            _tileMaterial = GetComponent<MeshRenderer>().material;
+        }
+
+        switch (occupantType)
+        {
+            case OccupantType.None:
+                _tileMaterial.color = _defaultTileColor;
+                break;
+            case OccupantType.Player:
+                _tileMaterial.color = _playerTileColor;
+                break;
+            case OccupantType.Enemy:
+            case OccupantType.Trap:
+            case OccupantType.Decoy:
+                _tileMaterial.color = _occupiedTileColor;
+                break;
+            case OccupantType.Item:
+                _tileMaterial.color = _itemTileColor;
+                break;
+        }
+    }
+
+    public void SetSelectableForMovement(bool selectable)
+    {
+        if (selectable && occupantType == OccupantType.None)
+        {
+            _tileMaterial.color = _selectableTileColor;
+        }
+        else
+        {
+            UpdateTileColor(); // Reset to default color based on occupant
+        }
     }
 }

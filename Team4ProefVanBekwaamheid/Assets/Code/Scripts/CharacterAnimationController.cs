@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 // Removed: using System.Collections.Generic; as List is no longer used.
 
 public class CharacterAnimationController : MonoBehaviour
@@ -16,12 +17,14 @@ public class CharacterAnimationController : MonoBehaviour
         TrapThrow,
         Entrance,
         Stuck,
-        Damage
+        Damage,
+        Start // Added Start animation state
     }
 
     [Header("Animators")]
     [SerializeField] private Animator playerAnimator;
     [SerializeField] private Animator enemyAnimator;
+    [SerializeField] private SFXManager sfxManager;
 
     private const string PlayerAnimationPrefix = "AN_Player_";
     private const string EnemyAnimationPrefix = "AN_Enemy_";
@@ -51,6 +54,20 @@ public class CharacterAnimationController : MonoBehaviour
 
         string animationName = prefix + state.ToString();
         animator.Play(animationName);
+
+        if (sfxManager != null)
+        {
+            // Attempt to parse AnimationState to SFXManager.ActionType
+            // This assumes SFXManager has an enum ActionType with matching names to AnimationState
+            if (Enum.TryParse<SFXManager.ActionType>(state.ToString(), out SFXManager.ActionType soundToPlay))
+            {
+                sfxManager.PlayActionSFX(soundToPlay);
+            }
+            else
+            {
+                Debug.LogWarning($"ActionType for animation state '{state.ToString()}' not found in SFXManager.ActionType enum. Ensure SFXManager has a corresponding action type defined (e.g., public enum ActionType {{ {state.ToString()} }}).");
+            }
+        }
     }
 
     // Player Animation Triggers
@@ -66,6 +83,7 @@ public class CharacterAnimationController : MonoBehaviour
     public void PlayerEntrance() => TriggerAnimation(playerAnimator, AnimationState.Entrance, PlayerAnimationPrefix);
     public void PlayerStuck() => TriggerAnimation(playerAnimator, AnimationState.Stuck, PlayerAnimationPrefix);
     public void PlayerDamage() => TriggerAnimation(playerAnimator, AnimationState.Damage, PlayerAnimationPrefix);
+    public void PlayerStart() => TriggerAnimation(playerAnimator, AnimationState.Start, PlayerAnimationPrefix);
 
     // Enemy Animation Triggers
     public void EnemyAttackUsable() => TriggerAnimation(enemyAnimator, AnimationState.AttackUsable, EnemyAnimationPrefix);
@@ -80,4 +98,5 @@ public class CharacterAnimationController : MonoBehaviour
     public void EnemyEntrance() => TriggerAnimation(enemyAnimator, AnimationState.Entrance, EnemyAnimationPrefix);
     public void EnemyStuck() => TriggerAnimation(enemyAnimator, AnimationState.Stuck, EnemyAnimationPrefix);
     public void EnemyDamage() => TriggerAnimation(enemyAnimator, AnimationState.Damage, EnemyAnimationPrefix);
+    public void EnemyStart() => TriggerAnimation(enemyAnimator, AnimationState.Start, EnemyAnimationPrefix);
 }

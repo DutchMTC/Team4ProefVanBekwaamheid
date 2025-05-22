@@ -546,6 +546,23 @@ public class GridManager : MonoBehaviour
     {
         if (matchingBlocks == null || matchingBlocks.Count == 0) yield break; // Use yield break for coroutines
 
+        // Play Match SFX based on count
+        if (SFXManager.Instance != null)
+        {
+            if (matchingBlocks.Count == 3)
+            {
+                SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.Match3);
+            }
+            else if (matchingBlocks.Count == 4)
+            {
+                SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.Match4);
+            }
+            else if (matchingBlocks.Count >= 5)
+            {
+                SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.Match5Plus);
+            }
+        }
+
         // --- Step 1: Count Power-ups by Type ---
         Dictionary<PowerUpInventory.PowerUpType, int> powerUpsToGrant = new Dictionary<PowerUpInventory.PowerUpType, int>();
         foreach (Block block in matchingBlocks)
@@ -745,6 +762,12 @@ public class GridManager : MonoBehaviour
         }
         _activePowerUpAnimations--; // Decrement counter when animation finishes
         if (_activePowerUpAnimations < 0) _activePowerUpAnimations = 0; // Safety check
+
+        // Play SFX for power-up charge
+        if (SFXManager.Instance != null)
+        {
+            SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.PowerUpCharge);
+        }
 
         // Signal that this block's animation has finished
         OnBlockAnimationFinished?.Invoke(type);

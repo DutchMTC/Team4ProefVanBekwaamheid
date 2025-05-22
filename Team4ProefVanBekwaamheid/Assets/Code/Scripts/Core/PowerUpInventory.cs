@@ -145,18 +145,5 @@ public class PowerUpInventory : MonoBehaviour
        OnPowerUpCountChanged?.Invoke(PowerUpType.Shield, _shieldCount);
        OnPowerUpCountChanged?.Invoke(PowerUpType.Steps, _stepsCount);
        OnPowerUpCountChanged?.Invoke(PowerUpType.Trap, _trapCount);
-
-       Debug.Log("Power-up inventory cleared.");
-       // LogInventory(); // Optional: Log after clearing
    }
-
-    private void LogInventory()
-    {
-        Debug.Log($"Power-Up Inventory:\n" +
-                  $"Swords: {_swordCount}\n" +
-                  $"Shields: {_shieldCount}\n" +
-                  $"Steps: {_stepsCount}\n" +
-                  $"Traps: {_trapCount}");
-                  
-    }
 }

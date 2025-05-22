@@ -11,14 +11,12 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
         private TileOccupants _tileOccupants;
         private bool _isActive = false;
         private TileSelection.UserType _currentUser;
+        private CharacterAnimationController _animationController;
 
         void Start()
         {
             _tileOccupants = GetComponent<TileOccupants>();
-            if (_tileOccupants == null)
-            {
-                Debug.LogError("TileOccupants component not found!");
-            }
+            _animationController = FindObjectOfType<CharacterAnimationController>();
         }
 
         public void DefensePowerUpSelected(PowerUpState state, TileSelection.UserType userType)
@@ -44,7 +42,22 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
             if (_tileOccupants != null)
             {
                 _tileOccupants.SetDamageReduction(_currentReduction);
-                Debug.Log($"{_currentUser} activated defense power-up with {_currentReduction * 100}% damage reduction!");
+                if (SFXManager.Instance != null)
+                {
+                    SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.Defense);
+                }
+
+                if (_animationController != null)
+                {
+                    if (_currentUser == TileSelection.UserType.Player)
+                    {
+                        _animationController.PlayerDefense();
+                    }
+                    else if (_currentUser == TileSelection.UserType.Enemy)
+                    {
+                        _animationController.EnemyDefense();
+                    }
+                }
             }
         }
 

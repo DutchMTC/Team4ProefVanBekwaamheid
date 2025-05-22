@@ -23,11 +23,6 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
             _tileSelection = FindObjectOfType<TileSelection>();
             _tileOccupants = GetComponent<TileOccupants>();
             _animationController = FindObjectOfType<CharacterAnimationController>();
-            
-            if (_tileSelection == null)
-            {
-                Debug.LogError("TileSelection script not found!");
-            }
         }
 
         // Removed Update method with debug key press
@@ -77,14 +72,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
                 TileSettings playerTile = _targetOccupantForAI.GetCurrentTile();
                 if (playerTile != null && IsTileInRange(playerTile))
                 {
-                     Debug.Log($"Enemy AI (Attack): Player target for AI is '{_targetOccupantForAI.gameObject.name}' (InstanceID: {_targetOccupantForAI.gameObject.GetInstanceID()}). Player tile occupant is '{playerTile.tileOccupant?.name}' (InstanceID: {playerTile.tileOccupant?.GetInstanceID()})");
-                     Debug.Log($"Enemy AI (Attack): Attacking player at ({playerTile.gridY}, {playerTile.gridX})"); // Changed to gridY and gridX
                      Attack(playerTile);
-                }
-                else
-                {
-                    Debug.LogWarning("Enemy AI (Attack): Player is not in range or player tile not found.");
-                    // Optionally, do nothing or attack nearest valid target if any
                 }
                 _tileSelection.CancelTileSelection(); // Clean up selection state
             }
@@ -105,19 +93,6 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
 
             // Player Logic: Attack the selected tile
             Attack(selectedTile);
-
-            // AI logic is handled directly in AttackPowerUpSelected, so this part is no longer needed here.
-            /*
-            if (_currentUserType == TileSelection.UserType.Enemy && _targetOccupantForAI != null)
-            {
-            {
-                 // This block is now handled directly in AttackPowerUpSelected for AI
-            }
-            else // Player Logic
-            {
-                 // This is handled above
-            }
-            */
         }
 
         // Helper to check if a tile is within the current attack range
@@ -142,6 +117,23 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
 
             if (targetTile != null && targetTile.occupantType == expectedTargetType)
             {
+                // Play SFX based on power-up state
+                if (SFXManager.Instance != null)
+                {
+                    switch (_currentPowerUpState)
+                    {
+                        case PowerUpState.Usable:
+                            SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.AttackUsable);
+                            break;
+                        case PowerUpState.Charged:
+                            SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.AttackCharged);
+                            break;
+                        case PowerUpState.Supercharged:
+                            SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.AttackSupercharged);
+                            break;
+                    }
+                }
+
                 // Trigger animation before dealing damage
                 if (_currentUserType == TileSelection.UserType.Player && _animationController != null)
                 {
@@ -163,24 +155,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
                 var targetHealth = targetTile.tileOccupant.GetComponent<TileOccupants>();
                 if (targetHealth != null)
                 {
-                    Debug.Log($"AttackPowerUp: Applying damage to '{targetHealth.gameObject.name}' (InstanceID: {targetHealth.gameObject.GetInstanceID()}). Has Armor: {targetHealth.GetHasArmorStatus()}");
                     targetHealth.TakeDamage(_currentDamage);
-                    Debug.Log($"{_currentUserType} attacked {expectedTargetType} for {_currentDamage} damage!");
-                }
-                else
-                {
-                    Debug.LogWarning($"{expectedTargetType} tile found but no TileOccupants component present!");
-                }
-            }
-            else
-            {
-                if (targetTile == null)
-                {
-                     Debug.Log("Invalid target tile for attack.");
-                }
-                else
-                {
-                    Debug.Log($"Selected tile has no {expectedTargetType} to attack!");
                 }
             }
         }

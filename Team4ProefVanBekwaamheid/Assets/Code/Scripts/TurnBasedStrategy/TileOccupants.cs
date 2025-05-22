@@ -1,8 +1,13 @@
 using UnityEngine;
+using Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps;
+using System.Collections.Generic; // Added for List<T>
 // Potentially add: using UnityEngine.Events; if you want to use UnityEvents for damage.
 
 public class TileOccupants : MonoBehaviour
 {
+    private GameManager _gameManager; // Added for game state management
+    private VignetteController _vignetteController; // Added for vignette effects
+
     [Header("Grid & Occupant Info")]
     [SerializeField] private GridGenerator _gridGenerator;
     public TileSettings.OccupantType myOccupantType;
@@ -17,37 +22,38 @@ public class TileOccupants : MonoBehaviour
     private float _damageReduction = 0f;
     private bool hasArmor = false; // Added for armor mechanic
 
+    [Header("Armor Visuals (Player Only)")]
+    [SerializeField] private List<GameObject> armorPlayerVisualsToEnable;
+    [SerializeField] private List<GameObject> armorPlayerVisualsToDisable;
+
+    [Header("Damage Delays")]
+    [SerializeField] private float usableAttackDamageDelay = 0f;
+    [SerializeField] private float chargedAttackDamageDelay = 0f;
+    [SerializeField] private float superchargedAttackDamageDelay = 0f;
+    [SerializeField] private float trapDamageDelay = 0f; // Added for trap damage delay
+ 
     [Header("UI")]
     [SerializeField] private CharacterHealthUI healthBarUI;
     // public UnityAction<float> OnHealthChanged; // Alternative: Use UnityEvent
-    private CharacterAnimationController _animationController; // Used for Player animations
+    private CharacterAnimationController _animationController; // Reference to the main character animation controller
     private EnemyAIController _enemyAIController; // Used for Enemy animations
- 
+    
     void Awake()
     {
+        _vignetteController = FindObjectOfType<VignetteController>(); // Find the VignetteController
         // Ensure we have a reference to the GridGenerator as early as possible
         if (_gridGenerator == null)
         {
             _gridGenerator = FindObjectOfType<GridGenerator>();
-            if (_gridGenerator == null)
-            {
-                Debug.LogError("GridGenerator reference not found in Awake!", this);
-            }
         }
         health = maxHealth; // Initialize current health to max health
-        
-        if (myOccupantType == TileSettings.OccupantType.Player)
-        {
-            _animationController = GetComponent<CharacterAnimationController>();
-            if (_animationController == null) _animationController = FindObjectOfType<CharacterAnimationController>(); // Fallback if not on same object
-        }
-        else if (myOccupantType == TileSettings.OccupantType.Enemy)
+
+        _gameManager = FindObjectOfType<GameManager>();
+        _animationController = FindObjectOfType<CharacterAnimationController>(); // Get the global animation controller
+
+        if (myOccupantType == TileSettings.OccupantType.Enemy)
         {
             _enemyAIController = GetComponent<EnemyAIController>();
-            if (_enemyAIController == null)
-            {
-                Debug.LogWarning($"EnemyAIController component not found on {gameObject.name}. Enemy animations for damage/death might not play.", this);
-            }
         }
     }
  
@@ -59,7 +65,6 @@ public class TileOccupants : MonoBehaviour
             _gridGenerator = FindObjectOfType<GridGenerator>();
             if (_gridGenerator == null)
             {
-                Debug.LogError("GridGenerator reference not found in Start!", this);
                 return;
             }
         }
@@ -71,10 +76,6 @@ public class TileOccupants : MonoBehaviour
             bool isPlayer = (myOccupantType == TileSettings.OccupantType.Player);
             healthBarUI.Initialize(this, maxHealth, health, isPlayer);
         }
-        else
-        {
-            Debug.LogWarning($"HealthBarUI not assigned for {gameObject.name}", this);
-        }
 
         // Force position update with small delay to ensure GridGenerator is fully initialized
         Invoke(nameof(InitializePosition), 0.1f);
@@ -84,71 +85,131 @@ public class TileOccupants : MonoBehaviour
     {
         FindTileAtCoordinates();
         MoveToTile();
-        
-        // Log position for debugging
-        Debug.Log($"{gameObject.name} initialized at position ({gridY}, {gridX})");
     }
 
     public void SetDamageReduction(float reduction)
     {
         _damageReduction = Mathf.Clamp(reduction, 0f, 0.8f);
-        Debug.Log($"{gameObject.name} defense set to {_damageReduction * 100}%", this);
     }
 
     public void TakeDamage(int amount)
     {
+        StartCoroutine(ApplyDamageAfterDelay(amount));
+    }
+
+    private System.Collections.IEnumerator ApplyDamageAfterDelay(int amount)
+    {
+        // 1. ARMOR CHECK
         if (hasArmor)
         {
             hasArmor = false;
-            Debug.Log($"{gameObject.name}'s armor absorbed the hit! Armor destroyed.");
-            // Optionally, notify UI to remove armor icon here
             if (healthBarUI != null)
             {
                 healthBarUI.UpdateArmorStatus(false);
             }
-            return; // No damage taken
+            // If Player, toggle armor visuals off
+            if (myOccupantType == TileSettings.OccupantType.Player)
+            {
+                ToggleArmorVisuals(false);
+            }
+            if (SFXManager.Instance != null)
+            {
+                SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.ArmorBreak);
+            }
+            yield break; // No health damage, no animation, no delay.
         }
 
+        // 2. CALCULATE REDUCED DAMAGE
         int reducedDamage = Mathf.RoundToInt(amount * (1f - _damageReduction));
-        int previousHealth = health;
-        health -= reducedDamage;
-        health = Mathf.Clamp(health, 0, maxHealth); // Ensure health doesn't go below 0 or above max
-
-        string defenseMsg = _damageReduction > 0 ? $"[DEFENSE {_damageReduction * 100}%]" : "[NO DEFENSE]";
-        Debug.Log($"{defenseMsg} {gameObject.name} Health: {previousHealth} -> {health} " +
-                 $"(Took {reducedDamage} damage, reduced from {amount})", this);
-
-        // Update Health Bar UI
-        if (healthBarUI != null)
+ 
+        // 3. IF ACTUAL DAMAGE WILL BE DEALT
+        if (reducedDamage > 0)
         {
-            healthBarUI.OnHealthChanged(health);
-        }
-        // OnHealthChanged?.Invoke(health); // Alternative: if using UnityEvent
+            // 3a. CALCULATE DELAY
+            float delay = 0f;
+            if (amount >= 25) { delay = superchargedAttackDamageDelay; }
+            else if (amount >= 15) { delay = chargedAttackDamageDelay; }
+            else if (amount >= 10) { delay = usableAttackDamageDelay; }
+            
+            // 3b. APPLY DELAY
+            if (delay > 0)
+            {
+                yield return new WaitForSeconds(delay);
+            }
 
-        if (myOccupantType == TileSettings.OccupantType.Enemy && _enemyAIController != null && health > 0 && reducedDamage > 0)
-        {
-            _enemyAIController.PlayDamageAnimation();
-        }
-        else if (myOccupantType == TileSettings.OccupantType.Player && _animationController != null && health > 0 && reducedDamage > 0)
-        {
-            _animationController.PlayerDamage(); // Assuming PlayerDamage exists and is public
-        }
+            // 3c. Ensure object still exists and is active after delay
+            if (this == null || !gameObject.activeInHierarchy)
+            {
+                yield break;
+            }
 
-        if (health <= 0)
-        {
-            Debug.Log($"{gameObject.name} has died from {reducedDamage} damage!", this);
-            Die();
+            // 3d. APPLY HEALTH CHANGE
+            health -= reducedDamage;
+            health = Mathf.Clamp(health, 0, maxHealth);
+ 
+            // 3e. UPDATE UI
+            if (healthBarUI != null)
+            {
+                healthBarUI.OnHealthChanged(health);
+            }
+ 
+            // 3f. PLAY ANIMATION (if still alive and damage was dealt)
+            if (health > 0) // Check health *after* damage is applied
+            {
+                if (myOccupantType == TileSettings.OccupantType.Enemy && _enemyAIController != null)
+                {
+                    _enemyAIController.PlayDamageAnimation();
+                }
+                else if (myOccupantType == TileSettings.OccupantType.Player && _animationController != null)
+                {
+                    _animationController.PlayerDamage();
+                    if (_vignetteController != null)
+                    {
+                        _vignetteController.PlayDamageVignette();
+                    }
+                }
+            }
+ 
+            // 3g. CHECK FOR DEATH
+            if (health <= 0)
+            {
+                // Death animation is handled in Die(), so no specific animation call here unless needed before Die()
+                Die();
+            }
         }
     }
 
     public void ReceiveArmor()
     {
         hasArmor = true;
-        Debug.Log($"{gameObject.name} received armor!");
         // Optionally, notify UI to show armor icon here
         if (healthBarUI != null)
         {
             healthBarUI.UpdateArmorStatus(true);
+        }
+        // If Player, toggle armor visuals on
+        if (myOccupantType == TileSettings.OccupantType.Player)
+        {
+            ToggleArmorVisuals(true);
+        }
+    }
+
+    private void ToggleArmorVisuals(bool armorActive)
+    {
+        if (armorPlayerVisualsToEnable != null)
+        {
+            foreach (GameObject go in armorPlayerVisualsToEnable)
+            {
+                if (go != null) go.SetActive(armorActive);
+            }
+        }
+
+        if (armorPlayerVisualsToDisable != null)
+        {
+            foreach (GameObject go in armorPlayerVisualsToDisable)
+            {
+                if (go != null) go.SetActive(!armorActive);
+            }
         }
     }
 
@@ -160,17 +221,32 @@ public class TileOccupants : MonoBehaviour
 
     private void Die()
     {
-        Debug.Log($"{gameObject.name} has died.", this);
         float destructionDelay = 0f;
-        if (myOccupantType == TileSettings.OccupantType.Player && _animationController != null)
+        if (myOccupantType == TileSettings.OccupantType.Player)
         {
-            _animationController.PlayerDeath();
-            destructionDelay = 2f;
+            if (_animationController != null)
+            {
+                _animationController.PlayerDeath();
+                destructionDelay = 2f;
+            }
+            if (_gameManager != null)
+            {
+                _gameManager.UpdateGameState(GameState.GameOver);
+            }
         }
-        else if (myOccupantType == TileSettings.OccupantType.Enemy && _enemyAIController != null)
+        else if (myOccupantType == TileSettings.OccupantType.Enemy)
         {
-            _enemyAIController.PlayDeathAnimation();
-            destructionDelay = 2f; // Assuming enemy death animation also takes time
+            if (_enemyAIController != null)
+            {
+                _enemyAIController.PlayDeathAnimation();
+                destructionDelay = 2f; // Assuming enemy death animation also takes time
+            }
+            if (_gameManager != null)
+            {
+                // This assumes any enemy death leads to a win.
+                // If multiple enemies exist, GameManager would need to check if all are defeated.
+                _gameManager.UpdateGameState(GameState.Win);
+            }
         }
         // Optional: Notify healthBarUI or other systems about death
         // if (healthBarUI != null) healthBarUI.HandleDeath();
@@ -192,10 +268,8 @@ public class TileOccupants : MonoBehaviour
     // Example method to heal the character
     public void Heal(int amount)
     {
-        int previousHealth = health;
         health += amount;
         health = Mathf.Clamp(health, 0, maxHealth);
-        Debug.Log($"{gameObject.name} healed. Health: {previousHealth} -> {health}", this);
 
         if (healthBarUI != null)
         {
@@ -221,56 +295,80 @@ public class TileOccupants : MonoBehaviour
             GameObject itemObjectToPickup = null;
             PickupItem pickupItemScript = null;
 
-            // Check if the target tile (_tileSettings from FindTileAtCoordinates) currently holds an item
+            // Store trap information before moving
+            bool hasTrap = _tileSettings.occupantType == TileSettings.OccupantType.Trap;
+            GameObject trapObject = hasTrap ? _tileSettings.tileOccupant : null;
+
+            // Check if the target tile currently holds an item
             if (_tileSettings.occupantType == TileSettings.OccupantType.Item && _tileSettings.tileOccupant != null)
             {
                 pickupItemScript = _tileSettings.tileOccupant.GetComponent<PickupItem>();
                 if (pickupItemScript != null)
                 {
-                    itemObjectToPickup = _tileSettings.tileOccupant; // Store reference to the item GameObject
-                    Debug.Log($"Tile ({_tileSettings.gridY}, {_tileSettings.gridX}) has item {itemObjectToPickup.name} with PickupItem script.");
-                }
-                else
-                {
-                    Debug.LogWarning($"Tile at ({_tileSettings.gridY}, {_tileSettings.gridX}) is marked as Item but occupant {_tileSettings.tileOccupant.name} has no PickupItem script.");
+                    itemObjectToPickup = _tileSettings.tileOccupant;
                 }
             }
-            
-            // Validate if the unit can move to the target tile (_tileSettings)
-            // This check is already in place and allows moving to 'Item' tiles.
-            if (_tileSettings.occupantType != TileSettings.OccupantType.None &&
-                _tileSettings.occupantType != TileSettings.OccupantType.Item &&
-                _tileSettings.occupantType != myOccupantType)
+
+            // Check for decoy and trigger fade-out
+            if (_tileSettings.occupantType == TileSettings.OccupantType.Decoy && _tileSettings.tileOccupant != null)
             {
-                Debug.LogWarning($"Cannot move to tile at ({gridY}, {gridX}) - tile is occupied by {_tileSettings.occupantType} and is not an item or self.");
+                LeafBehaviour leafBehaviour = _tileSettings.tileOccupant.GetComponent<LeafBehaviour>();
+                if (leafBehaviour != null)
+                {
+                    leafBehaviour.StartFadeOut(1f);
+                }
+            }
+
+            // Validate if the unit can move to the target tile            
+            if (_tileSettings.occupantType != TileSettings.OccupantType.None &&
+            _tileSettings.occupantType != TileSettings.OccupantType.Item &&
+            _tileSettings.occupantType != TileSettings.OccupantType.Trap &&
+            _tileSettings.occupantType != TileSettings.OccupantType.Decoy &&
+            _tileSettings.occupantType != myOccupantType)
+            {
                 return;
             }
 
-            // Actual movement and tile occupation
+            // Move to the new position
             Vector3 selectedTilePos = _selectedTile.transform.position;
-            // Consider using a y-offset for the unit if needed, or ensure tile pivot is at its base.
-            // For now, matching x and z, keeping unit's current y.
             transform.position = new Vector3(selectedTilePos.x, transform.position.y, selectedTilePos.z);
-            
-            // Set the unit as the occupant of the new tile.
-            // FindTileAtCoordinates already cleared this unit from its previous tile.
-            _tileSettings.SetOccupant(myOccupantType, this.gameObject);
-            // Note: _tileSettings is the new tile the unit is moving to.
-            // The internal gridY and gridX are already set to this tile's coordinates by FindTileAtCoordinates
-            // if the call originated from Update(). If it originated from a power-up, gridY/gridX were set before calling MoveToTile.
 
-            // If an item was on this tile, activate its pickup AFTER the unit has officially moved and occupied the tile.
+            if (SFXManager.Instance != null)
+            {
+                SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.Dash);
+            }
+            
+            // Handle trap if present
+            if (hasTrap && trapObject != null)
+            {
+                var trapBehaviour = trapObject.GetComponent<TrapBehaviour>();
+                if (trapBehaviour != null)
+                {
+                    TileSettings tileThatHadTrap = _tileSettings;
+                    // Immediately mark the tile as not having an active trap to prevent re-triggering.
+                    // The TrapBehaviour itself will handle the trap object's lifecycle.
+
+// Occupy the tile immediately before processing trap effects
+                    // to prevent re-triggering if MoveToTile is called again for this tile.
+                    _tileSettings.SetOccupant(myOccupantType, this.gameObject);
+                    StartCoroutine(HandleTrapDamage(trapBehaviour, tileThatHadTrap));
+                    StartCoroutine(PlayStuckAnimationAfterDelay(0.25f)); // Moved to a new coroutine with delay
+                }
+                else // Trap object exists, but no TrapBehaviour script. Occupy as normal.
+                {
+                    _tileSettings.SetOccupant(myOccupantType, this.gameObject);
+                }
+            }
+            else // No trap on the tile. Occupy as normal.
+            {
+                _tileSettings.SetOccupant(myOccupantType, this.gameObject);
+            }
+
+            // Handle item pickup after movement
             if (itemObjectToPickup != null && pickupItemScript != null)
             {
-                Debug.Log($"Unit {this.gameObject.name} moved to item tile. Activating pickup for {itemObjectToPickup.name}.");
-                pickupItemScript.ActivatePickup(this.gameObject);
-                // ItemManager will handle destroying the item.
-                // The tile's occupant is now this unit.
+                pickupItemScript.ActivatePickup(gameObject);
             }
-        }
-        else
-        {
-            Debug.LogWarning($"Cannot move to tile at ({gridY}, {gridX}) - tile not found");
         }
     }
 
@@ -281,7 +379,6 @@ public class TileOccupants : MonoBehaviour
             _gridGenerator = FindObjectOfType<GridGenerator>();
             if (_gridGenerator == null)
             {
-                Debug.LogError("GridGenerator reference not found in FindTileAtCoordinates!");
                 return;
             }
         }
@@ -289,7 +386,9 @@ public class TileOccupants : MonoBehaviour
         if (_tileSettings != null) // If this occupant was previously on a tile
         {
             // Only clear the occupant if this specific game object was the occupant
-            if (_tileSettings.tileOccupant == this.gameObject)
+            // AND if the character is actually moving to a new tile.
+            if (_tileSettings.tileOccupant == this.gameObject &&
+                (_tileSettings.gridX != this.gridX || _tileSettings.gridY != this.gridY))
             {
                 _tileSettings.SetOccupant(TileSettings.OccupantType.None, null);
             }
@@ -309,13 +408,63 @@ public class TileOccupants : MonoBehaviour
                 return;
             }
         }
-        
-        // If loop completes, no tile was found
-        Debug.LogWarning($"No tile found at grid position ({gridY}, {gridX})");
     }
 
     public TileSettings GetCurrentTile()
     {
         return _tileSettings;
+    }
+
+    private System.Collections.IEnumerator HandleTrapDamage(TrapBehaviour trapBehaviour, TileSettings tileWhereTrapWas)
+    {
+        if (trapDamageDelay > 0)
+        {
+            yield return new WaitForSeconds(trapDamageDelay);
+        }
+
+        // Ensure objects still exist and are active after delay
+        if (this == null || !gameObject.activeInHierarchy || trapBehaviour == null)
+        {
+            yield break;
+        }
+
+        trapBehaviour.OnCharacterEnterTile(this); // Trap effect occurs here
+
+        // After trap effect, if the character is still on this tile and it's clear, occupy it.
+        if (this != null && gameObject.activeInHierarchy && _tileSettings == tileWhereTrapWas)
+        {
+            // We set tileWhereTrapWas to None before starting the coroutine.
+            // If it's still None, and the player hasn't moved, they occupy it.
+            if (tileWhereTrapWas.occupantType == TileSettings.OccupantType.None)
+            {
+                tileWhereTrapWas.SetOccupant(myOccupantType, this.gameObject);
+            }
+        }
+    }
+
+    private System.Collections.IEnumerator PlayStuckAnimationAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        if (SFXManager.Instance != null)
+        {
+            SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.Stuck);
+        }
+
+        if (this != null && gameObject.activeInHierarchy && _animationController != null)
+        {
+            if (myOccupantType == TileSettings.OccupantType.Player)
+            {
+                _animationController.PlayerStuck();
+            }
+            else if (myOccupantType == TileSettings.OccupantType.Enemy)
+            {
+                // Assuming Enemy stuck animation is also handled by the global _animationController
+                // If enemies have their own animation controllers that handle 'Stuck',
+                // you might need to adjust this part, e.g., using _enemyAIController.PlayStuckAnimation()
+                // For now, using the global controller as per existing PlayerStuck pattern.
+                _animationController.EnemyStuck();
+            }
+        }
     }
 }

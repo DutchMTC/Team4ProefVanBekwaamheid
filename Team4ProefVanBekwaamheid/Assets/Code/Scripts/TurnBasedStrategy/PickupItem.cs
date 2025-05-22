@@ -5,6 +5,12 @@ public class PickupItem : MonoBehaviour
     public ItemData itemData;
     // public System.Action<PickupItem> OnItemPickedUp; // This will be handled by direct call to ItemManager
     private Vector2Int _gridCoords; // To store item's location for ItemManager
+    private VignetteController _vignetteController;
+
+    void Awake()
+    {
+        _vignetteController = FindObjectOfType<VignetteController>();
+    }
 
     public void Initialize(ItemData data, Vector2Int gridCoords)
     {
@@ -17,7 +23,6 @@ public class PickupItem : MonoBehaviour
     {
         if (itemData == null)
         {
-            Debug.LogError("ItemData is not assigned on this PickupItem. Make sure Initialize was called.");
             return;
         }
 
@@ -32,7 +37,6 @@ public class PickupItem : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("ItemManager instance not found. Item will be destroyed locally but not respawned.");
             Destroy(gameObject); // Fallback: destroy if no manager
         }
         // ItemManager.HandleItemPickup will be responsible for Destroy(gameObject) or disabling it.
@@ -48,27 +52,21 @@ public class PickupItem : MonoBehaviour
         switch (itemData.itemType)
         {
             case ItemType.Heal:
-                Debug.Log(unit.name + " picked up " + itemData.itemName + " and attempting to heal for 10.");
                 TileOccupants occupant = unit.GetComponent<TileOccupants>();
                 if (occupant != null)
                 {
-                    occupant.Heal(10);
-                }
-                else
-                {
-                    Debug.LogWarning($"{unit.name} does not have a TileOccupants component. Cannot apply heal.");
+                    occupant.Heal(30);
+                    if (_vignetteController != null)
+                    {
+                        _vignetteController.PlayHealVignette();
+                    }
                 }
                 break;
             case ItemType.Armor:
-                Debug.Log(unit.name + " picked up " + itemData.itemName + " and attempting to apply armor.");
                 TileOccupants targetOccupant = unit.GetComponent<TileOccupants>();
                 if (targetOccupant != null)
                 {
                     targetOccupant.ReceiveArmor();
-                }
-                else
-                {
-                    Debug.LogWarning($"{unit.name} does not have a TileOccupants component. Cannot apply armor.");
                 }
                 break;
         }

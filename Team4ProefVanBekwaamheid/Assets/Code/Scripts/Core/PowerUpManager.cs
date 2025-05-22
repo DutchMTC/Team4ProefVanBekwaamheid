@@ -63,6 +63,8 @@ public class PowerUpManager : MonoBehaviour
     private Dictionary<PowerUpInventory.PowerUpType, PowerUpState> powerUpPreviousStates;
     private Dictionary<PowerUpInventory.PowerUpType, Button> powerUpButtonMap; // Map type to Button component
     private bool _isUsingPowerUp = false; // Flag to prevent event-driven update during use
+    private Color _colorUnusable;
+    private readonly Color _colorActive = Color.white; // #FFFFFF
 
     // Constants for State Thresholds
     private const int USABLE_THRESHOLD = 1;
@@ -132,6 +134,8 @@ public class PowerUpManager : MonoBehaviour
                 Debug.LogWarning($"Image for {kvp.Key} Fill is not set to 'Filled' type in the Inspector. Fill effect may not work correctly.");
             }
         }
+
+        ColorUtility.TryParseHtmlString("#6A6A6A", out _colorUnusable);
 
 
         // Initialize previous states and initial visuals
@@ -204,6 +208,11 @@ public class PowerUpManager : MonoBehaviour
     /// <param name="instantUpdate">If true, stops animation and snaps visuals to the current state immediately.</param>
     public void UpdatePowerUpVisual(PowerUpInventory.PowerUpType type, bool instantReset = false, bool instantUpdate = false)
     {
+        if (SFXManager.Instance == null)
+        {
+            Debug.LogWarning("SFXManager instance not found. SFX will not play.");
+        }
+
         if (powerUpInventory == null)
         {
             Debug.LogError("PowerUpInventory reference is not set!");
@@ -239,6 +248,7 @@ public class PowerUpManager : MonoBehaviour
             fillImage.fillAmount = 0f;
             fillImage.gameObject.SetActive(false); // Hide fill
             powerUpPreviousStates[type] = PowerUpState.Unusable; // Update previous state
+            SetPowerUpStateColors(bgImage, PowerUpState.Unusable);
             // Debug.Log($"Instant Reset for {type}");
             return; // Skip normal update logic
         }
@@ -307,6 +317,7 @@ public class PowerUpManager : MonoBehaviour
             fillImage.fillAmount = fillAmountNow;
             fillImage.gameObject.SetActive(showFillNow);
             powerUpPreviousStates[type] = stateNow; // Update previous state
+            SetPowerUpStateColors(bgImage, stateNow);
             // Debug.Log($"Instant Update for {type} to state {stateNow}, fill {fillAmountNow}");
             return; // Skip normal animation logic
         }
@@ -397,7 +408,11 @@ public class PowerUpManager : MonoBehaviour
                 triggerInstantSwitch = true;
                 // Sprites *during* animation: BG = previous state, Fill = the sprite that was filling *before* the change
                 animBgSprite = GetSpriteForState(sprites, previousState);
-                animFillSprite = GetSpriteForState(sprites, currentState);
+                animFillSprite = GetSpriteForState(sprites, currentState); // This is the sprite of the state we are transitioning TO
+                if (SFXManager.Instance != null)
+                {
+                    SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.PowerUpNextLevelReached);
+                }
             }
             else // Decreased state
             {
@@ -425,6 +440,7 @@ public class PowerUpManager : MonoBehaviour
             bgImage.sprite = animBgSprite;
             fillImage.sprite = animFillSprite;
        }
+       SetPowerUpStateColors(bgImage, currentState); // Update colors based on the current state
 
 
        // --- Start Animation (if needed) ---
@@ -512,8 +528,9 @@ public class PowerUpManager : MonoBehaviour
             elapsedTime += Time.deltaTime;
             float timeFraction = Mathf.Clamp01(elapsedTime / fillAnimationDuration);
             float curveValue = fillAnimationCurve.Evaluate(timeFraction);
-            float currentFill = Mathf.LerpUnclamped(startFillAmount, targetFillAmount, curveValue);
-            image.fillAmount = Mathf.Clamp01(currentFill);
+            float newFill = Mathf.LerpUnclamped(startFillAmount, targetFillAmount, curveValue);
+
+            image.fillAmount = Mathf.Clamp01(newFill);
             yield return null;
         }
 
@@ -568,8 +585,9 @@ public class PowerUpManager : MonoBehaviour
           elapsedTime += Time.deltaTime;
           float timeFraction = Mathf.Clamp01(elapsedTime / duration);
           float curveValue = fillAnimationCurve.Evaluate(timeFraction);
-          float currentFill = Mathf.LerpUnclamped(startFillAmount, targetFillAmount, curveValue);
-          image.fillAmount = Mathf.Clamp01(currentFill);
+          float newFill = Mathf.LerpUnclamped(startFillAmount, targetFillAmount, curveValue);
+
+          image.fillAmount = Mathf.Clamp01(newFill);
           yield return null;
       }
 
@@ -585,6 +603,39 @@ public class PowerUpManager : MonoBehaviour
       {
            fillCoroutines[type] = null;
       }
+  }
+  
+  // New private coroutine to animate fill to a target and set visibility
+  private IEnumerator AnimateFillToTargetCoroutine(PowerUpInventory.PowerUpType type, Image image, float targetFillAmount, bool setVisibleAfterAnimation, System.Action onComplete)
+  {
+      if (image == null)
+      {
+          onComplete?.Invoke(); // Invoke onComplete even if image is null to clean up dictionary
+          yield break;
+      }
+  
+      // Ensure image is active to see the animation if it's not already and there's a change in fill.
+      if (!image.gameObject.activeSelf && image.fillAmount != targetFillAmount)
+      {
+          image.gameObject.SetActive(true);
+      }
+      
+      float startFillAmount = image.fillAmount;
+      float elapsedTime = 0f;
+  
+      while (elapsedTime < fillAnimationDuration)
+      {
+          elapsedTime += Time.deltaTime;
+          float timeFraction = Mathf.Clamp01(elapsedTime / fillAnimationDuration);
+          float curveValue = fillAnimationCurve.Evaluate(timeFraction);
+          image.fillAmount = Mathf.LerpUnclamped(startFillAmount, targetFillAmount, curveValue);
+          yield return null;
+      }
+  
+      image.fillAmount = targetFillAmount;
+      image.gameObject.SetActive(setVisibleAfterAnimation);
+  
+      onComplete?.Invoke();
   }
 
 
@@ -614,6 +665,48 @@ public class PowerUpManager : MonoBehaviour
             default:
                 Debug.LogWarning($"Unhandled PowerUpState for sprite selection: {state}");
                 return sprites.unusable; // Default to unusable sprite
+        }
+    }
+
+    private void SetPowerUpStateColors(Image powerUpButtonImage, PowerUpState state)
+    {
+        if (powerUpButtonImage == null) return; // Silently return if no image to work on
+
+        Image state1Image = null;
+        Image state2Image = null;
+        Image state3Image = null;
+
+        // Find children by tag and get their Image components
+        foreach (Transform child in powerUpButtonImage.transform)
+        {
+            if (child.CompareTag("PowerUpState1")) state1Image = child.GetComponent<Image>();
+            else if (child.CompareTag("PowerUpState2")) state2Image = child.GetComponent<Image>();
+            else if (child.CompareTag("PowerUpState3")) state3Image = child.GetComponent<Image>();
+        }
+
+        // Default all found state images to unusable color
+        if (state1Image != null) state1Image.color = _colorUnusable;
+        if (state2Image != null) state2Image.color = _colorUnusable;
+        if (state3Image != null) state3Image.color = _colorUnusable;
+
+        // Set active color based on state
+        switch (state)
+        {
+            case PowerUpState.Usable:
+                if (state1Image != null) state1Image.color = _colorActive;
+                break;
+            case PowerUpState.Charged:
+                if (state1Image != null) state1Image.color = _colorActive;
+                if (state2Image != null) state2Image.color = _colorActive;
+                break;
+            case PowerUpState.Supercharged:
+                if (state1Image != null) state1Image.color = _colorActive;
+                if (state2Image != null) state2Image.color = _colorActive;
+                if (state3Image != null) state3Image.color = _colorActive;
+                break;
+            case PowerUpState.Unusable:
+                // Defaulted above
+                break;
         }
     }
 
@@ -661,6 +754,10 @@ public class PowerUpManager : MonoBehaviour
                 // Any successful use resets count to 0 and visuals instantly
                 _isUsingPowerUp = true;
                 ActivateEffect(type, usageState); // Activate effect based on the state it was used in
+                if (SFXManager.Instance != null)
+                {
+                    SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.UsePowerUp);
+                }
                 powerUpInventory.SetPowerUpCount(type, 0); // Reset count to 0
                 UpdatePowerUpVisual(type, instantReset: true); // Force instant visual reset to Unusable state
                 _isUsingPowerUp = false; // Reset flag AFTER instant update
@@ -754,6 +851,53 @@ public class PowerUpManager : MonoBehaviour
         Debug.Log($"Handling {type} effect. State: {state}, User: {user}");
         // TODO: Pass type, state, user to the actual effect execution script/system
     }
+    
+        /// <summary>
+        /// Animates all power-up fills to disappear (fill to 0, then hide).
+        /// Call this when the Player phase begins.
+        /// </summary>
+        public void AnimateFillsToDisappearForPlayerPhase()
+        {
+            Debug.Log("Animating power-up fills to disappear for Player Phase.");
+            foreach (PowerUpInventory.PowerUpType type in System.Enum.GetValues(typeof(PowerUpInventory.PowerUpType)))
+            {
+                if (System.Enum.IsDefined(typeof(PowerUpInventory.PowerUpType), type))
+                {
+                    if (powerUpFillImageMap.TryGetValue(type, out Image fillImage) && fillImage != null)
+                    {
+                        // Stop any existing fill animation for this type and clear its registration
+                        if (fillCoroutines.TryGetValue(type, out Coroutine oldCoroutine) && oldCoroutine != null)
+                        {
+                            StopCoroutine(oldCoroutine);
+                            fillCoroutines[type] = null;
+                        }
+    
+                        // Only animate if it's currently visible and has some fill
+                        if (fillImage.gameObject.activeSelf && fillImage.fillAmount > 0)
+                        {
+                            Coroutine newCoroutineInstance = null;
+                            newCoroutineInstance = StartCoroutine(AnimateFillToTargetCoroutine(type, fillImage, 0f, false,
+                                () => { // OnComplete action
+                                    // Only nullify if this specific coroutine instance is still the one registered
+                                    if (fillCoroutines.TryGetValue(type, out Coroutine currentRegistered) && currentRegistered == newCoroutineInstance)
+                                    {
+                                        fillCoroutines[type] = null;
+                                    }
+                                }
+                            ));
+                            fillCoroutines[type] = newCoroutineInstance; // Register the new coroutine
+                        }
+                        else if (fillImage.gameObject.activeSelf && fillImage.fillAmount == 0f)
+                        {
+                            // Already at 0 fill and active, just ensure it's hidden
+                            fillImage.gameObject.SetActive(false);
+                            // fillCoroutines[type] should be null from the stop logic above if one was running
+                        }
+                        // If not activeSelf, it's already considered hidden.
+                    }
+                }
+            }
+        }
 
     private void HandleSteps(PowerUpInventory.PowerUpType type, PowerUpState state, PowerUpUser user)
     {

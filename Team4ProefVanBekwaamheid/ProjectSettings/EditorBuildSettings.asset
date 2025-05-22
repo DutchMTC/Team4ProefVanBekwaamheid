@@ -11,9 +11,18 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Level/Scenes/TurnBasedGrid.unity
     guid: d6071a79ffe3a08439fa03f336238ed8
-  - enabled: 1
+  - enabled: 0
     path: Assets/Level/Scenes/MatchCounter.unity
     guid: b093a9c304364b8498f094f281c77c91
+  - enabled: 0
+    path: Assets/Individual/Miyaki/MiyakiScene.unity
+    guid: 7e9896c3ee903df42974b83296931772
+  - enabled: 1
+    path: Assets/Level/Scenes/TitleScreenScene.unity
+    guid: 49307fe8ebed49349adc88c3f4b588cf
+  - enabled: 1
+    path: Assets/Level/Scenes/Game.unity
+    guid: fa47768b3569f18498565cd1c384ec24
   m_configObjects:
     com.unity.adaptiveperformance.google.android.provider_settings: {fileID: 11400000,
       guid: 8a7b19632a376014bb552e3e7b8e5a5e, type: 2}

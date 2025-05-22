@@ -64,10 +64,6 @@ public class CharacterHealthUI : MonoBehaviour
         {
             originalAnchoredPosition = rectTransform.anchoredPosition;
         }
-        else
-        {
-            Debug.LogError("CharacterHealthUI requires a RectTransform component on the same GameObject.", this);
-        }
     }
 
     public void Initialize(TileOccupants stats, float initialMaxHealth, float initialCurrentHealth, bool isPlayer)
@@ -88,7 +84,6 @@ public class CharacterHealthUI : MonoBehaviour
             mainSliderFillImage == null || mainSliderBackgroundImage == null ||
             previewSliderFillImage == null || previewSliderBackgroundImage == null || previewSliderFillAreaImage == null)
         {
-            Debug.LogError("One or more UI references (Sliders, Fill/Background Images for main slider, or Fill/Background/FillArea Images for preview slider) not assigned in CharacterHealthUI.", this);
             return;
         }
 
@@ -133,10 +128,6 @@ public class CharacterHealthUI : MonoBehaviour
 
         float topLayerStartNormalized = mainHealthSlider.value;
         float bottomLayerStartNormalized = damagePreviewSlider.value;
-
-        // Log the values used for sprite determination to help diagnose the issue.
-        Debug.Log($"[CharacterHealthUI] OnHealthChanged: newAbsoluteHealthValue={newAbsoluteHealthValue}, logicalCurrentHealth={logicalCurrentHealth}, maxHealth={maxHealth}, targetNormalizedHealth={targetNormalizedHealth}");
-
         // Update sprites to reflect the target health state immediately
         UpdateHealthBarSprites(targetNormalizedHealth);
 

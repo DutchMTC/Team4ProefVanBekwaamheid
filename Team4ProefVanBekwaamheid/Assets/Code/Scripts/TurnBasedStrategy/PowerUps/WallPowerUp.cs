@@ -19,22 +19,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
         {
             _tileSelection = FindObjectOfType<TileSelection>();
             _tileOccupants = GetComponent<TileOccupants>();
-
-            if (_tileSelection == null)
-            {
-                Debug.LogError("TileSelection script not found!");
-            }
-            if (_tileOccupants == null)
-            {
-                Debug.LogError("TileOccupants script not found on the GameObject!");
-            }
-            if (_wallPrefab == null)
-            {
-                Debug.LogError("Wall Prefab is not assigned in the WallPowerUp script!");
-            }
         }
-
-        // Removed Update method with debug key press
 
         // Added optional targetOccupant parameter for AI
         public void WallPowerUpSelected(PowerUpState _state, TileSelection.UserType userType, TileOccupants targetOccupant = null)
@@ -70,28 +55,14 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
             if (userType == TileSelection.UserType.Enemy && _targetOccupantForAI != null)
             {
                 // AI executes immediately
-                 Debug.Log($"Enemy AI (Wall): Attempting wall placement with range {_range}.");
                  TileSettings playerTile = _targetOccupantForAI.GetCurrentTile();
                  List<TileSettings> selectableTiles = _tileSelection.GetSelectableTiles();
-                 Debug.Log($"Enemy AI (Wall): Found {selectableTiles.Count} selectable empty tiles in range.");
-
-                 if (playerTile == null)
-                 {
-                     Debug.LogWarning("Enemy AI (Wall): Cannot target wall placement, player tile is null.");
-                 }
 
                  TileSettings bestTile = FindBestWallPlacementTile(selectableTiles, playerTile);
 
                  if (bestTile != null)
-                 {
-                     // *** DETAILED DEBUG: Log the chosen tile before attempting placement ***
-                     Debug.Log($"Enemy AI (Wall): Found best tile at ({bestTile.gridY}, {bestTile.gridX}). Attempting placement..."); // Changed to gridY and gridX
+                 {               
                      PlaceWall(bestTile);
-                 }
-                 else
-                 {
-                     // This warning now correctly reflects that no valid tile (adjacent or fallback) was found within range.
-                     Debug.LogWarning("Enemy AI (Wall): Could not find any valid tile to place wall.");
                  }
                  _tileSelection.CancelTileSelection(); // Clean up selection state
             }
@@ -112,27 +83,19 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
 
             // Player Logic: Place wall on the selected tile
             PlaceWall(selectedTile);
-
-            // AI logic is handled directly in WallPowerUpSelected, so this part is no longer needed here.
-            /* AI logic moved to WallPowerUpSelected */
         }
 
         private void PlaceWall(TileSettings targetTile)
         {
-            // *** DETAILED DEBUG: Log received tile and condition checks ***
             if (targetTile == null)
             {
-                Debug.LogError("Enemy AI (PlaceWall): Received NULL targetTile!");
+
                 return; // Exit early if tile is null
             }
-
-            Debug.Log($"Enemy AI (PlaceWall): Attempting to place wall on tile at ({targetTile.gridY}, {targetTile.gridX})."); // Changed to gridY and gridX
-            Debug.Log($"Enemy AI (PlaceWall): Checking conditions - Is Tile Null? {targetTile == null}, Occupant Type: {targetTile.occupantType}, Is Prefab Null? {_wallPrefab == null}");
-
+            
             // Original condition check
             if (targetTile.occupantType == TileSettings.OccupantType.None && _wallPrefab != null)
             {
-                Debug.Log("Enemy AI (PlaceWall): Conditions met. Proceeding with instantiation.");
                 Vector2Int userPos = new Vector2Int(_tileOccupants.gridY, _tileOccupants.gridX); // Changed to gridY and gridX
                 Vector2Int targetPos = new Vector2Int(targetTile.gridY, targetTile.gridX); // Changed to gridY and gridX
                 Vector2Int direction = targetPos - userPos; // Corrected variable name
@@ -145,7 +108,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
                 }
                 else if (direction == Vector2Int.up)
                 {
-                    angle = 315f; 
+                    angle = 315f;
                 }
                 else if (direction == Vector2Int.right)
                 {
@@ -155,36 +118,13 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
                 {
                     angle = 135f;
                 }
-                else
-                {
-                    Debug.LogWarning("Could not calculate direction, using default rotation.");
-                }
 
                 Vector3 spawnPosition = targetTile.transform.position + _positionOffset;
                 Quaternion spawnRotation = Quaternion.Euler(0, angle, 0);
 
                 GameObject wallInstance = Instantiate(_wallPrefab, spawnPosition, spawnRotation);
 
-                targetTile.SetOccupant(TileSettings.OccupantType.Trap, wallInstance); // Used SetOccupant
-                // targetTile.OccupationChangedEvent.Invoke(); // Invoke is handled by SetOccupant
-
-                Debug.Log($"Enemy AI (PlaceWall): Successfully placed wall at {targetPos} with rotation {angle} degrees.");
-            }
-            else // Log specific reason for failure
-            {
-                 if (targetTile.occupantType != TileSettings.OccupantType.None)
-                 {
-                      Debug.LogError($"Enemy AI (PlaceWall): Failed - Tile ({targetTile.gridY}, {targetTile.gridX}) is occupied by {targetTile.occupantType}."); // Changed to gridY and gridX
-                 }
-                 else if (_wallPrefab == null)
-                 {
-                      Debug.LogError("Enemy AI (PlaceWall): Failed - Wall Prefab is not assigned!");
-                 }
-                 else
-                 {
-                      // This case should ideally not be reached with the checks above, but included for safety.
-                      Debug.LogError("Enemy AI (PlaceWall): Failed - Unknown reason (Tile might be null despite initial check, or other logic error).");
-                 }
+                targetTile.SetOccupant(TileSettings.OccupantType.Trap, wallInstance); // Used SetOccupant  
             }
         }
 
@@ -196,18 +136,15 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
 
              if (selectableTiles == null || selectableTiles.Count == 0)
              {
-                 Debug.Log("Enemy AI (Wall Finder): No selectable tiles provided.");
                  return null; // No tiles to choose from
              }
 
              if (targetPlayerTile == null)
              {
-                 Debug.LogWarning("Enemy AI (Wall Finder): Player tile is null. Selecting the first available tile.");
                  return selectableTiles[0]; // Fallback: just pick the first one
              }
 
              Vector2Int playerPos = new Vector2Int(targetPlayerTile.gridY, targetPlayerTile.gridX); // Changed to gridY and gridX
-             Debug.Log($"Enemy AI (Wall Finder): Target player at ({playerPos.x}, {playerPos.y}). Checking {selectableTiles.Count} adjacent tiles for closest one.");
 
              foreach (var tile in selectableTiles)
              {
@@ -231,19 +168,11 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
              else
              {
                  // This should technically not happen if selectableTiles is not empty, but added as safety.
-                 Debug.LogWarning("Enemy AI (Wall Finder): Could not determine closest tile, selecting first available.");
                  bestTile = selectableTiles[0];
              }
 
              return bestTile;
         }
-
-        // Helper for distance calculation (optional refinement)
-        private int CalculateManhattanDistance(Vector2Int posA, Vector2Int posB)
-        {
-            return Mathf.Abs(posA.x - posB.x) + Mathf.Abs(posA.y - posB.y);
-        }
-
 
         void OnDestroy()
         {

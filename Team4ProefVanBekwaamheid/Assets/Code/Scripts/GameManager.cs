@@ -16,8 +16,9 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance;
 
     public GameState State { get; private set; }
+    private GameState _previousGameState; // To track the previous state
     public static event Action<GameState> OnGameStateChanged;
-
+ 
     [Header("Component References")]
     [SerializeField] private GridManager _gridManager;
     [SerializeField] private EnemyAIController _enemyAIController;
@@ -25,10 +26,20 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject _matchCounterUI;
     [SerializeField] private GameObject _timerUI;
     [SerializeField] private PowerUpManager _powerUpManager; // Add reference
+    [SerializeField] private UnityEngine.UI.Image _phaseTransitionImage; // UI Image for phase animation
+    [SerializeField] private Animator _phaseTransitionAnimator; // Animator for phase transition
+    [SerializeField] private Animator _matchGridCoverAnimator; // Animator for the Match3 grid cover
+    [SerializeField] private Animator _powerUpInfoAnimator; // Animator for the PowerUp information UI
+    [SerializeField] private EndScreen _endScreen; // Reference to the EndScreen script
+ 
+    [Header("Phase Animation Sprites")]
+    [SerializeField] private Sprite _matchingPhaseSprite;
+    [SerializeField] private Sprite _playerPhaseSprite;
+    [SerializeField] private Sprite _enemyPhaseSprite;
 
     [Header("Tile Sprites")]
     public List<TileSpriteSet> tileSprites; // List to hold sprite sets for each block type
-
+ 
     void Awake()
     {
         Instance = this;
@@ -46,9 +57,15 @@ public class GameManager : MonoBehaviour
         {
             Debug.LogError("GameManager: Player Timer reference not set in Inspector!");
         }
+        if (_endScreen == null)
+        {
+            Debug.LogError("GameManager: EndScreen reference not set in Inspector!");
+        }
+        // Initialize previous state to something different from Matching to avoid issues on first run
+        _previousGameState = GameState.Start;
         UpdateGameState(GameState.Matching);
     }
-
+ 
     void OnDestroy()
     {
         // Unsubscribe from the timer event when the GameManager is destroyed
@@ -65,20 +82,32 @@ public class GameManager : MonoBehaviour
     /// <exception cref="ArgumentOutOfRangeException"></exception>
     public void UpdateGameState(GameState newState)
     {
+        // Prevent state changes if the game is already over or won
+        if (State == GameState.Win || State == GameState.GameOver)
+        {
+            // Optionally log or handle this attempt to change state after game end
+            Debug.Log($"Attempted to change state to {newState} after game ended. State remains {State}.");
+            return;
+        }
+
+        _previousGameState = State; // Store current state as previous before updating
         State = newState;
         // Handle game state changes here
         switch (newState)
         {
             case GameState.Matching:
                 // Handle matching logic
+                if (_previousGameState != GameState.Start) PlayPhaseAnimation(_matchingPhaseSprite);
                 HandleMatching();
                 break;
             case GameState.Player:
                 // Handle player turn logic
+                if (_previousGameState != GameState.Start) PlayPhaseAnimation(_playerPhaseSprite);
                 HandlePlayerTurn();
                 break;
             case GameState.Enemy:
                 // Handle enemy turn logic
+                if (_previousGameState != GameState.Start) PlayPhaseAnimation(_enemyPhaseSprite);
                 HandleEnemyTurn();
                 break;
             case GameState.Win:
@@ -103,6 +132,37 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Matching phase!");
 
+        if (SFXManager.Instance != null)
+        {
+            SFXManager.Instance.PlayMusic(SFXManager.Instance.matchPhaseMusic);
+        }
+
+        // Hide cover if not the initial game start
+        if (_previousGameState != GameState.Start)
+        {
+            if (_matchGridCoverAnimator != null)
+            {
+                //_matchGridCoverAnimator.SetTrigger("CoverHide");
+            }
+            else
+            {
+                Debug.LogWarning("GameManager: Match Grid Cover Animator reference not set.");
+            }
+        }
+
+        // Hide powerup info only if coming from Player phase
+        if (_previousGameState == GameState.Enemy)
+        {
+            if (_powerUpInfoAnimator != null)
+            {
+                _powerUpInfoAnimator.SetTrigger("PowerUpHide");
+            }
+            else
+            {
+                Debug.LogWarning("GameManager: PowerUp Info Animator reference not set.");
+            }
+        }
+ 
         // Restore power-up visuals from inventory
         if (_powerUpManager != null)
         {
@@ -143,12 +203,39 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Player's turn!");
 
+        if (SFXManager.Instance != null)
+        {
+            SFXManager.Instance.PlayMusic(SFXManager.Instance.battlePhaseMusic);
+        }
+
+        if (_matchGridCoverAnimator != null)
+        {
+            //_matchGridCoverAnimator.SetTrigger("CoverShow");
+        }
+        else
+        {
+            Debug.LogWarning("GameManager: Match Grid Cover Animator reference not set.");
+        }
+
+        if (_powerUpInfoAnimator != null)
+        {
+            _powerUpInfoAnimator.SetTrigger("PowerUpShow");
+        }
+        else
+        {
+            Debug.LogWarning("GameManager: PowerUp Info Animator reference not set.");
+        }
+ 
         // Set UI visibility
         if (_matchCounterUI != null) _matchCounterUI.SetActive(false);
         if (_timerUI != null) _timerUI.SetActive(true);
-
-        if (_powerUpManager != null) _powerUpManager.SetButtonsInteractable(true); // Enable buttons
-
+ 
+        if (_powerUpManager != null)
+        {
+            _powerUpManager.SetButtonsInteractable(true); // Enable buttons
+            _powerUpManager.AnimateFillsToDisappearForPlayerPhase(); // Animate fills to disappear
+        }
+ 
         // The _playerTimer.StartTimer() call was here, but it's removed as the timer is now manually ended.
         // The _playerTimer reference is still needed for the onTimerEnd event.
         // Ensure _playerTimer is assigned in the Inspector.
@@ -192,12 +279,58 @@ public class GameManager : MonoBehaviour
     {
         // Handle win logic here
         Debug.Log("You win!");
+        if (SFXManager.Instance != null)
+        {
+            SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.EnemyDeath);
+            SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.Win);
+        }
+
+        if (_phaseTransitionAnimator != null)
+        {
+            _phaseTransitionAnimator.SetTrigger("GameEnd");
+        }
+        else
+        {
+            Debug.LogWarning("GameManager: Phase Transition Animator reference not set.");
+        }
+
+        if (_endScreen != null)
+        {
+            _endScreen.ShowVictoryScreen();
+        }
+        else
+        {
+            Debug.LogWarning("GameManager: EndScreen reference not set.");
+        }
     }
 
     private void HandleGameOver()
     {
         // Handle game over logic here
         Debug.Log("Game Over!");
+        if (SFXManager.Instance != null)
+        {
+            SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.PlayerDeath);
+            SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.GameOver);
+        }
+
+        if (_phaseTransitionAnimator != null)
+        {
+            _phaseTransitionAnimator.SetTrigger("GameEnd");
+        }
+        else
+        {
+            Debug.LogWarning("GameManager: Phase Transition Animator reference not set.");
+        }
+
+        if (_endScreen != null)
+        {
+            _endScreen.ShowGameOverScreen();
+        }
+        else
+        {
+            Debug.LogWarning("GameManager: EndScreen reference not set.");
+        }
     }
 
     private void HandlePause()
@@ -314,8 +447,24 @@ public class GameManager : MonoBehaviour
 
         UpdateGameState(GameState.Enemy);
     }
+ 
+    private void PlayPhaseAnimation(Sprite phaseSprite)
+    {
+        if (_phaseTransitionImage != null && _phaseTransitionAnimator != null && phaseSprite != null)
+        {
+            _phaseTransitionImage.sprite = phaseSprite;
+            _phaseTransitionImage.gameObject.SetActive(true); // Ensure it's active
+            _phaseTransitionAnimator.SetTrigger("PhaseSwitch");
+        }
+        else
+        {
+            if (_phaseTransitionImage == null) Debug.LogWarning("GameManager: Phase Transition Image reference not set.");
+            if (_phaseTransitionAnimator == null) Debug.LogWarning("GameManager: Phase Transition Animator reference not set.");
+            if (phaseSprite == null) Debug.LogWarning("GameManager: Phase Sprite is null for the current phase.");
+        }
+    }
 }
-
+ 
 public enum GameState
 {
     Start,

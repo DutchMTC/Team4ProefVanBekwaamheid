@@ -13,18 +13,13 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
         private TileSelection.UserType _currentUserType; // Store the user type
         private TileOccupants _targetOccupantForAI; // Store the target for AI
         private CharacterAnimationController _animationController;
- 
+
         void Start()
         {
             _tileSelection = FindObjectOfType<TileSelection>();
             _tileOccupants = GetComponent<TileOccupants>();
             _animationController = FindObjectOfType<CharacterAnimationController>();
-            
-            if (_tileSelection == null)
-            {
-                Debug.LogError("TileSelection script not found!");
-            }
-        }      
+        }
 
         // Removed Update method with debug key press
         // Added optional targetOccupant parameter for AI
@@ -46,7 +41,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
                     _range = 3; // Set range for supercharged state
                     break;
             }
-            
+
             if (_isWaitingForSelection)
             {
                 // Cancel current selection
@@ -68,13 +63,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
 
                 if (bestTile != null)
                 {
-                    Debug.Log($"Enemy AI (Movement): Moving towards player at ({_targetOccupantForAI.gridY}, {_targetOccupantForAI.gridX}). Best tile: ({bestTile.gridY}, {bestTile.gridX})"); // Changed to gridY and gridX
                     Move(bestTile);
-                }
-                else
-                {
-                    Debug.LogWarning("Enemy AI (Movement): Could not find a valid tile to move towards the player.");
-                    // Optionally, pick a random valid tile or do nothing
                 }
                 _tileSelection.CancelTileSelection(); // Clean up selection state
             }
@@ -95,56 +84,40 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
 
             // Player Logic: Move to the selected tile
             Move(selectedTile);
-
-            // AI logic is handled directly in MovementPowerUpSelected, so this part is no longer needed here.
-            /*
-            if (_currentUserType == TileSelection.UserType.Enemy && _targetOccupantForAI != null)
-            {
-                 List<TileSettings> selectableTiles = _tileSelection.GetSelectableTiles();
-                 TileSettings bestTile = FindBestMoveTileTowardsTarget(selectableTiles, _targetOccupantForAI);
-                 // Debug.LogWarning("Enemy AI (Movement): AI targeting needs TileSelection.GetSelectableTiles() or equivalent."); // Removed warning
-
-                 if (bestTile != null)
-                 {
-                     Debug.Log($"Enemy AI (Movement): Moving towards player at ({_targetOccupantForAI.row}, {_targetOccupantForAI.column}). Best tile: ({bestTile.row}, {bestTile.column})");
-                     Move(bestTile);
-                 }
-                 else
-                 {
-                     Debug.LogWarning("Enemy AI (Movement): Could not find a valid tile to move towards the player.");
-                     // Optionally, pick a random valid tile or do nothing
-                     Move(selectedTile); // Fallback to originally selected (might be null or invalid for AI)
-                 }
-                 _tileSelection.CancelTileSelection(); // Ensure selection mode is exited
-            }
-            else // Player Logic
-            {
-                 // This is handled above
-            }
-            */
         }
-
         private void Move(TileSettings targetTile)
         {
-            // Allow moving if the tile is None OR an Item
-            if (targetTile != null &&
-                (targetTile.occupantType == TileSettings.OccupantType.None || targetTile.occupantType == TileSettings.OccupantType.Item))
+            if (targetTile == null)
             {
-                _tileOccupants.gridY = targetTile.gridY; // Changed to gridY
-                _tileOccupants.gridX = targetTile.gridX; // Changed to gridX
+                return;
+            }
+
+            if (targetTile.occupantType == TileSettings.OccupantType.None ||
+                targetTile.occupantType == TileSettings.OccupantType.Item ||
+                targetTile.occupantType == TileSettings.OccupantType.Trap ||
+                targetTile.occupantType == TileSettings.OccupantType.Decoy)
+            {
+                // Check for trap before moving
+                if (targetTile.occupantType == TileSettings.OccupantType.Trap)
+                {
+                    var trapBehaviour = targetTile.GetComponentInChildren<TrapBehaviour>(true);
+                    if (trapBehaviour != null)
+                    {
+                        trapBehaviour.OnCharacterEnterTile(_tileOccupants);
+                        // Don't proceed with movement if this is an enemy - trap will handle state change
+                        if (_currentUserType == TileSelection.UserType.Enemy)
+                        {
+                            return;
+                        }
+                    }
+                }
+
+                _tileOccupants.gridY = targetTile.gridY;
+                _tileOccupants.gridX = targetTile.gridX;
                 _tileOccupants.MoveToTile();
                 if (_currentUserType == TileSelection.UserType.Player && _animationController != null)
                 {
                     _animationController.PlayerDash();
-                }
-            }
-            else
-            {
-                if (targetTile == null) {
-                    Debug.Log("Target tile is null, cannot move.");
-                } else {
-                    // Provide more specific feedback if the tile is occupied by something other than None or Item
-                    Debug.Log($"Selected tile is occupied by {targetTile.occupantType} or invalid, cannot move here.");
                 }
             }
         }
@@ -152,29 +125,45 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
         // AI Helper: Find the best tile to move towards the target
         private TileSettings FindBestMoveTileTowardsTarget(List<TileSettings> selectableTiles, TileOccupants target)
         {
-            TileSettings bestTile = null;
-            float minDistanceSq = float.MaxValue;
-            Vector2Int targetPos = new Vector2Int(target.gridX, target.gridY); // Standardized: (gridX, gridY) -> (column, row)
-
-            foreach (var tile in selectableTiles)
+            if (selectableTiles == null || target == null || _tileOccupants == null)
             {
-                if (tile.occupantType == TileSettings.OccupantType.None) // Ensure tile is empty
-                {
-                    Vector2Int tilePos = new Vector2Int(tile.gridX, tile.gridY); // Standardized: (gridX, gridY) -> (column, row)
-                    float distanceSq = Vector2Int.Distance(tilePos, targetPos); // Using squared distance for efficiency
+                return null;
+            }
 
-                    if (distanceSq < minDistanceSq)
+            TileSettings bestTile = null;
+            float minDistanceToTarget = float.MaxValue;
+            Vector2Int targetPos = new Vector2Int(target.gridX, target.gridY);
+            Vector2Int currentPos = new Vector2Int(_tileOccupants.gridX, _tileOccupants.gridY);
+
+            foreach (TileSettings tile in selectableTiles)
+            {
+                if (tile == null) continue;
+
+                Vector2Int tilePos = new Vector2Int(tile.gridX, tile.gridY);
+
+                // Verify the tile is within movement range
+                int distance = Mathf.Abs(tilePos.x - currentPos.x) + Mathf.Abs(tilePos.y - currentPos.y);
+                if (distance > _range)
+                {
+                    continue;
+                }
+
+                // Only consider empty tiles
+                if (tile.occupantType == TileSettings.OccupantType.None)
+                {
+                    float distanceToTarget = Vector2.Distance(tilePos, targetPos);
+                    if (distanceToTarget < minDistanceToTarget)
                     {
-                        minDistanceSq = distanceSq;
+                        minDistanceToTarget = distanceToTarget;
                         bestTile = tile;
                     }
                 }
             }
+
             return bestTile;
         }
 
-
-        void OnDestroy()
+        private void OnDestroy()
         {
             if (_tileSelection != null)
             {

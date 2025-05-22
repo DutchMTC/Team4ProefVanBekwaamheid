@@ -22,18 +22,15 @@ public class EnemyAIController : MonoBehaviour
     [SerializeField] private TileOccupants playerOccupants;
     public Image[] powerupDisplayIcons;
     public List<PowerupSpriteMapping> powerupSpriteMappings;
-    [SerializeField] private RectTransform powerupDisplayParent;
-    [SerializeField] private CharacterAnimationController characterAnimationController; // Added for animations
+    [SerializeField] private CharacterAnimationController characterAnimationController; 
     [SerializeField] private TileSelection _tileSelection;
+    [SerializeField] private CharacterRotator _characterRotator; 
  
     private AttackPowerUp _attackPowerUp;
     private TrapPowerUp _trapPowerUp;
     private DefensePowerUp _defensePowerUp;
     private TileOccupants _enemyOccupants;
-    private GridGenerator _gridGenerator; // Added to get all tiles
-
-    [Header("UI Positioning")]
-    [SerializeField] private float verticalOffset = 2.0f;
+    private GridGenerator _gridGenerator; 
 
     [Header("AI Probabilities")]
     [Range(0f, 1f)]
@@ -42,6 +39,10 @@ public class EnemyAIController : MonoBehaviour
     public float probabilityCharged = 0.3f;
     [Range(0f, 1f)]
     public float probabilitySupercharged = 0.1f;
+
+    private bool _movementWasChosen = false;
+    private bool _hasMovedThisTurn = false;
+    private bool _trapTriggered = false;
 
     private struct SelectedPowerup
     {
@@ -55,11 +56,15 @@ public class EnemyAIController : MonoBehaviour
 
     void Start()
     {
-        PositionPowerupDisplay();
         _attackPowerUp = GetComponent<AttackPowerUp>();
         _trapPowerUp = GetComponent<TrapPowerUp>();
         _defensePowerUp = GetComponent<DefensePowerUp>();
         _enemyOccupants = GetComponent<TileOccupants>();
+        // _characterRotator = GetComponent<CharacterRotator>(); // Removed GetComponent
+        if (_characterRotator == null)
+        {
+            Debug.LogError("EnemyAIController: CharacterRotator reference not assigned in the Inspector!");
+        }
         
         // Attempt to find TileSelection if not assigned
         if (_tileSelection == null)
@@ -266,18 +271,6 @@ public class EnemyAIController : MonoBehaviour
         return null;
     }
 
-    private void PositionPowerupDisplay()
-    {
-        if (powerupDisplayParent != null)
-        {
-            powerupDisplayParent.localPosition = new Vector3(0, verticalOffset, 0);
-        }
-        else
-        {
-            Debug.LogWarning("EnemyAIController: Powerup Display Parent RectTransform not assigned!");
-        }
-    }
-
     private void HidePowerups()
     {
         if (powerupDisplayIcons == null) return;
@@ -293,178 +286,218 @@ public class EnemyAIController : MonoBehaviour
         }
     }
 
-    private System.Collections.IEnumerator ExecutePowerups()
+    public void OnTrapTriggered()
     {
-        bool _hasMovedThisTurn = false;
-        bool _movementWasChosen = chosenPowerups.Any(p => p.Type == PowerUpInventory.PowerUpType.Steps);
-
-        if (chosenPowerups.Count == 0)
+        _trapTriggered = true;
+        if (_executionCoroutine != null)
         {
-            Debug.Log("Enemy AI: No powerups were selected for this turn.");
+            StopCoroutine(_executionCoroutine);
+            _executionCoroutine = null;
         }
-        else
-        {
-            Debug.Log("Enemy AI: Starting powerup execution sequence based on priority...");
-            Debug.Log("Enemy AI: Waiting for 2 seconds before executing first power-up...");
-            yield return new WaitForSeconds(2.0f);
-
-            List<PowerUpInventory.PowerUpType> priorityOrder = new List<PowerUpInventory.PowerUpType>
-            {
-                PowerUpInventory.PowerUpType.Steps,
-                PowerUpInventory.PowerUpType.Shield,
-                PowerUpInventory.PowerUpType.Sword,
-                PowerUpInventory.PowerUpType.Trap
-            };
-
-            List<int> executedIconIndices = new List<int>();
-
-            foreach (var priorityType in priorityOrder)
-            {
-                int chosenIndex = chosenPowerups.FindIndex(p => p.Type == priorityType);
-
-                if (chosenIndex != -1)
-                {
-                    SelectedPowerup powerupToExecute = chosenPowerups[chosenIndex];
-                    bool executedThisPowerup = false;
-
-                    Debug.Log($"Enemy AI: Considering {powerupToExecute.Type} (State: {powerupToExecute.State}) at index {chosenIndex}.");
-
-                    switch (powerupToExecute.Type)
-                    {
-                        case PowerUpInventory.PowerUpType.Steps:
-                            if (_tileSelection != null && _enemyOccupants != null && playerOccupants != null && _gridGenerator != null)
-                            {
-                                Debug.Log($"Enemy AI: Executing Movement ({powerupToExecute.State}) using new system.");
-                                int moveRange = GetMoveRangeFromState(powerupToExecute.State);
-                                TileSettings targetTile = FindBestMovementTile(moveRange);
-
-                                if (targetTile != null)
-                                {
-                                    TileSettings currentEnemyTile = _tileSelection.FindTileAtCoordinates(_enemyOccupants.gridY, _enemyOccupants.gridX);
-                                    if (currentEnemyTile != null)
-                                    {
-                                        List<TileSettings> path = MovementValidator.FindPath(currentEnemyTile, targetTile, _tileSelection.GetAllTiles());
-                                        if (path != null && path.Count > 0)
-                                        {
-                                            if (_tileSelection.pathVisualizer != null) _tileSelection.pathVisualizer.ShowPath(path);
-                                            // Pass the EnemyAIController's own characterAnimationController instance
-                                            yield return StartCoroutine(_tileSelection.MoveAlongPath(path, _enemyOccupants.gameObject, _enemyOccupants, TileSelection.UserType.Enemy, characterAnimationController));
-                                            // The EnemyDash animation is now called within MoveAlongPath, so we can remove the duplicate call here.
-                                            // if (characterAnimationController != null) characterAnimationController.EnemyDash();
-                                            _hasMovedThisTurn = true;
-                                            executedThisPowerup = true;
-                                        }
-                                        else
-                                        {
-                                            Debug.LogWarning("Enemy AI: No path found to the chosen movement tile.");
-                                        }
-                                    }
-                                    else
-                                    {
-                                        Debug.LogError("Enemy AI: Could not find current enemy tile.");
-                                    }
-                                }
-                                else
-                                {
-                                    Debug.Log("Enemy AI: No suitable movement tile found.");
-                                }
-                            }
-                            else
-                            {
-                                Debug.LogError("Enemy AI: TileSelection, EnemyOccupants, PlayerOccupants, or GridGenerator is null. Cannot execute movement.");
-                            }
-                            break;
-                        case PowerUpInventory.PowerUpType.Shield:
-                            if (_defensePowerUp != null)
-                            {
-                                Debug.Log($"Enemy AI: Executing Defense ({powerupToExecute.State})");
-                                _defensePowerUp.DefensePowerUpSelected(powerupToExecute.State, TileSelection.UserType.Enemy);
-                                if (characterAnimationController != null) characterAnimationController.EnemyDefense(); // Defense Animation
-                                executedThisPowerup = true;
-                            }
-                            break;
-                        case PowerUpInventory.PowerUpType.Sword:
-                            if (_attackPowerUp != null)
-                            {
-                                Debug.Log($"Enemy AI: Executing Attack ({powerupToExecute.State})");
-                                _attackPowerUp.AttackPowerUpSelected(powerupToExecute.State, TileSelection.UserType.Enemy, playerOccupants);
-                                if (characterAnimationController != null)
-                                {
-                                    switch (powerupToExecute.State)
-                                    {
-                                        case PowerUpState.Usable:
-                                            characterAnimationController.EnemyAttackUsable();
-                                            break;
-                                        case PowerUpState.Charged:
-                                            characterAnimationController.EnemyAttackCharged();
-                                            break;
-                                        case PowerUpState.Supercharged:
-                                            characterAnimationController.EnemyAttackSupercharged();
-                                            break;
-                                    }
-                                }
-                                executedThisPowerup = true;
-                            }
-                            break;
-                        case PowerUpInventory.PowerUpType.Trap:
-                            bool canUseTrap = !_movementWasChosen || _hasMovedThisTurn;
-                            if (_trapPowerUp != null && canUseTrap)
-                            {
-                                Debug.Log($"Enemy AI: Executing Trap ({powerupToExecute.State})");
-                                _trapPowerUp.TrapPowerUpSelected(powerupToExecute.State, TileSelection.UserType.Enemy, playerOccupants);
-                                executedThisPowerup = true;
-                            }
-                            else if (!canUseTrap)
-                            {
-                                Debug.Log($"Enemy AI: Skipping Trap ({powerupToExecute.State}) because Movement was chosen but not executed yet.");
-                            }
-                            break;
-                    }
-
-                    if (executedThisPowerup)
-                    {
-                        Debug.Log($"Enemy AI: Initiated {powerupToExecute.Type}.");
-                        executedIconIndices.Add(chosenIndex);
-                        yield return new WaitForSeconds(1.0f);
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"Enemy AI: Failed to initiate {powerupToExecute.Type} (script missing, condition not met, or error).");
-                    }
-                }
-            }
-
-            if (executedIconIndices.Count > 0)
-            {
-                Debug.Log($"Enemy AI: Hiding icons for {executedIconIndices.Count} executed powerups.");
-                foreach (int indexToHide in executedIconIndices)
-                {
-                    if (indexToHide >= 0 && indexToHide < powerupDisplayIcons.Length && powerupDisplayIcons[indexToHide] != null)
-                    {
-                        powerupDisplayIcons[indexToHide].enabled = false;
-                        Debug.Log($"Enemy AI: Hiding icon at index {indexToHide}");
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"Enemy AI: Could not find icon at index {indexToHide} to hide.");
-                    }
-                }
-            }
-            else
-            {
-                Debug.Log("Enemy AI: No powerups were executed this turn.");
-            }
-            Debug.Log("Enemy AI: Finished powerup execution sequence.");
-        }
-
+        // Clear any remaining powerups
+        chosenPowerups.Clear();
+        Debug.Log("EnemyAIController: Trap triggered - canceling remaining power-ups");
+        
+        // Immediately transition to Matching state when enemy triggers a trap
         if (gameManager != null)
         {
-            Debug.Log("Enemy AI: Notifying GameManager to transition state back to Matching.");
             gameManager.UpdateGameState(GameState.Matching);
         }
         else
         {
             Debug.LogError("EnemyAIController: Cannot notify GameManager, reference not assigned!");
+        }
+    }
+
+    private System.Collections.IEnumerator ExecutePowerups()
+    {
+        _trapTriggered = false; // Reset trap trigger state at start of execution
+        _movementWasChosen = false; // Reset movement selection state
+        _hasMovedThisTurn = false; // Reset movement completion state
+        
+        // Reset any trap interruption flag at the start of enemy turn
+        TrapBehaviour.ResetTrapInterrupt();
+        
+        if (chosenPowerups.Count == 0)
+        {
+            Debug.Log("Enemy AI: No powerups chosen to execute.");
+            if (gameManager != null)
+            {
+                gameManager.UpdateGameState(GameState.Matching);
+            }
+            yield break;
+        }
+
+        Debug.Log("Enemy AI: Starting powerup execution sequence based on priority...");
+        Debug.Log("Enemy AI: Waiting for 2 seconds before executing first power-up...");
+        yield return new WaitForSeconds(2.0f);
+
+        List<PowerUpInventory.PowerUpType> priorityOrder = new List<PowerUpInventory.PowerUpType>
+        {
+            PowerUpInventory.PowerUpType.Steps,
+            PowerUpInventory.PowerUpType.Shield,
+            PowerUpInventory.PowerUpType.Sword,
+            PowerUpInventory.PowerUpType.Trap
+        };
+
+        List<int> executedIconIndices = new List<int>();        foreach (var priorityType in priorityOrder)
+        {
+            // If enemy hit a trap, stop all remaining actions
+            if (TrapBehaviour.EnemyTurnInterruptedByTrap)
+            {
+                Debug.LogWarning("EnemyAIController: Enemy turn interrupted by trap! Ending turn immediately.");
+                yield break;
+            }
+
+            int chosenIndex = chosenPowerups.FindIndex(p => p.Type == priorityType);
+
+            if (chosenIndex != -1)
+            {
+                SelectedPowerup powerupToExecute = chosenPowerups[chosenIndex];
+                bool executedThisPowerup = false;
+
+                Debug.Log($"Enemy AI: Considering {powerupToExecute.Type} (State: {powerupToExecute.State}) at index {chosenIndex}.");
+
+                switch (powerupToExecute.Type)
+                {                    case PowerUpInventory.PowerUpType.Steps:
+                        _movementWasChosen = true;
+                        if (_tileSelection != null && _enemyOccupants != null && playerOccupants != null && _gridGenerator != null)
+                        {
+                            Debug.Log($"Enemy AI: Executing Movement ({powerupToExecute.State}) using new system.");
+                            int moveRange = GetMoveRangeFromState(powerupToExecute.State);
+                            TileSettings targetTile = FindBestMovementTile(moveRange);
+
+                            if (targetTile != null)
+                            {
+                                TileSettings currentEnemyTile = _tileSelection.FindTileAtCoordinates(_enemyOccupants.gridY, _enemyOccupants.gridX);
+                                if (currentEnemyTile != null)
+                                {
+                                    List<TileSettings> path = MovementValidator.FindPath(currentEnemyTile, targetTile, _tileSelection.GetAllTiles());
+                                    if (path != null && path.Count > 0)
+                                    {                                        if (_tileSelection.pathVisualizer != null)
+                                        {
+                                            _tileSelection.pathVisualizer.ShowPath(path);
+                                        }                                        yield return StartCoroutine(_tileSelection.MoveAlongPath(path, _enemyOccupants.gameObject, 
+                                            _enemyOccupants, TileSelection.UserType.Enemy, characterAnimationController));
+                                                
+                                        // Check if we hit a trap
+                                        if (TrapBehaviour.EnemyTurnInterruptedByTrap)
+                                        {
+                                            Debug.Log("EnemyAIController: Movement interrupted by trap!");
+                                            yield break; // Stop movement and end turn
+                                        }
+                                        _hasMovedThisTurn = true;
+                                        executedThisPowerup = true;
+                                    }
+                                    else
+                                    {
+                                        Debug.LogWarning("Enemy AI: No path found to the chosen movement tile.");
+                                    }
+                                }
+                                else
+                                {
+                                    Debug.LogError("Enemy AI: Could not find current enemy tile.");
+                                }
+                            }
+                            else
+                            {
+                                Debug.Log("Enemy AI: No suitable movement tile found.");
+                            }
+                        }
+                        else
+                        {
+                            Debug.LogError("Enemy AI: TileSelection, EnemyOccupants, PlayerOccupants, or GridGenerator is null. Cannot execute movement.");
+                        }
+                        break;
+                    case PowerUpInventory.PowerUpType.Shield:
+                        if (_defensePowerUp != null)
+                        {
+                            Debug.Log($"Enemy AI: Executing Defense ({powerupToExecute.State})");
+                            _defensePowerUp.DefensePowerUpSelected(powerupToExecute.State, TileSelection.UserType.Enemy);
+                            if (characterAnimationController != null) characterAnimationController.EnemyDefense(); // Defense Animation
+                            executedThisPowerup = true;
+                        }
+                        break;
+                    case PowerUpInventory.PowerUpType.Sword:
+                        if (_attackPowerUp != null && _characterRotator != null && playerOccupants != null)
+                        {
+                            Debug.Log($"Enemy AI: Executing Attack ({powerupToExecute.State})");
+                            // Rotate towards player before attacking
+                            yield return StartCoroutine(_characterRotator.RotateTowardsTargetAsync(transform, playerOccupants.transform, CharacterRotator.UserType.Enemy));
+                            
+                            _attackPowerUp.AttackPowerUpSelected(powerupToExecute.State, TileSelection.UserType.Enemy, playerOccupants);
+                            if (characterAnimationController != null)
+                            {
+                                switch (powerupToExecute.State)
+                                {
+                                    case PowerUpState.Usable:
+                                        characterAnimationController.EnemyAttackUsable();
+                                        break;
+                                    case PowerUpState.Charged:
+                                        characterAnimationController.EnemyAttackCharged();
+                                        break;
+                                    case PowerUpState.Supercharged:
+                                        characterAnimationController.EnemyAttackSupercharged();
+                                        break;
+                                }
+                            }
+                            executedThisPowerup = true;
+                        }
+                        break;
+                    case PowerUpInventory.PowerUpType.Trap:
+                        bool canUseTrap = !_movementWasChosen || _hasMovedThisTurn;
+                        if (_trapPowerUp != null && canUseTrap)
+                        {
+                            Debug.Log($"Enemy AI: Executing Trap ({powerupToExecute.State})");
+                            _trapPowerUp.TrapPowerUpSelected(powerupToExecute.State, TileSelection.UserType.Enemy, playerOccupants);
+                            executedThisPowerup = true;
+                        }
+                        else if (!canUseTrap)
+                        {
+                            Debug.Log($"Enemy AI: Skipping Trap ({powerupToExecute.State}) because Movement was chosen but not executed yet.");
+                        }
+                        break;
+                }
+
+                if (executedThisPowerup)
+                {
+                    Debug.Log($"Enemy AI: Initiated {powerupToExecute.Type}.");
+                    executedIconIndices.Add(chosenIndex);
+                    yield return new WaitForSeconds(1.0f);
+                }
+                else
+                {
+                    Debug.LogWarning($"Enemy AI: Failed to initiate {powerupToExecute.Type} (script missing, condition not met, or error).");
+                }
+            }
+        }
+
+        if (executedIconIndices.Count > 0)
+        {
+            Debug.Log($"Enemy AI: Hiding icons for {executedIconIndices.Count} executed powerups.");
+            foreach (int indexToHide in executedIconIndices)
+            {
+                if (indexToHide >= 0 && indexToHide < powerupDisplayIcons.Length && powerupDisplayIcons[indexToHide] != null)
+                {
+                    powerupDisplayIcons[indexToHide].enabled = false;
+                    Debug.Log($"Enemy AI: Hiding icon at index {indexToHide}");
+                }
+                else
+                {
+                    Debug.LogWarning($"Enemy AI: Could not find icon at index {indexToHide} to hide.");
+                }
+            }
+        }
+        else
+        {
+            Debug.Log("Enemy AI: No powerups were executed this turn.");
+        }
+        Debug.Log("Enemy AI: Finished powerup execution sequence.");        // Only transition to Matching state if a trap wasn't triggered
+        // (trap trigger handles its own state transition)
+        if (!_trapTriggered && gameManager != null)
+        {
+            Debug.Log("Enemy AI: Notifying GameManager to transition state back to Matching.");
+            gameManager.UpdateGameState(GameState.Matching);
         }
 
         _executionCoroutine = null;
@@ -492,15 +525,13 @@ public class EnemyAIController : MonoBehaviour
         {
             Debug.LogWarning("EnemyAIController: CharacterAnimationController not assigned. Enemy damage animation will not play.");
         }
-    }
-
-    private int GetMoveRangeFromState(PowerUpState state)
+    }    private int GetMoveRangeFromState(PowerUpState state)
     {
         switch (state)
         {
-            case PowerUpState.Usable: return 2; // Example range
-            case PowerUpState.Charged: return 3; // Example range
-            case PowerUpState.Supercharged: return 4; // Example range
+            case PowerUpState.Usable: return 1; // Can only move 1 tile
+            case PowerUpState.Charged: return 2; // Can move 2 tiles
+            case PowerUpState.Supercharged: return 3; // Can move 3 tiles
             default: return 1;
         }
     }
@@ -527,17 +558,27 @@ public class EnemyAIController : MonoBehaviour
         var allTiles = _tileSelection.GetAllTiles();
         foreach (var tile in allTiles)
         {
-            if (tile.occupantType == TileSettings.OccupantType.None || tile.occupantType == TileSettings.OccupantType.Item || tile.occupantType == TileSettings.OccupantType.Trap)
+            // Skip tiles that are occupied by something other than items or traps
+            if (tile.occupantType != TileSettings.OccupantType.None && 
+                tile.occupantType != TileSettings.OccupantType.Item && 
+                tile.occupantType != TileSettings.OccupantType.Trap)
             {
-                int distY = Mathf.Abs(tile.gridY - currentEnemyTile.gridY);
-                int distX = Mathf.Abs(tile.gridX - currentEnemyTile.gridX);
-                if ((distX + distY) <= moveRange && (distX + distY) > 0) // Manhattan distance within range and not current tile
+                continue;
+            }
+
+            // Calculate Manhattan distance
+            int distY = Mathf.Abs(tile.gridY - currentEnemyTile.gridY);
+            int distX = Mathf.Abs(tile.gridX - currentEnemyTile.gridX);
+            int totalDist = distX + distY;
+
+            // Strict range check - must be exactly within the range, not more
+            if (totalDist > 0 && totalDist <= moveRange) 
+            {
+                var path = MovementValidator.FindPath(currentEnemyTile, tile, allTiles);
+                // Only add if path exists and its length is within range
+                if (path != null && path.Count - 1 <= moveRange) // -1 because path includes starting tile
                 {
-                     // Check if a path exists (basic check, could be improved)
-                    if (MovementValidator.FindPath(currentEnemyTile, tile, allTiles) != null)
-                    {
-                        reachableTiles.Add(tile);
-                    }
+                    reachableTiles.Add(tile);
                 }
             }
         }

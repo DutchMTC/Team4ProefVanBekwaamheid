@@ -23,23 +23,16 @@ public class TileSelection : MonoBehaviour
       [SerializeField] private Camera _topCamera;
       [SerializeField] private GridGenerator _gridGenerator;
       [SerializeField] private CharacterAnimationController characterAnimationController; // Added for dash animations
+      [SerializeField] private CharacterRotator characterRotator; // Added for rotation logic
       [SerializeField, Range(1f, 20f), Tooltip("Speed at which the player moves between tiles")]
       private float moveSpeed = 5f; // Speed for smooth movement
     [SerializeField, Tooltip("Time the player pauses on each tile during movement")]
     private float tilePauseDuration = 0.2f;
     [SerializeField, Tooltip("Curve defining the player's movement animation between tiles")]
     private AnimationCurve movementCurve = AnimationCurve.EaseInOut(0, 0, 1, 1); // Default to an ease-in-out curve
-    [SerializeField, Tooltip("Duration of the rotation towards the next tile")]
-    private float rotationDuration = 0.3f;
-    [SerializeField, Tooltip("Curve defining the rotation animation")]
-    private AnimationCurve rotationCurve = AnimationCurve.EaseInOut(0, 0, 1, 1); // Default to an ease-in-out curve
-    [SerializeField, Tooltip("Rotation offset for the player character (Euler angles)")]
-    private Vector3 playerRotationOffset = Vector3.zero;
-    [SerializeField, Tooltip("Rotation offset for the enemy character (Euler angles)")]
-    private Vector3 enemyRotationOffset = Vector3.zero;
-    [SerializeField, Tooltip("Optional: Specific transform for the enemy model to rotate (if different from the main enemy object)")]
-    private Transform enemyModelToRotate;
-    
+    [SerializeField, Tooltip("Duration of the rotation when moving or attacking")]
+    private float actionRotationDuration = 0.3f; // Used for rotations
+
     // Allows other scripts to modify the movement speed
     public float MoveSpeed
     {
@@ -55,6 +48,7 @@ public class TileSelection : MonoBehaviour
     private bool _isSelectionEnabled = false;
     private bool _hasSelectedTile = false;
     private SelectionType _currentSelectionType; // To store the current selection type
+    private UserType _actionUserType; // To store the user type initiating the action
     private List<TileSettings> _currentPath;
 
     public bool IsSelectingTiles => _isSelectionEnabled;
@@ -64,6 +58,19 @@ public class TileSelection : MonoBehaviour
     void Start()
     {
         _tileOccupants = GetComponent<TileOccupants>();
+        if (characterRotator == null)
+        {
+            characterRotator = GetComponent<CharacterRotator>();
+            if (characterRotator == null)
+            {
+                 // Attempt to find it if not assigned, assuming one CharacterRotator on the same GameObject or in children
+                characterRotator = GetComponentInChildren<CharacterRotator>();
+                if (characterRotator == null)
+                {
+                    Debug.LogError("CharacterRotator reference not found! Please assign it or add it to the GameObject.");
+                }
+            }
+        }
         if (_gridGenerator == null)
         {
             _gridGenerator = FindObjectOfType<GridGenerator>();
@@ -114,6 +121,7 @@ public class TileSelection : MonoBehaviour
     public void StartTileSelection(int range, Vector2Int currentPosition, SelectionType selectionType, UserType userType)
     {
         _currentSelectionType = selectionType; // Store the selection type
+        _actionUserType = userType; // Store the user type initiating the action
         ClearTilesInRange();
         _isSelectionEnabled = true;
         _hasSelectedTile = false;
@@ -189,8 +197,12 @@ public class TileSelection : MonoBehaviour
                 {
                     _hasSelectedTile = true;
                     _tileSettings = hitTile;
-                    OnTileSelected.Invoke(hitTile);
-                    ClearTilesInRange(); // This also sets _isSelectionEnabled = false
+                    // Rotate towards the target before invoking OnTileSelected
+                    // Pass the _actionUserType captured in StartTileSelection
+                    StartCoroutine(RotateBeforeAttack(hitTile, _actionUserType, () => {
+                        OnTileSelected.Invoke(hitTile);
+                        ClearTilesInRange(); // This also sets _isSelectionEnabled = false
+                    }));
                 }
                 else if (_currentSelectionType == SelectionType.Movement)
                 {
@@ -333,16 +345,12 @@ public class TileSelection : MonoBehaviour
             // Rotate towards the next tile first
             Vector3 directionToNextTile = path[i].transform.position - entityToMove.transform.position;
             directionToNextTile.y = 0; // Keep rotation on the Y axis (horizontal plane)
-            if (directionToNextTile != Vector3.zero)
+            if (directionToNextTile != Vector3.zero && characterRotator != null)
             {
-                Vector3 currentOffset = (currentUserType == UserType.Player) ? playerRotationOffset : enemyRotationOffset;
-                Transform transformToRotate = entityToMove.transform; // Default to the main entity transform
-
-                if (currentUserType == UserType.Enemy && enemyModelToRotate != null)
-                {
-                    transformToRotate = enemyModelToRotate; // Use specified model for enemy rotation
-                }
-                yield return StartCoroutine(RotateTowardsAsync(transformToRotate, directionToNextTile, rotationDuration, currentOffset));
+                // Determine the correct UserType for CharacterRotator
+                CharacterRotator.UserType rotatorUserType = (currentUserType == TileSelection.UserType.Player) ? CharacterRotator.UserType.Player : CharacterRotator.UserType.Enemy;
+                // Call the modified RotateTowardsAsync without the explicit offset
+                yield return StartCoroutine(characterRotator.RotateTowardsAsync(entityToMove.transform, directionToNextTile, rotatorUserType, actionRotationDuration));
             }
 
             // Trigger Dash animation before moving to *this* specific tile in the path
@@ -430,22 +438,19 @@ public class TileSelection : MonoBehaviour
         }
     }
 
-    private System.Collections.IEnumerator RotateTowardsAsync(Transform entityTransform, Vector3 direction, float duration, Vector3 offset)
+    private System.Collections.IEnumerator RotateBeforeAttack(TileSettings targetTile, UserType attackerTileSelectionUserType, System.Action onRotationComplete)
     {
-        Quaternion startRotation = entityTransform.rotation;
-        Quaternion targetLookRotation = Quaternion.LookRotation(direction);
-        // Apply the offset to the target rotation
-        Quaternion targetRotation = targetLookRotation * Quaternion.Euler(offset);
-        float elapsedTime = 0f;
-
-        while (elapsedTime < duration)
+        if (characterRotator != null && _tileOccupants != null && targetTile != null && targetTile.tileOccupant != null)
         {
-            elapsedTime += Time.deltaTime;
-            float curveValue = rotationCurve.Evaluate(elapsedTime / duration);
-            entityTransform.rotation = Quaternion.Slerp(startRotation, targetRotation, curveValue);
-            yield return null;
+            // Convert TileSelection.UserType to CharacterRotator.UserType
+            CharacterRotator.UserType rotatorAttackerUserType =
+                (attackerTileSelectionUserType == TileSelection.UserType.Player) ? CharacterRotator.UserType.Player : CharacterRotator.UserType.Enemy;
+            
+            // Ensure _tileOccupants.gameObject.transform is used if _tileOccupants is the entity doing the attack
+            // and targetTile.tileOccupant.transform is the target's transform.
+            yield return StartCoroutine(characterRotator.RotateTowardsTargetAsync(_tileOccupants.transform, targetTile.tileOccupant.transform, rotatorAttackerUserType));
         }
-        entityTransform.rotation = targetRotation; // Ensure it ends exactly at the target rotation
+        onRotationComplete?.Invoke();
     }
 
     public List<TileSettings> GetAllTiles()

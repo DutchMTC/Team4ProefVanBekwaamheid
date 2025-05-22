@@ -22,14 +22,15 @@ public class EnemyAIController : MonoBehaviour
     [SerializeField] private TileOccupants playerOccupants;
     public Image[] powerupDisplayIcons;
     public List<PowerupSpriteMapping> powerupSpriteMappings;
-    [SerializeField] private CharacterAnimationController characterAnimationController; // Added for animations
+    [SerializeField] private CharacterAnimationController characterAnimationController; 
     [SerializeField] private TileSelection _tileSelection;
+    [SerializeField] private CharacterRotator _characterRotator; 
  
     private AttackPowerUp _attackPowerUp;
     private TrapPowerUp _trapPowerUp;
     private DefensePowerUp _defensePowerUp;
     private TileOccupants _enemyOccupants;
-    private GridGenerator _gridGenerator; // Added to get all tiles
+    private GridGenerator _gridGenerator; 
 
     [Header("AI Probabilities")]
     [Range(0f, 1f)]
@@ -59,6 +60,11 @@ public class EnemyAIController : MonoBehaviour
         _trapPowerUp = GetComponent<TrapPowerUp>();
         _defensePowerUp = GetComponent<DefensePowerUp>();
         _enemyOccupants = GetComponent<TileOccupants>();
+        // _characterRotator = GetComponent<CharacterRotator>(); // Removed GetComponent
+        if (_characterRotator == null)
+        {
+            Debug.LogError("EnemyAIController: CharacterRotator reference not assigned in the Inspector!");
+        }
         
         // Attempt to find TileSelection if not assigned
         if (_tileSelection == null)
@@ -413,9 +419,12 @@ public class EnemyAIController : MonoBehaviour
                         }
                         break;
                     case PowerUpInventory.PowerUpType.Sword:
-                        if (_attackPowerUp != null)
+                        if (_attackPowerUp != null && _characterRotator != null && playerOccupants != null)
                         {
                             Debug.Log($"Enemy AI: Executing Attack ({powerupToExecute.State})");
+                            // Rotate towards player before attacking
+                            yield return StartCoroutine(_characterRotator.RotateTowardsTargetAsync(transform, playerOccupants.transform, CharacterRotator.UserType.Enemy));
+                            
                             _attackPowerUp.AttackPowerUpSelected(powerupToExecute.State, TileSelection.UserType.Enemy, playerOccupants);
                             if (characterAnimationController != null)
                             {

@@ -208,6 +208,11 @@ public class PowerUpManager : MonoBehaviour
     /// <param name="instantUpdate">If true, stops animation and snaps visuals to the current state immediately.</param>
     public void UpdatePowerUpVisual(PowerUpInventory.PowerUpType type, bool instantReset = false, bool instantUpdate = false)
     {
+        if (SFXManager.Instance == null)
+        {
+            Debug.LogWarning("SFXManager instance not found. SFX will not play.");
+        }
+
         if (powerUpInventory == null)
         {
             Debug.LogError("PowerUpInventory reference is not set!");
@@ -403,7 +408,11 @@ public class PowerUpManager : MonoBehaviour
                 triggerInstantSwitch = true;
                 // Sprites *during* animation: BG = previous state, Fill = the sprite that was filling *before* the change
                 animBgSprite = GetSpriteForState(sprites, previousState);
-                animFillSprite = GetSpriteForState(sprites, currentState);
+                animFillSprite = GetSpriteForState(sprites, currentState); // This is the sprite of the state we are transitioning TO
+                if (SFXManager.Instance != null)
+                {
+                    SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.PowerUpNextLevelReached);
+                }
             }
             else // Decreased state
             {
@@ -519,8 +528,14 @@ public class PowerUpManager : MonoBehaviour
             elapsedTime += Time.deltaTime;
             float timeFraction = Mathf.Clamp01(elapsedTime / fillAnimationDuration);
             float curveValue = fillAnimationCurve.Evaluate(timeFraction);
-            float currentFill = Mathf.LerpUnclamped(startFillAmount, targetFillAmount, curveValue);
-            image.fillAmount = Mathf.Clamp01(currentFill);
+            float newFill = Mathf.LerpUnclamped(startFillAmount, targetFillAmount, curveValue);
+
+            // Play SFX only if fill amount increases
+            if (newFill > image.fillAmount && SFXManager.Instance != null)
+            {
+                SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.PowerUpCharge);
+            }
+            image.fillAmount = Mathf.Clamp01(newFill);
             yield return null;
         }
 
@@ -575,8 +590,14 @@ public class PowerUpManager : MonoBehaviour
           elapsedTime += Time.deltaTime;
           float timeFraction = Mathf.Clamp01(elapsedTime / duration);
           float curveValue = fillAnimationCurve.Evaluate(timeFraction);
-          float currentFill = Mathf.LerpUnclamped(startFillAmount, targetFillAmount, curveValue);
-          image.fillAmount = Mathf.Clamp01(currentFill);
+          float newFill = Mathf.LerpUnclamped(startFillAmount, targetFillAmount, curveValue);
+
+          // Play SFX only if fill amount increases
+          if (newFill > image.fillAmount && SFXManager.Instance != null)
+          {
+              SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.PowerUpCharge);
+          }
+          image.fillAmount = Mathf.Clamp01(newFill);
           yield return null;
       }
 
@@ -743,6 +764,10 @@ public class PowerUpManager : MonoBehaviour
                 // Any successful use resets count to 0 and visuals instantly
                 _isUsingPowerUp = true;
                 ActivateEffect(type, usageState); // Activate effect based on the state it was used in
+                if (SFXManager.Instance != null)
+                {
+                    SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.UsePowerUp);
+                }
                 powerUpInventory.SetPowerUpCount(type, 0); // Reset count to 0
                 UpdatePowerUpVisual(type, instantReset: true); // Force instant visual reset to Unusable state
                 _isUsingPowerUp = false; // Reset flag AFTER instant update

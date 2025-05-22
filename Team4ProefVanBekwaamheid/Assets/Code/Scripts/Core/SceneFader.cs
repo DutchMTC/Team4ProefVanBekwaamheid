@@ -10,12 +10,16 @@ public class SceneFader : MonoBehaviour
     public bool fadeInOnStart = true;
     public float fadeInDelay = 0f;
 
+    private SFXManager sfxManager;
+
     void Awake()
     {
         if (fadeImage == null)
         {
             CreateFadeImage();
         }
+
+        sfxManager = FindObjectOfType<SFXManager>();
     }
 
     void OnEnable()
@@ -134,6 +138,10 @@ public class SceneFader : MonoBehaviour
         fadeImage.gameObject.SetActive(true);
 
         StartCoroutine(PerformFade(0f, fadeDuration));
+        if (sfxManager != null)
+        {
+            StartCoroutine(sfxManager.FadeMusicVolume(1f, fadeDuration));
+        }
     }
 
     private IEnumerator PerformFade(float targetAlpha, float duration, System.Action onComplete = null)
@@ -214,6 +222,11 @@ public class SceneFader : MonoBehaviour
         c.a = 0f;
         fadeImage.color = c;
         fadeImage.gameObject.SetActive(true);
+
+        if (sfxManager != null)
+        {
+            StartCoroutine(sfxManager.FadeMusicVolume(0f, fadeDuration));
+        }
 
         yield return StartCoroutine(PerformFade(1f, fadeDuration, () => {
             LoadSceneByIdentifier(sceneIdentifier);

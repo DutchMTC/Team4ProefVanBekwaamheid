@@ -4,6 +4,8 @@ using Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps;
 
 public class TileOccupants : MonoBehaviour
 {
+    private GameManager _gameManager; // Added for game state management
+
     [Header("Grid & Occupant Info")]
     [SerializeField] private GridGenerator _gridGenerator;
     public TileSettings.OccupantType myOccupantType;
@@ -41,6 +43,12 @@ public class TileOccupants : MonoBehaviour
             }
         }
         health = maxHealth; // Initialize current health to max health
+
+        _gameManager = FindObjectOfType<GameManager>();
+        if (_gameManager == null)
+        {
+            Debug.LogError("GameManager not found in the scene!", this);
+        }
         
         if (myOccupantType == TileSettings.OccupantType.Player)
         {
@@ -223,15 +231,31 @@ public class TileOccupants : MonoBehaviour
     {
         Debug.Log($"{gameObject.name} has died.", this);
         float destructionDelay = 0f;
-        if (myOccupantType == TileSettings.OccupantType.Player && _animationController != null)
+        if (myOccupantType == TileSettings.OccupantType.Player)
         {
-            _animationController.PlayerDeath();
-            destructionDelay = 2f;
+            if (_animationController != null)
+            {
+                _animationController.PlayerDeath();
+                destructionDelay = 2f;
+            }
+            if (_gameManager != null)
+            {
+                _gameManager.UpdateGameState(GameState.GameOver);
+            }
         }
-        else if (myOccupantType == TileSettings.OccupantType.Enemy && _enemyAIController != null)
+        else if (myOccupantType == TileSettings.OccupantType.Enemy)
         {
-            _enemyAIController.PlayDeathAnimation();
-            destructionDelay = 2f; // Assuming enemy death animation also takes time
+            if (_enemyAIController != null)
+            {
+                _enemyAIController.PlayDeathAnimation();
+                destructionDelay = 2f; // Assuming enemy death animation also takes time
+            }
+            if (_gameManager != null)
+            {
+                // This assumes any enemy death leads to a win.
+                // If multiple enemies exist, GameManager would need to check if all are defeated.
+                _gameManager.UpdateGameState(GameState.Win);
+            }
         }
         // Optional: Notify healthBarUI or other systems about death
         // if (healthBarUI != null) healthBarUI.HandleDeath();
@@ -327,6 +351,11 @@ public class TileOccupants : MonoBehaviour
             // Move to the new position
             Vector3 selectedTilePos = _selectedTile.transform.position;
             transform.position = new Vector3(selectedTilePos.x, transform.position.y, selectedTilePos.z);
+
+            if (SFXManager.Instance != null)
+            {
+                SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.Dash);
+            }
             
             // Handle trap if present
             if (hasTrap && trapObject != null)

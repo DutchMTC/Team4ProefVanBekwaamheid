@@ -119,6 +119,11 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Matching phase!");
 
+        if (SFXManager.Instance != null)
+        {
+            SFXManager.Instance.PlayMusic(SFXManager.Instance.matchPhaseMusic);
+        }
+
         // Hide cover if not the initial game start
         if (_previousGameState != GameState.Start)
         {
@@ -184,6 +189,11 @@ public class GameManager : MonoBehaviour
     public void HandlePlayerTurn()
     {
         Debug.Log("Player's turn!");
+
+        if (SFXManager.Instance != null)
+        {
+            SFXManager.Instance.PlayMusic(SFXManager.Instance.battlePhaseMusic);
+        }
 
         if (_matchGridCoverAnimator != null)
         {
@@ -256,12 +266,22 @@ public class GameManager : MonoBehaviour
     {
         // Handle win logic here
         Debug.Log("You win!");
+        if (SFXManager.Instance != null)
+        {
+            SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.EnemyDeath);
+            SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.Win);
+        }
     }
 
     private void HandleGameOver()
     {
         // Handle game over logic here
         Debug.Log("Game Over!");
+        if (SFXManager.Instance != null)
+        {
+            SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.PlayerDeath);
+            SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.GameOver);
+        }
     }
 
     private void HandlePause()

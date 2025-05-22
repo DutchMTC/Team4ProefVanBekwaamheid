@@ -6583,7 +6583,7 @@ MonoBehaviour:
       supercharged: {fileID: 21300000, guid: bf7a74949fc5fd746b6b9cab2cf45f30, type: 3}
   powerupDisplayParent: {fileID: 720193902}
   characterAnimationController: {fileID: 154450978}
-  _tileSelection: {fileID: 0}
+  _tileSelection: {fileID: 1557919039}
   verticalOffset: 0
   probabilityToSelectThreePowerups: 0.2
   probabilityCharged: 0.4
@@ -11037,11 +11037,12 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1028325834}
+  - {fileID: 298717137}
   - {fileID: 1680619392}
+  - {fileID: 1904655126}
   - {fileID: 269116826}
   - {fileID: 31519539}
   - {fileID: 233285971}
-  - {fileID: 298717137}
   - {fileID: 147858572}
   - {fileID: 154450976}
   m_Father: {fileID: 0}
@@ -11483,6 +11484,76 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 89.600006}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1904655125
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1904655126}
+  - component: {fileID: 1904655127}
+  m_Layer: 0
+  m_Name: SFX Manager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1904655126
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1904655125}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1873409516}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1904655127
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1904655125}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 230c283fad52a754eb4cfee5a8a36980, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mainMenuMusic: {fileID: 8300000, guid: c2fee7a952bc524459e7c522a31c25bd, type: 3}
+  matchPhaseMusic: {fileID: 8300000, guid: 55333782cd1922b479834dcd3c84c09c, type: 3}
+  battlePhaseMusic: {fileID: 8300000, guid: deae3079e1419ee42b423d981d0ec9ca, type: 3}
+  winSFX: {fileID: 8300000, guid: e0c064e7d308d774faced9b76a5720eb, type: 3}
+  gameOverSFX: {fileID: 8300000, guid: 46ca3722eee5f0347b388170ed1186ca, type: 3}
+  enemyDeathSFX: {fileID: 8300000, guid: 65776e58917fcec419822a7cb6651377, type: 3}
+  playerDeathSFX: {fileID: 8300000, guid: 85e27bf64136b7042be6733e6bf0ba2c, type: 3}
+  attackUsableSFX: {fileID: 8300000, guid: c5c78a7437f2efa4286896ba39956a76, type: 3}
+  attackChargedSFX: {fileID: 8300000, guid: 5c8dd852b27f54241a1e17c3e42f4365, type: 3}
+  attackSuperchargedSFX: {fileID: 8300000, guid: 2d3c574a08c9f044ca5e8ac61fb7fbd7,
+    type: 3}
+  idleSFX: {fileID: 0}
+  dashSFX: {fileID: 8300000, guid: 2d5b6e67c359b5a44b090135808a249c, type: 3}
+  dashStopSFX: {fileID: 0}
+  defenseSFX: {fileID: 0}
+  trapThrowSFX: {fileID: 0}
+  entranceSFX: {fileID: 0}
+  stuckSFX: {fileID: 0}
+  damageSFX: {fileID: 0}
+  startSFX: {fileID: 0}
+  match3SFX: {fileID: 8300000, guid: 524eec57fd9572d4b9a4dfa4451c6ccf, type: 3}
+  match4SFX: {fileID: 8300000, guid: 330ddb0bed40f2e4d86f52bbe19e891e, type: 3}
+  match5PlusSFX: {fileID: 8300000, guid: 76a2c4f16764d224795d0eb28592cc75, type: 3}
+  usePowerUpSFX: {fileID: 0}
+  powerUpChargeSFX: {fileID: 0}
+  powerUpNextLevelReachedSFX: {fileID: 0}
 --- !u!1 &1937977753
 GameObject:
   m_ObjectHideFlags: 0

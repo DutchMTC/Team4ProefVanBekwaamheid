@@ -735,6 +735,72 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 825277176}
   m_CullTransparentMesh: 1
+--- !u!1 &923557099
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 923557101}
+  - component: {fileID: 923557100}
+  m_Layer: 0
+  m_Name: SFX Manager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &923557100
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 923557099}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 230c283fad52a754eb4cfee5a8a36980, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mainMenuMusic: {fileID: 8300000, guid: c2fee7a952bc524459e7c522a31c25bd, type: 3}
+  matchPhaseMusic: {fileID: 8300000, guid: 55333782cd1922b479834dcd3c84c09c, type: 3}
+  battlePhaseMusic: {fileID: 8300000, guid: deae3079e1419ee42b423d981d0ec9ca, type: 3}
+  winSFX: {fileID: 8300000, guid: e0c064e7d308d774faced9b76a5720eb, type: 3}
+  gameOverSFX: {fileID: 8300000, guid: 46ca3722eee5f0347b388170ed1186ca, type: 3}
+  attackUsableSFX: {fileID: 8300000, guid: 7190bf4e64f870042aa638667c98fca3, type: 3}
+  attackChargedSFX: {fileID: 0}
+  attackSuperchargedSFX: {fileID: 0}
+  idleSFX: {fileID: 0}
+  dashSFX: {fileID: 8300000, guid: 2d5b6e67c359b5a44b090135808a249c, type: 3}
+  dashStopSFX: {fileID: 0}
+  deathSFX: {fileID: 8300000, guid: 42d1bbfc73376074e8f9676f71f1491e, type: 3}
+  defenseSFX: {fileID: 0}
+  trapThrowSFX: {fileID: 0}
+  entranceSFX: {fileID: 0}
+  stuckSFX: {fileID: 0}
+  damageSFX: {fileID: 0}
+  startSFX: {fileID: 0}
+  matchSFX: {fileID: 0}
+  usePowerUpSFX: {fileID: 0}
+  powerUpChargeSFX: {fileID: 0}
+  powerUpNextLevelReachedSFX: {fileID: 0}
+--- !u!4 &923557101
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 923557099}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1045691155
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1633,3 +1699,4 @@ SceneRoots:
   - {fileID: 112877720}
   - {fileID: 1185947864}
   - {fileID: 2136411720}
+  - {fileID: 923557101}

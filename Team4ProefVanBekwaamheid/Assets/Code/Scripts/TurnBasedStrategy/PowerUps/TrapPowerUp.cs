@@ -13,6 +13,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
         [SerializeField] private int _decoyAmount; // Base damage of the trap
         [SerializeField] private GameObject _trapPrefab; // The prefab to place as a trap
         [SerializeField] private GameObject _leafPrefab; // The prefab to place as a trap
+        [SerializeField] private GameObject _trapLimitReachedIndicator; // Indicator for max traps reached
         private int _currentDamage; // Current damage of the trap, modified by power-up state
         private TileSelection _tileSelection; // Reference to the TileSelection script
         private TileOccupants _tileOccupants; // The user of the powerup
@@ -41,6 +42,14 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
             if (_trapPrefab == null)
             {
                 Debug.LogError("Trap Prefab is not assigned in the TrapPowerUp script!");
+            }
+            if (_trapLimitReachedIndicator == null)
+            {
+                Debug.LogWarning("Trap Limit Reached Indicator is not assigned in the TrapPowerUp script. UI updates for trap limit will not be shown.");
+            }
+            else
+            {
+                _trapLimitReachedIndicator.SetActive(false); // Initially hide the indicator
             }
         }
 
@@ -305,6 +314,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
         {
             _activeTrapCount++;
             Debug.Log($"TrapPowerUp: Active trap count increased to {_activeTrapCount}");
+            UpdateTrapLimitIndicator();
         }
 
         // Method to decrement trap count when a trap is destroyed
@@ -312,6 +322,17 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
         {
             _activeTrapCount = Mathf.Max(0, _activeTrapCount - 1);
             Debug.Log($"TrapPowerUp: Active trap count decreased to {_activeTrapCount}");
+            UpdateTrapLimitIndicator();
+        }
+
+        // Method to update the trap limit indicator
+        private static void UpdateTrapLimitIndicator()
+        {
+            TrapPowerUp instance = FindObjectOfType<TrapPowerUp>();
+            if (instance != null && instance._trapLimitReachedIndicator != null)
+            {
+                instance._trapLimitReachedIndicator.SetActive(_activeTrapCount >= MAX_TRAPS);
+            }
         }
 
         void OnDestroy()

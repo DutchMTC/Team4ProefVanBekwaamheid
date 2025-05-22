@@ -6,6 +6,7 @@ using System.Collections.Generic; // Added for List<T>
 public class TileOccupants : MonoBehaviour
 {
     private GameManager _gameManager; // Added for game state management
+    private VignetteController _vignetteController; // Added for vignette effects
 
     [Header("Grid & Occupant Info")]
     [SerializeField] private GridGenerator _gridGenerator;
@@ -36,9 +37,10 @@ public class TileOccupants : MonoBehaviour
     // public UnityAction<float> OnHealthChanged; // Alternative: Use UnityEvent
     private CharacterAnimationController _animationController; // Reference to the main character animation controller
     private EnemyAIController _enemyAIController; // Used for Enemy animations
- 
+    
     void Awake()
     {
+        _vignetteController = FindObjectOfType<VignetteController>(); // Find the VignetteController
         // Ensure we have a reference to the GridGenerator as early as possible
         if (_gridGenerator == null)
         {
@@ -161,6 +163,10 @@ public class TileOccupants : MonoBehaviour
                 else if (myOccupantType == TileSettings.OccupantType.Player && _animationController != null)
                 {
                     _animationController.PlayerDamage();
+                    if (_vignetteController != null)
+                    {
+                        _vignetteController.PlayDamageVignette();
+                    }
                 }
             }
  

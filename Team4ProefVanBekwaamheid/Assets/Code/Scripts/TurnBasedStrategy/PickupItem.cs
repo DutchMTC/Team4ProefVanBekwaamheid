@@ -5,6 +5,12 @@ public class PickupItem : MonoBehaviour
     public ItemData itemData;
     // public System.Action<PickupItem> OnItemPickedUp; // This will be handled by direct call to ItemManager
     private Vector2Int _gridCoords; // To store item's location for ItemManager
+    private VignetteController _vignetteController;
+
+    void Awake()
+    {
+        _vignetteController = FindObjectOfType<VignetteController>();
+    }
 
     public void Initialize(ItemData data, Vector2Int gridCoords)
     {
@@ -50,6 +56,10 @@ public class PickupItem : MonoBehaviour
                 if (occupant != null)
                 {
                     occupant.Heal(30);
+                    if (_vignetteController != null)
+                    {
+                        _vignetteController.PlayHealVignette();
+                    }
                 }
                 break;
             case ItemType.Armor:

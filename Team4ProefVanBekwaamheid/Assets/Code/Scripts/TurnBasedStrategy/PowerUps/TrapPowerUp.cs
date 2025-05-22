@@ -14,6 +14,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
         [SerializeField] private GameObject _trapPrefab; // The prefab to place as a trap
         [SerializeField] private GameObject _leafPrefab; // The prefab to place as a trap
         [SerializeField] private GameObject _trapLimitReachedIndicator; // Indicator for max traps reached
+        private PowerUpState _currentPowerUpState;
         private int _currentDamage; // Current damage of the trap, modified by power-up state
         private TileSelection _tileSelection; // Reference to the TileSelection script
         private TileOccupants _tileOccupants; // The user of the powerup
@@ -66,8 +67,10 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
         // Removed Update method with debug key press
 
         // Added optional targetOccupant parameter for AI
-        public void TrapPowerUpSelected(PowerUpState _state, TileSelection.UserType userType, TileOccupants targetOccupant = null)
+        public void TrapPowerUpSelected(PowerUpState state, TileSelection.UserType userType, TileOccupants targetOccupant = null)
         {
+            _currentPowerUpState = state; // Store the state
+            
             // First check if we can place more traps
             if (!CanPlaceTrap)
             {
@@ -78,7 +81,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
             _currentUserType = userType; // Store user type
             _targetOccupantForAI = targetOccupant; // Store target for AI
 
-            switch (_state)
+            switch (state)
             {
                 case PowerUpState.Usable:
                     _range = 1;
@@ -184,14 +187,17 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
                 GameObject trapInstance = Instantiate(_trapPrefab, spawnPosition, _trapPrefab.transform.rotation);
                 trapInstance.transform.SetParent(targetTile.transform, true);
 
-                // Initialize the trap with current damage value
+                // Initialize the trap with current damage value and power-up state
                 var trapBehaviour = trapInstance.GetComponent<TrapBehaviour>();
                 if (trapBehaviour != null)
                 {
-                    trapBehaviour.Initialize(_currentDamage);
-                    IncrementTrapCount();                    // If we're in charged or supercharged state, add leaf on top of trap and a decoy
+                    trapBehaviour.Initialize(_currentDamage, _currentPowerUpState);
+                    IncrementTrapCount();
+                    
+                    // If we're in charged or supercharged state, add leaf on top of trap and a decoy
                     if (_decoyAmount > 0 && _leafPrefab != null)
-                    {                        // Add leaf on top of trap
+                    {
+                        // Add leaf on top of trap
                         GameObject leafOnTrap = Instantiate(_leafPrefab, spawnPosition, _leafPrefab.transform.rotation);
                         leafOnTrap.transform.SetParent(trapInstance.transform, true);
                         // Adjust the local position after parenting

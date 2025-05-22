@@ -1,5 +1,6 @@
 using UnityEngine;
 using Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps;
+using System.Collections.Generic; // Added for List<T>
 // Potentially add: using UnityEngine.Events; if you want to use UnityEvents for damage.
 
 public class TileOccupants : MonoBehaviour
@@ -19,6 +20,10 @@ public class TileOccupants : MonoBehaviour
     [SerializeField] private int health = 30; // Current health
     private float _damageReduction = 0f;
     private bool hasArmor = false; // Added for armor mechanic
+
+    [Header("Armor Visuals (Player Only)")]
+    [SerializeField] private List<GameObject> armorPlayerVisualsToEnable;
+    [SerializeField] private List<GameObject> armorPlayerVisualsToDisable;
 
     [Header("Damage Delays")]
     [SerializeField] private float usableAttackDamageDelay = 0f;
@@ -103,9 +108,14 @@ public class TileOccupants : MonoBehaviour
             {
                 healthBarUI.UpdateArmorStatus(false);
             }
+            // If Player, toggle armor visuals off
+            if (myOccupantType == TileSettings.OccupantType.Player)
+            {
+                ToggleArmorVisuals(false);
+            }
             yield break; // No health damage, no animation, no delay.
         }
- 
+
         // 2. CALCULATE REDUCED DAMAGE
         int reducedDamage = Mathf.RoundToInt(amount * (1f - _damageReduction));
  
@@ -169,6 +179,30 @@ public class TileOccupants : MonoBehaviour
         if (healthBarUI != null)
         {
             healthBarUI.UpdateArmorStatus(true);
+        }
+        // If Player, toggle armor visuals on
+        if (myOccupantType == TileSettings.OccupantType.Player)
+        {
+            ToggleArmorVisuals(true);
+        }
+    }
+
+    private void ToggleArmorVisuals(bool armorActive)
+    {
+        if (armorPlayerVisualsToEnable != null)
+        {
+            foreach (GameObject go in armorPlayerVisualsToEnable)
+            {
+                if (go != null) go.SetActive(armorActive);
+            }
+        }
+
+        if (armorPlayerVisualsToDisable != null)
+        {
+            foreach (GameObject go in armorPlayerVisualsToDisable)
+            {
+                if (go != null) go.SetActive(!armorActive);
+            }
         }
     }
 

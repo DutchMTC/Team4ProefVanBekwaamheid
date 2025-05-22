@@ -11539,21 +11539,20 @@ MonoBehaviour:
   attackChargedSFX: {fileID: 8300000, guid: 5c8dd852b27f54241a1e17c3e42f4365, type: 3}
   attackSuperchargedSFX: {fileID: 8300000, guid: 2d3c574a08c9f044ca5e8ac61fb7fbd7,
     type: 3}
-  idleSFX: {fileID: 0}
   dashSFX: {fileID: 8300000, guid: 2d5b6e67c359b5a44b090135808a249c, type: 3}
-  dashStopSFX: {fileID: 0}
   defenseSFX: {fileID: 0}
   trapThrowSFX: {fileID: 0}
-  entranceSFX: {fileID: 0}
-  stuckSFX: {fileID: 0}
-  damageSFX: {fileID: 0}
-  startSFX: {fileID: 0}
+  stuckSFX: {fileID: 8300000, guid: fd944c2f7d40d864cb5be553a89bbe4e, type: 3}
+  damageSFX: {fileID: 8300000, guid: 7190bf4e64f870042aa638667c98fca3, type: 3}
   match3SFX: {fileID: 8300000, guid: 524eec57fd9572d4b9a4dfa4451c6ccf, type: 3}
   match4SFX: {fileID: 8300000, guid: 330ddb0bed40f2e4d86f52bbe19e891e, type: 3}
   match5PlusSFX: {fileID: 8300000, guid: 76a2c4f16764d224795d0eb28592cc75, type: 3}
   usePowerUpSFX: {fileID: 0}
   powerUpChargeSFX: {fileID: 0}
   powerUpNextLevelReachedSFX: {fileID: 0}
+  playGameSFX: {fileID: 8300000, guid: 9f441db4ce0bc244da33b169cf71e2b3, type: 3}
+  pickupArmorSFX: {fileID: 8300000, guid: d720e5c4e7712e145a0360698fdfe785, type: 3}
+  pickupHealSFX: {fileID: 8300000, guid: 81813b34ae2eaca41870278aa7d8f071, type: 3}
 --- !u!1 &1937977753
 GameObject:
   m_ObjectHideFlags: 0

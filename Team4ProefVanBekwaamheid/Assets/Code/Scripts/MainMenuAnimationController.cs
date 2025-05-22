@@ -73,6 +73,10 @@ public class MainMenuAnimationController : MonoBehaviour
     public void StartGame()
     {
         Debug.Log("registerd"); // Reverted to original, including typo if it was there
+        if (SFXManager.Instance != null)
+        {
+            SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.PlayGame);
+        }
         if (cameraAnimator != null)
         {
             cameraAnimator.SetTrigger("Start");

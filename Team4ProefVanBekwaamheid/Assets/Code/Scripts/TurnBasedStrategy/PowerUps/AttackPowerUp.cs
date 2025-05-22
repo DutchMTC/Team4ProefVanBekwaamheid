@@ -117,6 +117,23 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
 
             if (targetTile != null && targetTile.occupantType == expectedTargetType)
             {
+                // Play SFX based on power-up state
+                if (SFXManager.Instance != null)
+                {
+                    switch (_currentPowerUpState)
+                    {
+                        case PowerUpState.Usable:
+                            SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.AttackUsable);
+                            break;
+                        case PowerUpState.Charged:
+                            SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.AttackCharged);
+                            break;
+                        case PowerUpState.Supercharged:
+                            SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.AttackSupercharged);
+                            break;
+                    }
+                }
+
                 // Trigger animation before dealing damage
                 if (_currentUserType == TileSelection.UserType.Player && _animationController != null)
                 {

@@ -114,6 +114,25 @@ public class ItemManager : MonoBehaviour
             return;
         }
 
+        // Play SFX based on item type
+        PickupItem pickupScript = itemObject.GetComponent<PickupItem>();
+        if (pickupScript != null && pickupScript.itemData != null && SFXManager.Instance != null)
+        {
+            switch (pickupScript.itemData.itemType)
+            {
+                case ItemType.Heal:
+                    SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.PickupHeal);
+                    break;
+                case ItemType.Armor:
+                    SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.PickupArmor);
+                    break;
+                default:
+                    Debug.LogWarning($"ItemManager: Unknown itemType {pickupScript.itemData.itemType} for SFX.");
+                    break;
+            }
+        }
+
+
         // Mark the tile as unoccupied in TileSettings
         TileSettings tileSettings = GetTileSettingsAt(gridCoords);
         if (tileSettings != null && tileSettings.tileOccupant == itemObject)

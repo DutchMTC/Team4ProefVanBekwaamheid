@@ -12,33 +12,29 @@ public class SFXManager : MonoBehaviour
     public AudioClip battlePhaseMusic;
 
     [Header("SFX")]
-    public AudioClip winSFX; // Added back
-    public AudioClip gameOverSFX; // Added back
+    public AudioClip winSFX;
+    public AudioClip gameOverSFX; 
     public AudioClip enemyDeathSFX;
     public AudioClip playerDeathSFX;
     public AudioClip attackUsableSFX;
     public AudioClip attackChargedSFX;
     public AudioClip attackSuperchargedSFX;
-    public AudioClip idleSFX;
     public AudioClip dashSFX;
-    public AudioClip dashStopSFX;
-    // public AudioClip deathSFX; // Removed generic deathSFX
     public AudioClip defenseSFX;
     public AudioClip trapThrowSFX;
-    public AudioClip entranceSFX;
     public AudioClip stuckSFX;
     public AudioClip damageSFX;
-    public AudioClip startSFX;
-    // public AudioClip matchSFX; // Replaced by specific match SFXs
     public AudioClip match3SFX;
     public AudioClip match4SFX;
     public AudioClip match5PlusSFX;
     public AudioClip usePowerUpSFX;
     public AudioClip powerUpChargeSFX;
     public AudioClip powerUpNextLevelReachedSFX;
+    public AudioClip playGameSFX; 
+    public AudioClip pickupArmorSFX; 
+    public AudioClip pickupHealSFX;
 
     private AudioSource musicSource;
-    // private AudioSource sfxSource; // Removed: SFX will use temporary AudioSources
 
     public enum ActionType
     {
@@ -47,24 +43,23 @@ public class SFXManager : MonoBehaviour
         AttackSupercharged,
         Idle,
         Dash,
-        DashStop,
         PlayerDeath,
         EnemyDeath,
-        Win,         // Added
-        GameOver,    // Added
+        Win,        
+        GameOver,    
         Defense,
         TrapThrow,
-        Entrance,
         Stuck,
         Damage,
-        Start,
-        // Match, // Replaced by specific match SFXs
         Match3,
         Match4,
         Match5Plus,
         UsePowerUp,
         PowerUpCharge,
-        PowerUpNextLevelReached
+        PowerUpNextLevelReached,
+        PlayGame, 
+        PickupArmor, 
+        PickupHeal 
     }
 
     void Awake()
@@ -137,14 +132,8 @@ public class SFXManager : MonoBehaviour
             case ActionType.AttackSupercharged:
                 clipToPlay = attackSuperchargedSFX;
                 break;
-            case ActionType.Idle:
-                clipToPlay = idleSFX;
-                break;
             case ActionType.Dash:
                 clipToPlay = dashSFX;
-                break;
-            case ActionType.DashStop:
-                clipToPlay = dashStopSFX;
                 break;
             case ActionType.PlayerDeath:
                 clipToPlay = playerDeathSFX;
@@ -164,21 +153,12 @@ public class SFXManager : MonoBehaviour
             case ActionType.TrapThrow:
                 clipToPlay = trapThrowSFX;
                 break;
-            case ActionType.Entrance:
-                clipToPlay = entranceSFX;
-                break;
             case ActionType.Stuck:
                 clipToPlay = stuckSFX;
                 break;
             case ActionType.Damage:
                 clipToPlay = damageSFX;
                 break;
-            case ActionType.Start:
-                clipToPlay = startSFX;
-                break;
-            // case ActionType.Match: // Replaced by specific match SFXs
-            //     clipToPlay = matchSFX;
-            //     break;
             case ActionType.Match3:
                 clipToPlay = match3SFX;
                 break;
@@ -196,6 +176,15 @@ public class SFXManager : MonoBehaviour
                 break;
             case ActionType.PowerUpNextLevelReached:
                 clipToPlay = powerUpNextLevelReachedSFX;
+                break;
+            case ActionType.PlayGame:
+                clipToPlay = playGameSFX;
+                break;
+            case ActionType.PickupArmor:
+                clipToPlay = pickupArmorSFX;
+                break;
+            case ActionType.PickupHeal:
+                clipToPlay = pickupHealSFX;
                 break;
         }
         PlaySFX(clipToPlay);

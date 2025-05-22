@@ -774,15 +774,11 @@ MonoBehaviour:
   attackUsableSFX: {fileID: 8300000, guid: 7190bf4e64f870042aa638667c98fca3, type: 3}
   attackChargedSFX: {fileID: 0}
   attackSuperchargedSFX: {fileID: 0}
-  idleSFX: {fileID: 0}
   dashSFX: {fileID: 8300000, guid: 2d5b6e67c359b5a44b090135808a249c, type: 3}
-  dashStopSFX: {fileID: 0}
   defenseSFX: {fileID: 0}
   trapThrowSFX: {fileID: 0}
-  entranceSFX: {fileID: 0}
   stuckSFX: {fileID: 0}
   damageSFX: {fileID: 0}
-  startSFX: {fileID: 0}
   match3SFX: {fileID: 0}
   match4SFX: {fileID: 0}
   match5PlusSFX: {fileID: 0}
@@ -790,6 +786,8 @@ MonoBehaviour:
   powerUpChargeSFX: {fileID: 0}
   powerUpNextLevelReachedSFX: {fileID: 0}
   playGameSFX: {fileID: 8300000, guid: 9f441db4ce0bc244da33b169cf71e2b3, type: 3}
+  pickupArmorSFX: {fileID: 0}
+  pickupHealSFX: {fileID: 0}
 --- !u!4 &923557101
 Transform:
   m_ObjectHideFlags: 0
@@ -1111,7 +1109,7 @@ RectTransform:
   m_GameObject: {fileID: 1251682406}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.8, y: 0.8, z: 0.8}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 207978056}
@@ -1119,7 +1117,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -774.99}
+  m_AnchoredPosition: {x: 0, y: -724}
   m_SizeDelta: {x: 981, y: 421}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1251682408

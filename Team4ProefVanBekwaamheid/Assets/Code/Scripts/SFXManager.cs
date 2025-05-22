@@ -31,8 +31,9 @@ public class SFXManager : MonoBehaviour
     public AudioClip powerUpChargeSFX;
     public AudioClip powerUpNextLevelReachedSFX;
     public AudioClip playGameSFX; 
-    public AudioClip pickupArmorSFX; 
+    public AudioClip pickupArmorSFX;
     public AudioClip pickupHealSFX;
+    public AudioClip armorBreakSFX;
 
     private AudioSource musicSource;
 
@@ -58,8 +59,9 @@ public class SFXManager : MonoBehaviour
         PowerUpCharge,
         PowerUpNextLevelReached,
         PlayGame, 
-        PickupArmor, 
-        PickupHeal 
+        PickupArmor,
+        PickupHeal,
+        ArmorBreak
     }
 
     void Awake()
@@ -185,6 +187,9 @@ public class SFXManager : MonoBehaviour
                 break;
             case ActionType.PickupHeal:
                 clipToPlay = pickupHealSFX;
+                break;
+            case ActionType.ArmorBreak:
+                clipToPlay = armorBreakSFX;
                 break;
         }
         PlaySFX(clipToPlay);

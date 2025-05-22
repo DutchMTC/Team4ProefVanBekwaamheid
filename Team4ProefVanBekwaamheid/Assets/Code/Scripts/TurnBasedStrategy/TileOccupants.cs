@@ -113,6 +113,10 @@ public class TileOccupants : MonoBehaviour
             {
                 ToggleArmorVisuals(false);
             }
+            if (SFXManager.Instance != null)
+            {
+                SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.ArmorBreak);
+            }
             yield break; // No health damage, no animation, no delay.
         }
 

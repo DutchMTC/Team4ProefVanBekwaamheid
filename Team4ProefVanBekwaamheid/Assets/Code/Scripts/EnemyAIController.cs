@@ -326,6 +326,9 @@ public class EnemyAIController : MonoBehaviour
         _movementWasChosen = false; // Reset movement selection state
         _hasMovedThisTurn = false; // Reset movement completion state
         
+        // Reset any trap interruption flag at the start of enemy turn
+        TrapBehaviour.ResetTrapInterrupt();
+        
         if (chosenPowerups.Count == 0)
         {
             Debug.Log("Enemy AI: No powerups chosen to execute.");
@@ -350,13 +353,13 @@ public class EnemyAIController : MonoBehaviour
 
         List<int> executedIconIndices = new List<int>();        foreach (var priorityType in priorityOrder)
         {
-            // If a trap was triggered, stop executing power-ups
-            if (_trapTriggered)
+            // If enemy hit a trap, stop all remaining actions
+            if (TrapBehaviour.EnemyTurnInterruptedByTrap)
             {
-                Debug.Log("Enemy AI: Stopping power-up execution due to trap trigger");
+                Debug.LogWarning("EnemyAIController: Enemy turn interrupted by trap! Ending turn immediately.");
                 yield break;
             }
-            
+
             int chosenIndex = chosenPowerups.FindIndex(p => p.Type == priorityType);
 
             if (chosenIndex != -1)
@@ -385,14 +388,14 @@ public class EnemyAIController : MonoBehaviour
                                     {                                        if (_tileSelection.pathVisualizer != null)
                                         {
                                             _tileSelection.pathVisualizer.ShowPath(path);
-                                        }                                        // Pass the EnemyAIController's own characterAnimationController instance
-                                        yield return StartCoroutine(_tileSelection.MoveAlongPath(path, _enemyOccupants.gameObject, 
+                                        }                                        yield return StartCoroutine(_tileSelection.MoveAlongPath(path, _enemyOccupants.gameObject, 
                                             _enemyOccupants, TileSelection.UserType.Enemy, characterAnimationController));
-                                            
-                                        // If a trap was triggered during movement, exit immediately
-                                        if (_trapTriggered)
+                                                
+                                        // Check if we hit a trap
+                                        if (TrapBehaviour.EnemyTurnInterruptedByTrap)
                                         {
-                                            yield break;
+                                            Debug.Log("EnemyAIController: Movement interrupted by trap!");
+                                            yield break; // Stop movement and end turn
                                         }
                                         _hasMovedThisTurn = true;
                                         executedThisPowerup = true;

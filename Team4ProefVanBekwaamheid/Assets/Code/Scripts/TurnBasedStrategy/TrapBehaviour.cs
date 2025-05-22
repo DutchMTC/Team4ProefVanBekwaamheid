@@ -14,6 +14,10 @@ public class TrapBehaviour : MonoBehaviour
     private int _trapDamage;
     private PowerUpState _currentPowerUpState;
 
+    // Add static flag for enemy turn interruption
+    public static bool EnemyTurnInterruptedByTrap { get; private set; } = false;
+    public static void ResetTrapInterrupt() => EnemyTurnInterruptedByTrap = false;
+
     public void Initialize(int damage, PowerUpState powerUpState)
     {
         _trapDamage = damage;
@@ -84,6 +88,17 @@ public class TrapBehaviour : MonoBehaviour
             }
         }
 
+        // Set the interruption flag immediately for enemy
+        if (character.myOccupantType == TileSettings.OccupantType.Enemy)
+        {
+            EnemyTurnInterruptedByTrap = true;
+            var enemyAI = FindObjectOfType<EnemyAIController>();
+            if (enemyAI != null)
+            {
+                enemyAI.OnTrapTriggered();
+            }
+        }
+
         string characterType = character.myOccupantType == TileSettings.OccupantType.Player ? "Player" : "Enemy";
         Debug.Log($"TrapBehaviour: {characterType} is standing on trap at position ({_parentTile.gridY}, {_parentTile.gridX})");
 
@@ -101,20 +116,15 @@ public class TrapBehaviour : MonoBehaviour
         }
     }    private IEnumerator TrapActivationSequence(TileOccupants character, LeafBehaviour leafBehaviour)
     {
-        // First, start the leaf fade-out animation
-        leafBehaviour.StartFadeOut(1f);
+        // First, apply damage immediately
+        character.TakeDamage(_trapDamage);
         
-        // Wait for the leaf fade-out animation to complete (1 second + small buffer)
+        // Then start animations
+        leafBehaviour.StartFadeOut(1f);
         yield return new WaitForSeconds(1.1f);
         
-        // Play the trap animation
         Animationlevel1();
-        
-        // Wait for the trap animation to complete (assuming animation is 1 second, adjust as needed)
         yield return new WaitForSeconds(1.0f);
-        
-        // Now that both animations are complete, apply trap effects
-        character.TakeDamage(_trapDamage);
         
         // Process the remaining trap effects (game state changes, etc.)
         GameManager gameManager = GameManager.Instance;
@@ -144,20 +154,16 @@ public class TrapBehaviour : MonoBehaviour
 
     private IEnumerator ProcessTrapEffectSequence(TileOccupants character)
     {
-        // Play the trap animation first
-        Animationlevel1();
-        
-        // Wait for the trap animation to complete (assuming animation is 1 second, adjust as needed)
-        yield return new WaitForSeconds(1.0f);
-        
-        // Apply trap effects (damage, etc.)
+        // Apply damage immediately
         character.TakeDamage(_trapDamage);
+        
+        // Then play animations
+        Animationlevel1();
+        yield return new WaitForSeconds(1.0f);
 
-        // Get reference to GameManager
         GameManager gameManager = GameManager.Instance;
         if (gameManager != null)
         {
-            // Switch game state based on who triggered the trap
             if (character.myOccupantType == TileSettings.OccupantType.Player)
             {
                 Debug.Log("TrapBehaviour: Player triggered trap, switching to Enemy phase");
@@ -168,10 +174,6 @@ public class TrapBehaviour : MonoBehaviour
                 Debug.Log("TrapBehaviour: Enemy triggered trap, switching to Matching phase");
                 gameManager.UpdateGameState(GameState.Matching);
             }
-        }
-        else
-        {
-            Debug.LogError("TrapBehaviour: Could not find GameManager instance!");
         }
 
         // Clean up the trap

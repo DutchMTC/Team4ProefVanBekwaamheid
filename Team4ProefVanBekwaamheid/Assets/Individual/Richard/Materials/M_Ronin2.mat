@@ -109,7 +109,7 @@ Material:
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:
-    - _AmbientColor: {r: 0.4056604, g: 0.12055002, b: 0.17113407, a: 0}
+    - _AmbientColor: {r: 0.5188679, g: 0.5188679, b: 0.5188679, a: 0}
     - _CameraFadeParams: {r: 0, g: Infinity, b: 0, a: 0}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _ColorAddSubDiff: {r: 0, g: 0, b: 0, a: 0}

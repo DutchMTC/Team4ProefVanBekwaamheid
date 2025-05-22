@@ -385,7 +385,7 @@ public class GameManager : MonoBehaviour
         {
             _phaseTransitionImage.sprite = phaseSprite;
             _phaseTransitionImage.gameObject.SetActive(true); // Ensure it's active
-            _phaseTransitionAnimator.SetTrigger("AN_PhaseSwitch");
+            _phaseTransitionAnimator.SetTrigger("PhaseSwitch");
         }
         else
         {

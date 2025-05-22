@@ -6724,6 +6724,7 @@ MonoBehaviour:
   usableAttackDamageDelay: 0.7
   chargedAttackDamageDelay: 0.7
   superchargedAttackDamageDelay: 0.85
+  trapDamageDelay: 1.75
   healthBarUI: {fileID: 1937977755}
 --- !u!65 &939605195
 BoxCollider:
@@ -9497,6 +9498,7 @@ MonoBehaviour:
   usableAttackDamageDelay: 0.7
   chargedAttackDamageDelay: 0.7
   superchargedAttackDamageDelay: 0.85
+  trapDamageDelay: 1.75
   healthBarUI: {fileID: 389566553}
 --- !u!4 &1557919041
 Transform:

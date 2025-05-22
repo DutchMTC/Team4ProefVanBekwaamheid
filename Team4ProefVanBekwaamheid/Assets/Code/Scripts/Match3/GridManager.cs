@@ -763,6 +763,12 @@ public class GridManager : MonoBehaviour
         _activePowerUpAnimations--; // Decrement counter when animation finishes
         if (_activePowerUpAnimations < 0) _activePowerUpAnimations = 0; // Safety check
 
+        // Play SFX for power-up charge
+        if (SFXManager.Instance != null)
+        {
+            SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.PowerUpCharge);
+        }
+
         // Signal that this block's animation has finished
         OnBlockAnimationFinished?.Invoke(type);
     }

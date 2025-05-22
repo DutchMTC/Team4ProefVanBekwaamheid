@@ -190,6 +190,11 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
                 }
                 
                 targetTile.SetOccupant(TileSettings.OccupantType.Trap, trapInstance);
+
+                if (SFXManager.Instance != null)
+                {
+                    SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.TrapThrow);
+                }
             }
         }
 

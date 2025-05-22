@@ -530,11 +530,6 @@ public class PowerUpManager : MonoBehaviour
             float curveValue = fillAnimationCurve.Evaluate(timeFraction);
             float newFill = Mathf.LerpUnclamped(startFillAmount, targetFillAmount, curveValue);
 
-            // Play SFX only if fill amount increases
-            if (newFill > image.fillAmount && SFXManager.Instance != null)
-            {
-                SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.PowerUpCharge);
-            }
             image.fillAmount = Mathf.Clamp01(newFill);
             yield return null;
         }
@@ -592,11 +587,6 @@ public class PowerUpManager : MonoBehaviour
           float curveValue = fillAnimationCurve.Evaluate(timeFraction);
           float newFill = Mathf.LerpUnclamped(startFillAmount, targetFillAmount, curveValue);
 
-          // Play SFX only if fill amount increases
-          if (newFill > image.fillAmount && SFXManager.Instance != null)
-          {
-              SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.PowerUpCharge);
-          }
           image.fillAmount = Mathf.Clamp01(newFill);
           yield return null;
       }

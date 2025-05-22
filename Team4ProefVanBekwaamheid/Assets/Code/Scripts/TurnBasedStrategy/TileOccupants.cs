@@ -29,11 +29,12 @@ public class TileOccupants : MonoBehaviour
     [SerializeField] private float usableAttackDamageDelay = 0f;
     [SerializeField] private float chargedAttackDamageDelay = 0f;
     [SerializeField] private float superchargedAttackDamageDelay = 0f;
+    [SerializeField] private float trapDamageDelay = 0f; // Added for trap damage delay
  
     [Header("UI")]
     [SerializeField] private CharacterHealthUI healthBarUI;
     // public UnityAction<float> OnHealthChanged; // Alternative: Use UnityEvent
-    private CharacterAnimationController _animationController; // Used for Player animations
+    private CharacterAnimationController _animationController; // Reference to the main character animation controller
     private EnemyAIController _enemyAIController; // Used for Enemy animations
  
     void Awake()
@@ -46,13 +47,9 @@ public class TileOccupants : MonoBehaviour
         health = maxHealth; // Initialize current health to max health
 
         _gameManager = FindObjectOfType<GameManager>();
+        _animationController = FindObjectOfType<CharacterAnimationController>(); // Get the global animation controller
 
-        if (myOccupantType == TileSettings.OccupantType.Player)
-        {
-            _animationController = GetComponent<CharacterAnimationController>();
-            if (_animationController == null) _animationController = FindObjectOfType<CharacterAnimationController>(); // Fallback if not on same object
-        }
-        else if (myOccupantType == TileSettings.OccupantType.Enemy)
+        if (myOccupantType == TileSettings.OccupantType.Enemy)
         {
             _enemyAIController = GetComponent<EnemyAIController>();
         }
@@ -342,12 +339,21 @@ public class TileOccupants : MonoBehaviour
                 var trapBehaviour = trapObject.GetComponent<TrapBehaviour>();
                 if (trapBehaviour != null)
                 {
-                    trapBehaviour.OnCharacterEnterTile(this);
+                    TileSettings tileThatHadTrap = _tileSettings;
+                    // Immediately mark the tile as not having an active trap to prevent re-triggering.
+                    // The TrapBehaviour itself will handle the trap object's lifecycle.
+                    tileThatHadTrap.SetOccupant(TileSettings.OccupantType.None, null);
+
+                    StartCoroutine(HandleTrapDamage(trapBehaviour, tileThatHadTrap));
+                    StartCoroutine(PlayStuckAnimationAfterDelay(0.25f)); // Moved to a new coroutine with delay
+                }
+                else // Trap object exists, but no TrapBehaviour script. Occupy as normal.
+                {
+                    _tileSettings.SetOccupant(myOccupantType, this.gameObject);
                 }
             }
-            else
+            else // No trap on the tile. Occupy as normal.
             {
-                // Only set occupant if there was no trap (trap handling will clear the tile)
                 _tileSettings.SetOccupant(myOccupantType, this.gameObject);
             }
 
@@ -398,5 +404,58 @@ public class TileOccupants : MonoBehaviour
     public TileSettings GetCurrentTile()
     {
         return _tileSettings;
+    }
+
+    private System.Collections.IEnumerator HandleTrapDamage(TrapBehaviour trapBehaviour, TileSettings tileWhereTrapWas)
+    {
+        if (trapDamageDelay > 0)
+        {
+            yield return new WaitForSeconds(trapDamageDelay);
+        }
+
+        // Ensure objects still exist and are active after delay
+        if (this == null || !gameObject.activeInHierarchy || trapBehaviour == null)
+        {
+            yield break;
+        }
+
+        trapBehaviour.OnCharacterEnterTile(this); // Trap effect occurs here
+
+        // After trap effect, if the character is still on this tile and it's clear, occupy it.
+        if (this != null && gameObject.activeInHierarchy && _tileSettings == tileWhereTrapWas)
+        {
+            // We set tileWhereTrapWas to None before starting the coroutine.
+            // If it's still None, and the player hasn't moved, they occupy it.
+            if (tileWhereTrapWas.occupantType == TileSettings.OccupantType.None)
+            {
+                tileWhereTrapWas.SetOccupant(myOccupantType, this.gameObject);
+            }
+        }
+    }
+
+    private System.Collections.IEnumerator PlayStuckAnimationAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        if (SFXManager.Instance != null)
+        {
+            SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.Stuck);
+        }
+
+        if (this != null && gameObject.activeInHierarchy && _animationController != null)
+        {
+            if (myOccupantType == TileSettings.OccupantType.Player)
+            {
+                _animationController.PlayerStuck();
+            }
+            else if (myOccupantType == TileSettings.OccupantType.Enemy)
+            {
+                // Assuming Enemy stuck animation is also handled by the global _animationController
+                // If enemies have their own animation controllers that handle 'Stuck',
+                // you might need to adjust this part, e.g., using _enemyAIController.PlayStuckAnimation()
+                // For now, using the global controller as per existing PlayerStuck pattern.
+                _animationController.EnemyStuck();
+            }
+        }
     }
 }

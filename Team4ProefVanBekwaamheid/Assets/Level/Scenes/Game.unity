@@ -8469,6 +8469,7 @@ GameObject:
   - component: {fileID: 1557919036}
   - component: {fileID: 1557919037}
   - component: {fileID: 1557919044}
+  - component: {fileID: 1557919045}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -8528,6 +8529,7 @@ MonoBehaviour:
   _topCamera: {fileID: 84001778}
   _gridGenerator: {fileID: 0}
   characterAnimationController: {fileID: 154450978}
+  characterRotator: {fileID: 0}
   moveSpeed: 7
   tilePauseDuration: 0.1
   movementCurve:
@@ -8554,34 +8556,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  rotationDuration: 0.3
-  rotationCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  playerRotationOffset: {x: -90, y: 90, z: 0}
-  enemyRotationOffset: {x: 0, y: 25, z: 0}
-  enemyModelToRotate: {fileID: 2110333418}
+  actionRotationDuration: 0.3
   pathVisualizer: {fileID: 0}
 --- !u!114 &1557919040
 MonoBehaviour:
@@ -8661,6 +8636,46 @@ MonoBehaviour:
   _baseDamage: 10
   _trapPrefab: {fileID: 8415200219741149987, guid: b67f22d8c671f4445997e8e19010da47,
     type: 3}
+--- !u!114 &1557919045
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1557919035}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f86dbbf9f4dec84ca34bb78f1e133ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationDuration: 0.3
+  rotationCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  playerRotationOffset: {x: -90, y: 90, z: 0}
+  enemyRotationOffset: {x: 0, y: 25, z: 0}
+  enemyModelToRotate: {fileID: 939605188}
 --- !u!1 &1601236584
 GameObject:
   m_ObjectHideFlags: 0

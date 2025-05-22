@@ -4,14 +4,14 @@ using UnityEngine;
 using UnityEngine.Events;
 
 public class TileSettings : MonoBehaviour
-{
-    public enum OccupantType
+{    public enum OccupantType
     {
         None,
         Player,
         Enemy,
         Trap,
-        Item // Added Item type
+        Item, // Added Item type
+        Decoy // Added Decoy type for trap powerup
     }
     public GameObject tileOccupant { get; private set; } // Made setter private, managed by SetOccupant
 
@@ -89,9 +89,7 @@ public class TileSettings : MonoBehaviour
         }
         
         return objects;
-    }
-
-    public void OnOccupationChange()
+    }    public void OnOccupationChange()
     {
         switch (occupantType)
         {
@@ -105,7 +103,10 @@ public class TileSettings : MonoBehaviour
                 _tileMaterial.color = _occupiedTileColor;
                 break;
             case OccupantType.Trap:
-                _tileMaterial.color = _occupiedTileColor;
+                _tileMaterial.color = _defaultTileColor; // Changed to default color to hide trap
+                break;
+            case OccupantType.Decoy:
+                _tileMaterial.color = _defaultTileColor; // Make decoy look like a regular tile
                 break;
             case OccupantType.Item:
                 _tileMaterial.color = _itemTileColor; // Set color for Item

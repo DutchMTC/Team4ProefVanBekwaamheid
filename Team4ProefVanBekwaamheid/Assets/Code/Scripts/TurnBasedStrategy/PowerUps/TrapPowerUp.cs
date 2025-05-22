@@ -2,15 +2,18 @@ using UnityEngine;
 using Team4ProefVanBekwaamheid.TurnBasedStrategy;
 using System.Collections.Generic;
 using Unity.VisualScripting; // Added for List<>
+using System.Linq; // Added for LINQ operations
 
 namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
 {
     public class TrapPowerUp : MonoBehaviour
     {
         [SerializeField] private int _range; // The range of the power-up
-        [SerializeField] private int _baseDamage = 10; // Base damage of the trap
-        private int _currentDamage; // Current damage of the trap, modified by power-up state
+        [SerializeField] private int _baseDamage = 8; // Base damage of the trap
+        [SerializeField] private int _decoyAmount; // Base damage of the trap
         [SerializeField] private GameObject _trapPrefab; // The prefab to place as a trap
+        [SerializeField] private GameObject _leafPrefab; // The prefab to place as a trap
+        private int _currentDamage; // Current damage of the trap, modified by power-up state
         private TileSelection _tileSelection; // Reference to the TileSelection script
         private TileOccupants _tileOccupants; // The user of the powerup
         private bool _isWaitingForSelection = false;
@@ -70,15 +73,18 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
             {
                 case PowerUpState.Usable:
                     _range = 1;
+                    _decoyAmount = 0; // Reset decoy amount for usable state
                     _currentDamage = _baseDamage; // Reset damage for usable state
                     break;
                 case PowerUpState.Charged:
                     _range = 2;
-                    _currentDamage = _baseDamage + 5;
+                    _decoyAmount = 1; // Set decoy amount for charged state
+                    _currentDamage = _baseDamage + 4;
                     break;
                 case PowerUpState.Supercharged:
                     _range = 3;
-                    _currentDamage = _baseDamage + 10;
+                    _decoyAmount = 1; // Set decoy amount for supercharged state
+                    _currentDamage = _baseDamage + 14;
                     break;
             }
 
@@ -160,21 +166,54 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
             Debug.Log($"{_currentUserType} (PlaceTrap): Attempting to place trap on tile at ({targetTile.gridY}, {targetTile.gridX}).");
             Debug.Log($"{_currentUserType} (PlaceTrap): Checking conditions - Is Tile Null? {targetTile == null}, Occupant Type: {targetTile.occupantType}, Is Prefab Null? {_trapPrefab == null}");
 
-            // Original condition check
             if (targetTile.occupantType == TileSettings.OccupantType.None && _trapPrefab != null)
-            {                Debug.Log($"{_currentUserType} (PlaceTrap): Conditions met. Proceeding with instantiation.");
+            {
+                Debug.Log($"{_currentUserType} (PlaceTrap): Conditions met. Proceeding with instantiation.");
                 Vector3 spawnPosition = targetTile.transform.position;
-                // Instantiate without parenting first to maintain original scale and rotation
-                GameObject trapInstance = Instantiate(_trapPrefab, spawnPosition, _trapPrefab.transform.rotation);
-                // Then set the parent while keeping world position/rotation/scale
-                trapInstance.transform.SetParent(targetTile.transform, true);
                 
+                // Instantiate trap with preserved scale
+                GameObject trapInstance = Instantiate(_trapPrefab, spawnPosition, _trapPrefab.transform.rotation);
+                trapInstance.transform.SetParent(targetTile.transform, true);
+
                 // Initialize the trap with current damage value
                 var trapBehaviour = trapInstance.GetComponent<TrapBehaviour>();
                 if (trapBehaviour != null)
                 {
                     trapBehaviour.Initialize(_currentDamage);
-                    IncrementTrapCount();
+                    IncrementTrapCount();                    // If we're in charged or supercharged state, add leaf on top of trap and a decoy
+                    if (_decoyAmount > 0 && _leafPrefab != null)
+                    {                        // Add leaf on top of trap
+                        GameObject leafOnTrap = Instantiate(_leafPrefab, spawnPosition, _leafPrefab.transform.rotation);
+                        leafOnTrap.transform.SetParent(trapInstance.transform, true);
+                        // Adjust the local position after parenting
+                        leafOnTrap.transform.localPosition = new Vector3(leafOnTrap.transform.localPosition.x, -1f, leafOnTrap.transform.localPosition.z);
+                        
+                        // First try to find adjacent empty tiles
+                        var allTiles = _tileSelection.GetSelectableTiles();
+                        var adjacentTiles = allTiles.Where(t => 
+                            t != targetTile && 
+                            t.occupantType == TileSettings.OccupantType.None &&
+                            Mathf.Abs(t.gridX - targetTile.gridX) + Mathf.Abs(t.gridY - targetTile.gridY) == 1
+                        ).ToList();
+
+                        // If no adjacent tiles available, look for tiles two steps away
+                        if (adjacentTiles.Count == 0)
+                        {
+                            adjacentTiles = allTiles.Where(t =>
+                                t != targetTile &&
+                                t.occupantType == TileSettings.OccupantType.None &&
+                                Mathf.Abs(t.gridX - targetTile.gridX) + Mathf.Abs(t.gridY - targetTile.gridY) == 2
+                            ).ToList();
+                        }                        // If we found any valid tiles, place the decoy
+                        if (adjacentTiles.Count > 0)
+                        {                            TileSettings decoyTile = adjacentTiles[Random.Range(0, adjacentTiles.Count)];
+                            Vector3 decoyPosition = decoyTile.transform.position + new Vector3(0, -1f, 0);
+                            GameObject decoyLeaf = Instantiate(_leafPrefab, decoyPosition, _leafPrefab.transform.rotation);
+                            decoyLeaf.transform.SetParent(decoyTile.transform, true);
+                            decoyTile.SetOccupant(TileSettings.OccupantType.Decoy, decoyLeaf);
+                            Debug.Log($"{_currentUserType} (PlaceTrap): Placed decoy leaf at ({decoyTile.gridY}, {decoyTile.gridX})");
+                        }
+                    }
                 }
                 else
                 {
@@ -186,21 +225,20 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
                 targetTile.SetOccupant(TileSettings.OccupantType.Trap, trapInstance);
                 Debug.Log($"{_currentUserType} (PlaceTrap): Successfully placed trap with damage {_currentDamage} at {targetTile.gridY}, {targetTile.gridX}). Active traps: {_activeTrapCount}/{MAX_TRAPS}");
             }
-            else // Log specific reason for failure
+            else
             {
-                 if (targetTile.occupantType != TileSettings.OccupantType.None)
-                 {
-                      Debug.LogError($"Enemy AI (PlaceTrap): Failed - Tile ({targetTile.gridY}, {targetTile.gridX}) is occupied by {targetTile.occupantType}."); // Changed to gridY and gridX
-                 }
-                 else if (_trapPrefab == null)
-                 {
-                      Debug.LogError("Enemy AI (PlaceTrap): Failed - Trap Prefab is not assigned!");
-                 }
-                 else
-                 {
-                      // This case should ideally not be reached with the checks above, but included for safety.
-                      Debug.LogError("Enemy AI (PlaceTrap): Failed - Unknown reason (Tile might be null despite initial check, or other logic error).");
-                 }
+                if (targetTile.occupantType != TileSettings.OccupantType.None)
+                {
+                    Debug.LogError($"Enemy AI (PlaceTrap): Failed - Tile ({targetTile.gridY}, {targetTile.gridX}) is occupied by {targetTile.occupantType}.");
+                }
+                else if (_trapPrefab == null)
+                {
+                    Debug.LogError("Enemy AI (PlaceTrap): Failed - Trap Prefab is not assigned!");
+                }
+                else
+                {
+                    Debug.LogError("Enemy AI (PlaceTrap): Failed - Unknown reason (Tile might be null despite initial check, or other logic error).");
+                }
             }
         }
 

@@ -22,7 +22,6 @@ public class EnemyAIController : MonoBehaviour
     [SerializeField] private TileOccupants playerOccupants;
     public Image[] powerupDisplayIcons;
     public List<PowerupSpriteMapping> powerupSpriteMappings;
-    [SerializeField] private RectTransform powerupDisplayParent;
     [SerializeField] private CharacterAnimationController characterAnimationController; // Added for animations
     [SerializeField] private TileSelection _tileSelection;
  
@@ -31,9 +30,6 @@ public class EnemyAIController : MonoBehaviour
     private DefensePowerUp _defensePowerUp;
     private TileOccupants _enemyOccupants;
     private GridGenerator _gridGenerator; // Added to get all tiles
-
-    [Header("UI Positioning")]
-    [SerializeField] private float verticalOffset = 2.0f;
 
     [Header("AI Probabilities")]
     [Range(0f, 1f)]
@@ -59,7 +55,6 @@ public class EnemyAIController : MonoBehaviour
 
     void Start()
     {
-        PositionPowerupDisplay();
         _attackPowerUp = GetComponent<AttackPowerUp>();
         _trapPowerUp = GetComponent<TrapPowerUp>();
         _defensePowerUp = GetComponent<DefensePowerUp>();
@@ -268,18 +263,6 @@ public class EnemyAIController : MonoBehaviour
         }
         Debug.LogWarning($"EnemyAIController: No PowerupSpriteMapping found for type '{type}'.");
         return null;
-    }
-
-    private void PositionPowerupDisplay()
-    {
-        if (powerupDisplayParent != null)
-        {
-            powerupDisplayParent.localPosition = new Vector3(0, verticalOffset, 0);
-        }
-        else
-        {
-            Debug.LogWarning("EnemyAIController: Powerup Display Parent RectTransform not assigned!");
-        }
     }
 
     private void HidePowerups()

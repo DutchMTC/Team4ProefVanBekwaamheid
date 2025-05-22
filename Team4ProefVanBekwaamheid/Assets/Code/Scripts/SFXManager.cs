@@ -123,6 +123,8 @@ public class SFXManager : MonoBehaviour
     public void PlayActionSFX(ActionType actionType)
     {
         AudioClip clipToPlay = null;
+        bool playHaptic = false;
+
         switch (actionType)
         {
             case ActionType.AttackUsable:
@@ -130,69 +132,103 @@ public class SFXManager : MonoBehaviour
                 break;
             case ActionType.AttackCharged:
                 clipToPlay = attackChargedSFX;
+                playHaptic = true;
                 break;
             case ActionType.AttackSupercharged:
                 clipToPlay = attackSuperchargedSFX;
+                playHaptic = true;
                 break;
             case ActionType.Dash:
                 clipToPlay = dashSFX;
+                playHaptic = true;
                 break;
             case ActionType.PlayerDeath:
                 clipToPlay = playerDeathSFX;
+                playHaptic = true;
                 break;
             case ActionType.EnemyDeath:
                 clipToPlay = enemyDeathSFX;
+                playHaptic = true;
                 break;
             case ActionType.Win:
                 clipToPlay = winSFX;
+                playHaptic = true;
                 break;
             case ActionType.GameOver:
                 clipToPlay = gameOverSFX;
+                playHaptic = true;
                 break;
             case ActionType.Defense:
                 clipToPlay = defenseSFX;
+                playHaptic = true;
                 break;
             case ActionType.TrapThrow:
                 clipToPlay = trapThrowSFX;
+                playHaptic = true;
                 break;
             case ActionType.Stuck:
                 clipToPlay = stuckSFX;
                 break;
             case ActionType.Damage:
                 clipToPlay = damageSFX;
+                playHaptic = true;
                 break;
             case ActionType.Match3:
                 clipToPlay = match3SFX;
                 break;
             case ActionType.Match4:
                 clipToPlay = match4SFX;
+                playHaptic = true;
                 break;
             case ActionType.Match5Plus:
                 clipToPlay = match5PlusSFX;
+                playHaptic = true;
                 break;
             case ActionType.UsePowerUp:
                 clipToPlay = usePowerUpSFX;
+                playHaptic = true;
                 break;
             case ActionType.PowerUpCharge:
                 clipToPlay = powerUpChargeSFX;
+                // No haptic for charging
                 break;
             case ActionType.PowerUpNextLevelReached:
                 clipToPlay = powerUpNextLevelReachedSFX;
+                playHaptic = true;
                 break;
             case ActionType.PlayGame:
                 clipToPlay = playGameSFX;
+                playHaptic = true;
+                // No haptic for play game button
                 break;
             case ActionType.PickupArmor:
                 clipToPlay = pickupArmorSFX;
+                playHaptic = true;
                 break;
             case ActionType.PickupHeal:
                 clipToPlay = pickupHealSFX;
+                // No haptic for light pickup
                 break;
             case ActionType.ArmorBreak:
                 clipToPlay = armorBreakSFX;
+                playHaptic = true;
                 break;
         }
         PlaySFX(clipToPlay);
+        if (playHaptic)
+        {
+            TriggerHapticFeedback();
+        }
+    }
+
+    private void TriggerHapticFeedback()
+    {
+#if UNITY_ANDROID && !UNITY_EDITOR
+        Handheld.Vibrate();
+#else
+        // Placeholder for non-Android platforms or editor testing
+        Debug.Log("Haptic Feedback Triggered (Platform not Android or in Editor)");
+#endif
     }
 
     private void PlaySFX(AudioClip clip)

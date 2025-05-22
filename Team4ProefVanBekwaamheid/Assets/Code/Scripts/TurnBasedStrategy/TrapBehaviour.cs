@@ -22,7 +22,6 @@ public class TrapBehaviour : MonoBehaviour
     {
         _trapDamage = damage;
         _currentPowerUpState = powerUpState;
-        Debug.Log($"TrapBehaviour: Initialized with damage {_trapDamage} and state {powerUpState}");
         
         // Set visibility based on power-up state
         if (_trapLevel1 != null && _trapLevel2 != null)
@@ -34,19 +33,11 @@ public class TrapBehaviour : MonoBehaviour
             if (_trapAnimatorLevel1 != null) _trapAnimatorLevel1.enabled = powerUpState == PowerUpState.Usable;
             if (_trapAnimatorLevel2 != null) _trapAnimatorLevel2.enabled = powerUpState != PowerUpState.Usable;
         }
-        else
-        {
-            Debug.LogWarning("TrapBehaviour: One or both trap level GameObjects are not assigned!");
-        }
     }
 
     void Start()
     {
         _parentTile = GetComponentInParent<TileSettings>();
-        if (_parentTile == null)
-        {
-            Debug.LogError("TrapBehaviour: No parent TileSettings found!");
-        }
     }
 
     public void Animationlevel1()
@@ -55,26 +46,17 @@ public class TrapBehaviour : MonoBehaviour
         if (_currentPowerUpState == PowerUpState.Usable && _trapAnimatorLevel1 != null)
         {
             _trapAnimatorLevel1.SetTrigger("TrapTrigger");
-            Debug.Log("TrapBehaviour: Playing Level 1 trap animation");
         }
         else if (_currentPowerUpState != PowerUpState.Usable && _trapAnimatorLevel2 != null)
         {
             _trapAnimatorLevel2.SetTrigger("TrapTrigger");
-            Debug.Log("TrapBehaviour: Playing Level 2 trap animation");
-        }
-        else
-        {
-            Debug.LogWarning($"TrapBehaviour: Cannot play animation for power-up state {_currentPowerUpState} - animator missing");
         }
     }
 
     public void OnCharacterEnterTile(TileOccupants character)
     {
-        Debug.Log("TrapBehaviour: OnCharacterEnterTile called");
-
         if (character == null)
         {
-            Debug.LogError("TrapBehaviour: Null character entered trap tile!");
             return;
         }
 
@@ -83,7 +65,6 @@ public class TrapBehaviour : MonoBehaviour
             _parentTile = GetComponentInParent<TileSettings>();
             if (_parentTile == null)
             {
-                Debug.LogError("TrapBehaviour: Parent tile is null when trying to trigger trap!");
                 return;
             }
         }
@@ -98,9 +79,6 @@ public class TrapBehaviour : MonoBehaviour
                 enemyAI.OnTrapTriggered();
             }
         }
-
-        string characterType = character.myOccupantType == TileSettings.OccupantType.Player ? "Player" : "Enemy";
-        Debug.Log($"TrapBehaviour: {characterType} is standing on trap at position ({_parentTile.gridY}, {_parentTile.gridX})");
 
         // Get child LeafBehaviour if it exists
         LeafBehaviour leafBehaviour = GetComponentInChildren<LeafBehaviour>();
@@ -132,12 +110,10 @@ public class TrapBehaviour : MonoBehaviour
         {
             if (character.myOccupantType == TileSettings.OccupantType.Player)
             {
-                Debug.Log("TrapBehaviour: Player triggered trap, switching to Enemy phase");
                 gameManager.UpdateGameState(GameState.Enemy);
             }
             else if (character.myOccupantType == TileSettings.OccupantType.Enemy)
             {
-                Debug.Log("TrapBehaviour: Enemy triggered trap, switching to Matching phase");
                 gameManager.UpdateGameState(GameState.Matching);
             }
         }
@@ -146,7 +122,9 @@ public class TrapBehaviour : MonoBehaviour
         _parentTile.SetOccupant(TileSettings.OccupantType.None, null);
         TrapPowerUp.DecrementTrapCount();
         Destroy(gameObject);
-    }    private void ProcessTrapEffect(TileOccupants character)
+    }
+
+    private void ProcessTrapEffect(TileOccupants character)
     {
         // Start coroutine to handle the trap effect sequence
         StartCoroutine(ProcessTrapEffectSequence(character));
@@ -166,12 +144,10 @@ public class TrapBehaviour : MonoBehaviour
         {
             if (character.myOccupantType == TileSettings.OccupantType.Player)
             {
-                Debug.Log("TrapBehaviour: Player triggered trap, switching to Enemy phase");
                 gameManager.UpdateGameState(GameState.Enemy);
             }
             else if (character.myOccupantType == TileSettings.OccupantType.Enemy)
             {
-                Debug.Log("TrapBehaviour: Enemy triggered trap, switching to Matching phase");
                 gameManager.UpdateGameState(GameState.Matching);
             }
         }
@@ -192,7 +168,6 @@ public class TrapBehaviour : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("TrapBehaviour: No LeafBehaviour found on decoy");
             Destroy(gameObject);
         }
     }

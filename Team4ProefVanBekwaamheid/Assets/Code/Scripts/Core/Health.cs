@@ -22,12 +22,10 @@ public class Health : MonoBehaviour
     public void ReceiveHeal(int amount)
     {
         health = Mathf.Min(health + amount, _initialHealth);
-        Debug.Log(gameObject.name + " received " + amount + " health. Current health: " + health);
     }
 
     private void Die()
     {
-        Debug.Log(gameObject.name + " has died.");
         Destroy(gameObject);
     }
 }

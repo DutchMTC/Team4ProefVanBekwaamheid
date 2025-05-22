@@ -37,19 +37,11 @@ public class TileOccupants : MonoBehaviour
         if (_gridGenerator == null)
         {
             _gridGenerator = FindObjectOfType<GridGenerator>();
-            if (_gridGenerator == null)
-            {
-                Debug.LogError("GridGenerator reference not found in Awake!", this);
-            }
         }
         health = maxHealth; // Initialize current health to max health
 
         _gameManager = FindObjectOfType<GameManager>();
-        if (_gameManager == null)
-        {
-            Debug.LogError("GameManager not found in the scene!", this);
-        }
-        
+
         if (myOccupantType == TileSettings.OccupantType.Player)
         {
             _animationController = GetComponent<CharacterAnimationController>();
@@ -58,10 +50,6 @@ public class TileOccupants : MonoBehaviour
         else if (myOccupantType == TileSettings.OccupantType.Enemy)
         {
             _enemyAIController = GetComponent<EnemyAIController>();
-            if (_enemyAIController == null)
-            {
-                Debug.LogWarning($"EnemyAIController component not found on {gameObject.name}. Enemy animations for damage/death might not play.", this);
-            }
         }
     }
  
@@ -73,7 +61,6 @@ public class TileOccupants : MonoBehaviour
             _gridGenerator = FindObjectOfType<GridGenerator>();
             if (_gridGenerator == null)
             {
-                Debug.LogError("GridGenerator reference not found in Start!", this);
                 return;
             }
         }
@@ -85,10 +72,6 @@ public class TileOccupants : MonoBehaviour
             bool isPlayer = (myOccupantType == TileSettings.OccupantType.Player);
             healthBarUI.Initialize(this, maxHealth, health, isPlayer);
         }
-        else
-        {
-            Debug.LogWarning($"HealthBarUI not assigned for {gameObject.name}", this);
-        }
 
         // Force position update with small delay to ensure GridGenerator is fully initialized
         Invoke(nameof(InitializePosition), 0.1f);
@@ -98,15 +81,11 @@ public class TileOccupants : MonoBehaviour
     {
         FindTileAtCoordinates();
         MoveToTile();
-        
-        // Log position for debugging
-        Debug.Log($"{gameObject.name} initialized at position ({gridY}, {gridX})");
     }
 
     public void SetDamageReduction(float reduction)
     {
         _damageReduction = Mathf.Clamp(reduction, 0f, 0.8f);
-        Debug.Log($"{gameObject.name} defense set to {_damageReduction * 100}%", this);
     }
 
     public void TakeDamage(int amount)
@@ -120,7 +99,6 @@ public class TileOccupants : MonoBehaviour
         if (hasArmor)
         {
             hasArmor = false;
-            Debug.Log($"{gameObject.name}'s armor absorbed the hit! Armor destroyed.");
             if (healthBarUI != null)
             {
                 healthBarUI.UpdateArmorStatus(false);
@@ -143,27 +121,18 @@ public class TileOccupants : MonoBehaviour
             // 3b. APPLY DELAY
             if (delay > 0)
             {
-                Debug.Log($"ApplyDamageAfterDelay: Waiting for {delay} seconds. Current health: {health}, Reduced Damage: {reducedDamage}");
                 yield return new WaitForSeconds(delay);
-                Debug.Log("ApplyDamageAfterDelay: Resumed after delay.");
             }
 
             // 3c. Ensure object still exists and is active after delay
             if (this == null || !gameObject.activeInHierarchy)
             {
-                Debug.LogWarning("ApplyDamageAfterDelay: Object became null or inactive after delay. Exiting.");
                 yield break;
             }
-            Debug.Log($"ApplyDamageAfterDelay: Object still active. Current health before applying damage: {health}");
 
             // 3d. APPLY HEALTH CHANGE
-            int previousHealth = health;
             health -= reducedDamage;
             health = Mathf.Clamp(health, 0, maxHealth);
-
-            string defenseMsg = _damageReduction > 0 ? $"[DEFENSE {_damageReduction * 100}%]" : "[NO DEFENSE]";
-            Debug.Log($"{defenseMsg} {gameObject.name} Health: {previousHealth} -> {health} " +
-                      $"(Took {reducedDamage} damage, reduced from {amount})", this);
  
             // 3e. UPDATE UI
             if (healthBarUI != null)
@@ -172,48 +141,30 @@ public class TileOccupants : MonoBehaviour
             }
  
             // 3f. PLAY ANIMATION (if still alive and damage was dealt)
-            Debug.Log($"ApplyDamageAfterDelay: Checking animation conditions. Health: {health}, ReducedDamage: {reducedDamage}, OccupantType: {myOccupantType}, EnemyCtrl: {_enemyAIController != null}, PlayerCtrl: {_animationController != null}");
             if (health > 0) // Check health *after* damage is applied
             {
                 if (myOccupantType == TileSettings.OccupantType.Enemy && _enemyAIController != null)
                 {
-                    Debug.Log("ApplyDamageAfterDelay: Playing Enemy Damage Animation.");
                     _enemyAIController.PlayDamageAnimation();
                 }
                 else if (myOccupantType == TileSettings.OccupantType.Player && _animationController != null)
                 {
-                    Debug.Log("ApplyDamageAfterDelay: Playing Player Damage Animation.");
                     _animationController.PlayerDamage();
                 }
-                else
-                {
-                    Debug.LogWarning("ApplyDamageAfterDelay: Animation conditions met (health > 0) but controller missing or wrong type.");
-                }
-            }
-            else
-            {
-                Debug.Log("ApplyDamageAfterDelay: Animation skipped (health <= 0).");
             }
  
             // 3g. CHECK FOR DEATH
             if (health <= 0)
             {
                 // Death animation is handled in Die(), so no specific animation call here unless needed before Die()
-                Debug.Log($"{gameObject.name} has died from {reducedDamage} damage!", this);
                 Die();
             }
-        }
-        // 4. IF NO DAMAGE DEALT (BUT ATTACK OCCURRED)
-        else if (amount > 0) // Check if there was an intent to damage
-        {
-            Debug.Log($"{gameObject.name} took no damage. Attack amount {amount} was fully mitigated by defense or other factors.", this);
         }
     }
 
     public void ReceiveArmor()
     {
         hasArmor = true;
-        Debug.Log($"{gameObject.name} received armor!");
         // Optionally, notify UI to show armor icon here
         if (healthBarUI != null)
         {
@@ -229,7 +180,6 @@ public class TileOccupants : MonoBehaviour
 
     private void Die()
     {
-        Debug.Log($"{gameObject.name} has died.", this);
         float destructionDelay = 0f;
         if (myOccupantType == TileSettings.OccupantType.Player)
         {
@@ -277,10 +227,8 @@ public class TileOccupants : MonoBehaviour
     // Example method to heal the character
     public void Heal(int amount)
     {
-        int previousHealth = health;
         health += amount;
         health = Mathf.Clamp(health, 0, maxHealth);
-        Debug.Log($"{gameObject.name} healed. Health: {previousHealth} -> {health}", this);
 
         if (healthBarUI != null)
         {
@@ -317,11 +265,6 @@ public class TileOccupants : MonoBehaviour
                 if (pickupItemScript != null)
                 {
                     itemObjectToPickup = _tileSettings.tileOccupant;
-                    Debug.Log($"Tile ({_tileSettings.gridY}, {_tileSettings.gridX}) has item {itemObjectToPickup.name} with PickupItem script.");
-                }
-                else
-                {
-                    Debug.LogWarning($"Tile at ({_tileSettings.gridY}, {_tileSettings.gridX}) is marked as Item but occupant {_tileSettings.tileOccupant.name} has no PickupItem script.");
                 }
             }
 
@@ -331,7 +274,6 @@ public class TileOccupants : MonoBehaviour
                 LeafBehaviour leafBehaviour = _tileSettings.tileOccupant.GetComponent<LeafBehaviour>();
                 if (leafBehaviour != null)
                 {
-                    Debug.Log($"Found decoy leaf at ({_tileSettings.gridY}, {_tileSettings.gridX}), starting fade out");
                     leafBehaviour.StartFadeOut(1f);
                     _tileSettings.SetOccupant(TileSettings.OccupantType.None, null);
                 }
@@ -344,7 +286,6 @@ public class TileOccupants : MonoBehaviour
             _tileSettings.occupantType != TileSettings.OccupantType.Decoy &&
             _tileSettings.occupantType != myOccupantType)
             {
-                Debug.LogWarning($"Cannot move to tile at ({gridY}, {gridX}) - tile is occupied by {_tileSettings.occupantType}.");
                 return;
             }
 
@@ -363,7 +304,6 @@ public class TileOccupants : MonoBehaviour
                 var trapBehaviour = trapObject.GetComponent<TrapBehaviour>();
                 if (trapBehaviour != null)
                 {
-                    Debug.Log($"Character stepping on trap at ({_tileSettings.gridY}, {_tileSettings.gridX})");
                     trapBehaviour.OnCharacterEnterTile(this);
                 }
             }
@@ -376,13 +316,8 @@ public class TileOccupants : MonoBehaviour
             // Handle item pickup after movement
             if (itemObjectToPickup != null && pickupItemScript != null)
             {
-                Debug.Log($"Unit {gameObject.name} moved to item tile. Activating pickup for {itemObjectToPickup.name}.");
                 pickupItemScript.ActivatePickup(gameObject);
             }
-        }
-        else
-        {
-            Debug.LogWarning($"Cannot move to tile at ({gridY}, {gridX}) - tile not found");
         }
     }
 
@@ -393,7 +328,6 @@ public class TileOccupants : MonoBehaviour
             _gridGenerator = FindObjectOfType<GridGenerator>();
             if (_gridGenerator == null)
             {
-                Debug.LogError("GridGenerator reference not found in FindTileAtCoordinates!");
                 return;
             }
         }
@@ -421,9 +355,6 @@ public class TileOccupants : MonoBehaviour
                 return;
             }
         }
-        
-        // If loop completes, no tile was found
-        Debug.LogWarning($"No tile found at grid position ({gridY}, {gridX})");
     }
 
     public TileSettings GetCurrentTile()

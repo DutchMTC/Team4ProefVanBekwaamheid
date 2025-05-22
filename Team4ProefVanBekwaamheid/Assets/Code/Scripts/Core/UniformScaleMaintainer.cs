@@ -21,7 +21,8 @@ public class UniformScaleMaintainer : MonoBehaviour
     #if UNITY_EDITOR
     void Update() {
         // Ensure it updates in edit mode if ExecuteAlways is enabled and parent changes
-        if (!Application.isPlaying) {
+        if (!Application.isPlaying)
+        {
             if (parentTransform != transform.parent) {
                 parentTransform = transform.parent;
             }

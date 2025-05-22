@@ -32,18 +32,6 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
             _tileSelection = FindObjectOfType<TileSelection>();
             _tileOccupants = GetComponent<TileOccupants>();
 
-            if (_tileSelection == null)
-            {
-                Debug.LogError("TileSelection script not found!");
-            }
-            if (_tileOccupants == null)
-            {
-                Debug.LogError("TileOccupants script not found on the GameObject!");
-            }
-            if (_trapPrefab == null)
-            {
-                Debug.LogError("Trap Prefab is not assigned in the TrapPowerUp script!");
-            }
             if (_trapLimitReachedIndicator == null)
             {
                 Debug.LogWarning("Trap Limit Reached Indicator is not assigned in the TrapPowerUp script. UI updates for trap limit will not be shown.");
@@ -51,16 +39,6 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
             else
             {
                 _trapLimitReachedIndicator.SetActive(false); // Initially hide the indicator
-            }
-        }
-
-        void Update()
-        {
-            if(Input.GetKeyDown(KeyCode.T))
-            {
-                // Debug key press for testing
-                Debug.Log("T key pressed - Triggering TrapPowerUpSelected with default parameters.");
-                TrapPowerUpSelected(PowerUpState.Usable, TileSelection.UserType.Player);
             }
         }
 
@@ -73,8 +51,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
             
             // First check if we can place more traps
             if (!CanPlaceTrap)
-            {
-                Debug.LogWarning($"{userType} (TrapPowerUp): Maximum number of traps ({MAX_TRAPS}) already placed!");
+            {                
                 return;
             }
 
@@ -113,28 +90,13 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
             if (userType == TileSelection.UserType.Enemy && _targetOccupantForAI != null)
             {
                 // AI executes immediately
-                Debug.Log($"Enemy AI (Trap): Attempting trap placement with range {_range}.");
                 TileSettings playerTile = _targetOccupantForAI.GetCurrentTile();
                 List<TileSettings> selectableTiles = _tileSelection.GetSelectableTiles();
-                Debug.Log($"Enemy AI (Trap): Found {selectableTiles.Count} selectable empty tiles in range.");
-
-                if (playerTile == null)
-                {
-                    Debug.LogWarning("Enemy AI (Trap): Cannot target trap placement, player tile is null.");
-                }
-
                 TileSettings bestTile = FindBestTrapPlacementTile(selectableTiles, playerTile);
 
                 if (bestTile != null)
-                {
-                    // *** DETAILED DEBUG: Log the chosen tile before attempting placement ***
-                    Debug.Log($"Enemy AI (Trap): Found best tile at ({bestTile.gridY}, {bestTile.gridX}). Attempting placement..."); // Changed to gridY and gridX
+                { 
                     PlaceTrap(bestTile);
-                }
-                else
-                {
-                    // This warning now correctly reflects that no valid tile (adjacent or fallback) was found within range.
-                    Debug.LogWarning("Enemy AI (Trap): Could not find any valid tile to place trap.");
                 }
                 _tileSelection.CancelTileSelection(); // Clean up selection state
             }
@@ -155,32 +117,22 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
 
             // Player Logic: Place trap on the selected tile
             PlaceTrap(selectedTile);
-
-            // AI logic is handled directly in TrapPowerUpSelected, so this part is no longer needed here.
-            /* AI logic moved to TrapPowerUpSelected */
         }
 
         private void PlaceTrap(TileSettings targetTile)
         {
-            // *** DETAILED DEBUG: Log received tile and condition checks ***
             if (targetTile == null)
             {
-                Debug.LogError($"{_currentUserType} (PlaceTrap): Received NULL targetTile!");
                 return; // Exit early if tile is null
             }
 
             if (!CanPlaceTrap)
             {
-                Debug.LogError($"{_currentUserType} (PlaceTrap): Cannot place more traps, limit of {MAX_TRAPS} reached!");
-                return;
+                return; // Exit early if trap limit is reached
             }
-
-            Debug.Log($"{_currentUserType} (PlaceTrap): Attempting to place trap on tile at ({targetTile.gridY}, {targetTile.gridX}).");
-            Debug.Log($"{_currentUserType} (PlaceTrap): Checking conditions - Is Tile Null? {targetTile == null}, Occupant Type: {targetTile.occupantType}, Is Prefab Null? {_trapPrefab == null}");
 
             if ((targetTile.occupantType == TileSettings.OccupantType.None || targetTile.occupantType == TileSettings.OccupantType.Decoy) && targetTile.occupantType != TileSettings.OccupantType.Item && _trapPrefab != null)
             {
-                Debug.Log($"{_currentUserType} (PlaceTrap): Conditions met. Proceeding with instantiation.");
                 Vector3 spawnPosition = targetTile.transform.position;
                 
                 // Instantiate trap with preserved scale
@@ -228,34 +180,16 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
                             GameObject decoyLeaf = Instantiate(_leafPrefab, decoyPosition, _leafPrefab.transform.rotation);
                             decoyLeaf.transform.SetParent(decoyTile.transform, true);
                             decoyTile.SetOccupant(TileSettings.OccupantType.Decoy, decoyLeaf);
-                            Debug.Log($"{_currentUserType} (PlaceTrap): Placed decoy leaf at ({decoyTile.gridY}, {decoyTile.gridX})");
                         }
                     }
                 }
                 else
                 {
-                    Debug.LogError($"{_currentUserType} (PlaceTrap): Trap prefab is missing TrapBehaviour component!");
                     Destroy(trapInstance);
                     return;
                 }
                 
                 targetTile.SetOccupant(TileSettings.OccupantType.Trap, trapInstance);
-                Debug.Log($"{_currentUserType} (PlaceTrap): Successfully placed trap with damage {_currentDamage} at {targetTile.gridY}, {targetTile.gridX}). Active traps: {_activeTrapCount}/{MAX_TRAPS}");
-            }
-            else
-            {
-                if (targetTile.occupantType != TileSettings.OccupantType.None)
-                {
-                    Debug.LogError($"Enemy AI (PlaceTrap): Failed - Tile ({targetTile.gridY}, {targetTile.gridX}) is occupied by {targetTile.occupantType}.");
-                }
-                else if (_trapPrefab == null)
-                {
-                    Debug.LogError("Enemy AI (PlaceTrap): Failed - Trap Prefab is not assigned!");
-                }
-                else
-                {
-                    Debug.LogError("Enemy AI (PlaceTrap): Failed - Unknown reason (Tile might be null despite initial check, or other logic error).");
-                }
             }
         }
 
@@ -267,18 +201,15 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
 
              if (selectableTiles == null || selectableTiles.Count == 0)
              {
-                 Debug.Log("Enemy AI (Trap Finder): No selectable tiles provided.");
                  return null; // No tiles to choose from
              }
 
              if (targetPlayerTile == null)
              {
-                 Debug.LogWarning("Enemy AI (Trap Finder): Player tile is null. Selecting the first available tile.");
                  return selectableTiles[0]; // Fallback: just pick the first one
              }
 
              Vector2Int playerPos = new Vector2Int(targetPlayerTile.gridY, targetPlayerTile.gridX); // Changed to gridY and gridX
-             Debug.Log($"Enemy AI (Trap Finder): Target player at ({playerPos.x}, {playerPos.y}). Checking {selectableTiles.Count} adjacent tiles for closest one.");
 
              foreach (var tile in selectableTiles)
              {
@@ -302,7 +233,6 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
              else
              {
                  // This should technically not happen if selectableTiles is not empty, but added as safety.
-                 Debug.LogWarning("Enemy AI (Trap Finder): Could not determine closest tile, selecting first available.");
                  bestTile = selectableTiles[0];
              }
 
@@ -319,7 +249,6 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
         public static void IncrementTrapCount()
         {
             _activeTrapCount++;
-            Debug.Log($"TrapPowerUp: Active trap count increased to {_activeTrapCount}");
             UpdateTrapLimitIndicator();
         }
 
@@ -327,7 +256,6 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
         public static void DecrementTrapCount()
         {
             _activeTrapCount = Mathf.Max(0, _activeTrapCount - 1);
-            Debug.Log($"TrapPowerUp: Active trap count decreased to {_activeTrapCount}");
             UpdateTrapLimitIndicator();
         }
 

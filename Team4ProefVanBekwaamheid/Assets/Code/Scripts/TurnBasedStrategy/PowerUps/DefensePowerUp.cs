@@ -15,10 +15,6 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
         void Start()
         {
             _tileOccupants = GetComponent<TileOccupants>();
-            if (_tileOccupants == null)
-            {
-                Debug.LogError("TileOccupants component not found!");
-            }
         }
 
         public void DefensePowerUpSelected(PowerUpState state, TileSelection.UserType userType)
@@ -43,8 +39,7 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
             // Apply the defense buff
             if (_tileOccupants != null)
             {
-                _tileOccupants.SetDamageReduction(_currentReduction);
-                Debug.Log($"{_currentUser} activated defense power-up with {_currentReduction * 100}% damage reduction!");
+                _tileOccupants.SetDamageReduction(_currentReduction);           
             }
         }
 

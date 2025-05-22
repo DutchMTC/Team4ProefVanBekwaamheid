@@ -88,10 +88,6 @@ public class MovementValidator : MonoBehaviour
                     pathParents[neighbor] = neighborNode;
                 }
             }        }
-
-        // No path found
-        Debug.LogWarning($"No path found from ({startTile.gridX}, {startTile.gridY}) to ({endTile.gridX}, {endTile.gridY}). " +
-                      $"Explored {closedList.Count} tiles, {openList.Count} tiles still in open list.");
         return null;
     }
 
@@ -109,10 +105,12 @@ public class MovementValidator : MonoBehaviour
     {
         var neighbors = new List<TileSettings>();
         var gridGenerator = tile.GetComponentInParent<GridGenerator>();
-        if (gridGenerator == null) {
-            Debug.LogError("Could not find GridGenerator parent for tile");
+        if (gridGenerator == null)
+        {
             return neighbors;
-        }        // Only check orthogonal neighbors (up, down, left, right)
+        }
+
+        // Only check orthogonal neighbors (up, down, left, right)
         int[][] directions = new int[][] 
         {
             new int[] { 0, 1 },  // up
@@ -139,17 +137,19 @@ public class MovementValidator : MonoBehaviour
                 else if (IsWalkable(neighborTile))
                 {
                     neighbors.Add(neighborTile);
-                    Debug.Log($"Added walkable neighbor at ({newX}, {newY})");
                 }
             }
         }
 
         return neighbors;
-    }    private static bool IsWalkable(TileSettings tile)
-    {        var isWalkable = tile.occupantType == TileSettings.OccupantType.None ||
-                        tile.occupantType == TileSettings.OccupantType.Item ||
-                        tile.occupantType == TileSettings.OccupantType.Trap ||
-                        tile.occupantType == TileSettings.OccupantType.Decoy;
+    }
+
+    private static bool IsWalkable(TileSettings tile)
+    {
+        var isWalkable = tile.occupantType == TileSettings.OccupantType.None ||
+                         tile.occupantType == TileSettings.OccupantType.Item ||
+                         tile.occupantType == TileSettings.OccupantType.Trap ||
+                         tile.occupantType == TileSettings.OccupantType.Decoy;
         if (!isWalkable) {
             Debug.Log($"Tile at ({tile.gridX}, {tile.gridY}) is not walkable: {tile.occupantType}");
         }

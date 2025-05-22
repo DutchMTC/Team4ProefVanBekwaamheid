@@ -43,7 +43,6 @@ public class TileSelection : MonoBehaviour
     private TileOccupants _tileOccupants;
     public PathVisualizer pathVisualizer; // Made public
     private Color _playerTileColor = new Color(0f, 0f, 1.0f, 0.5f);
-    private Color _defaultTileColor = new Color(1.0f, 1.0f, 1.0f, 0.2f);  
     private HashSet<TileSettings> _tilesInRange = new HashSet<TileSettings>();
     private bool _isSelectionEnabled = false;
     private bool _hasSelectedTile = false;
@@ -65,28 +64,16 @@ public class TileSelection : MonoBehaviour
             {
                  // Attempt to find it if not assigned, assuming one CharacterRotator on the same GameObject or in children
                 characterRotator = GetComponentInChildren<CharacterRotator>();
-                if (characterRotator == null)
-                {
-                    Debug.LogError("CharacterRotator reference not found! Please assign it or add it to the GameObject.");
-                }
             }
         }
         if (_gridGenerator == null)
         {
             _gridGenerator = FindObjectOfType<GridGenerator>();
-            if (_gridGenerator == null)
-            {
-                Debug.LogError("GridGenerator reference not found!");
-            }
         }
         if (characterAnimationController == null)
         {
             // Attempt to find it if not assigned, assuming one CharacterAnimationController in the scene
             characterAnimationController = FindObjectOfType<CharacterAnimationController>();
-            if (characterAnimationController == null)
-            {
-                Debug.LogWarning("TileSelection: CharacterAnimationController not found in scene and not assigned. Dash animations might not play.");
-            }
         }
         pathVisualizer = FindObjectOfType<PathVisualizer>();
         if (pathVisualizer == null)
@@ -142,8 +129,9 @@ public class TileSelection : MonoBehaviour
                         bool isValidTile = false;
                         
                         switch (selectionType)
-                        {                            case SelectionType.Movement:
-                                isValidTile = tile.occupantType == TileSettings.OccupantType.None || 
+                        {
+                            case SelectionType.Movement:
+                                isValidTile = tile.occupantType == TileSettings.OccupantType.None ||
                                             tile.occupantType == TileSettings.OccupantType.Item ||
                                             tile.occupantType == TileSettings.OccupantType.Trap ||
                                             tile.occupantType == TileSettings.OccupantType.Decoy;
@@ -172,7 +160,6 @@ public class TileSelection : MonoBehaviour
 
         if (_tilesInRange.Count == 0)
         {
-            Debug.Log("No valid tiles in range!");
             _isSelectionEnabled = false;
         }
     }
@@ -181,7 +168,6 @@ public class TileSelection : MonoBehaviour
     {
         if (!_isSelectionEnabled)
         {
-            Debug.Log("Cannot select tiles until selection is started!");
             return;
         }
 
@@ -215,7 +201,6 @@ public class TileSelection : MonoBehaviour
                 }                else if (_currentSelectionType == SelectionType.Trap)
                 {
                     // For trap placement, directly handle the selection since we don't need path finding
-                    Debug.Log("Placing trap on selected tile...");
                     _hasSelectedTile = true;
                     _tileSettings = hitTile;
                     OnTileSelected.Invoke(hitTile);
@@ -223,13 +208,11 @@ public class TileSelection : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogWarning($"Unknown selection type: {_currentSelectionType}");
                     _selectedTile = null;
                 }
             }
             else
             {
-                Debug.Log("Selected tile is not in range or not a valid tile!");
                 _selectedTile = null;
             }
         }
@@ -304,7 +287,6 @@ public class TileSelection : MonoBehaviour
         var playerTile = FindTileAtCoordinates(_tileOccupants.gridY, _tileOccupants.gridX);
         if (playerTile == null)
         {
-            Debug.LogError("Could not find player's current tile!");
             return false;
         }        // Get all tiles and find path from player to destination
         var allTiles = GetAllTiles();
@@ -326,7 +308,6 @@ public class TileSelection : MonoBehaviour
         }
         else
         {
-            Debug.Log("No valid path found to selected tile!");
             return false;
         }
     }
@@ -465,7 +446,7 @@ public class TileSelection : MonoBehaviour
             {
                 var coord = new Vector2Int(tile.gridX, tile.gridY);
                 if (coordCheck.ContainsKey(coord))
-                {                    Debug.LogWarning($"Duplicate tile found at coordinates ({tile.gridX}, {tile.gridY}). Destroying duplicate.");
+                {
                     // Destroy the duplicate tile
                     DestroyImmediate(tile.gameObject);
                 }

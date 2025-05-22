@@ -63,6 +63,8 @@ public class PowerUpManager : MonoBehaviour
     private Dictionary<PowerUpInventory.PowerUpType, PowerUpState> powerUpPreviousStates;
     private Dictionary<PowerUpInventory.PowerUpType, Button> powerUpButtonMap; // Map type to Button component
     private bool _isUsingPowerUp = false; // Flag to prevent event-driven update during use
+    private Color _colorUnusable;
+    private readonly Color _colorActive = Color.white; // #FFFFFF
 
     // Constants for State Thresholds
     private const int USABLE_THRESHOLD = 1;
@@ -132,6 +134,8 @@ public class PowerUpManager : MonoBehaviour
                 Debug.LogWarning($"Image for {kvp.Key} Fill is not set to 'Filled' type in the Inspector. Fill effect may not work correctly.");
             }
         }
+
+        ColorUtility.TryParseHtmlString("#6A6A6A", out _colorUnusable);
 
 
         // Initialize previous states and initial visuals
@@ -239,6 +243,7 @@ public class PowerUpManager : MonoBehaviour
             fillImage.fillAmount = 0f;
             fillImage.gameObject.SetActive(false); // Hide fill
             powerUpPreviousStates[type] = PowerUpState.Unusable; // Update previous state
+            SetPowerUpStateColors(bgImage, PowerUpState.Unusable);
             // Debug.Log($"Instant Reset for {type}");
             return; // Skip normal update logic
         }
@@ -307,6 +312,7 @@ public class PowerUpManager : MonoBehaviour
             fillImage.fillAmount = fillAmountNow;
             fillImage.gameObject.SetActive(showFillNow);
             powerUpPreviousStates[type] = stateNow; // Update previous state
+            SetPowerUpStateColors(bgImage, stateNow);
             // Debug.Log($"Instant Update for {type} to state {stateNow}, fill {fillAmountNow}");
             return; // Skip normal animation logic
         }
@@ -425,6 +431,7 @@ public class PowerUpManager : MonoBehaviour
             bgImage.sprite = animBgSprite;
             fillImage.sprite = animFillSprite;
        }
+       SetPowerUpStateColors(bgImage, currentState); // Update colors based on the current state
 
 
        // --- Start Animation (if needed) ---
@@ -647,6 +654,48 @@ public class PowerUpManager : MonoBehaviour
             default:
                 Debug.LogWarning($"Unhandled PowerUpState for sprite selection: {state}");
                 return sprites.unusable; // Default to unusable sprite
+        }
+    }
+
+    private void SetPowerUpStateColors(Image powerUpButtonImage, PowerUpState state)
+    {
+        if (powerUpButtonImage == null) return; // Silently return if no image to work on
+
+        Image state1Image = null;
+        Image state2Image = null;
+        Image state3Image = null;
+
+        // Find children by tag and get their Image components
+        foreach (Transform child in powerUpButtonImage.transform)
+        {
+            if (child.CompareTag("PowerUpState1")) state1Image = child.GetComponent<Image>();
+            else if (child.CompareTag("PowerUpState2")) state2Image = child.GetComponent<Image>();
+            else if (child.CompareTag("PowerUpState3")) state3Image = child.GetComponent<Image>();
+        }
+
+        // Default all found state images to unusable color
+        if (state1Image != null) state1Image.color = _colorUnusable;
+        if (state2Image != null) state2Image.color = _colorUnusable;
+        if (state3Image != null) state3Image.color = _colorUnusable;
+
+        // Set active color based on state
+        switch (state)
+        {
+            case PowerUpState.Usable:
+                if (state1Image != null) state1Image.color = _colorActive;
+                break;
+            case PowerUpState.Charged:
+                if (state1Image != null) state1Image.color = _colorActive;
+                if (state2Image != null) state2Image.color = _colorActive;
+                break;
+            case PowerUpState.Supercharged:
+                if (state1Image != null) state1Image.color = _colorActive;
+                if (state2Image != null) state2Image.color = _colorActive;
+                if (state3Image != null) state3Image.color = _colorActive;
+                break;
+            case PowerUpState.Unusable:
+                // Defaulted above
+                break;
         }
     }
 

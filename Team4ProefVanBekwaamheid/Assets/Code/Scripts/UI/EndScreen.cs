@@ -2,10 +2,12 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-
 public class EndScreen : MonoBehaviour
 {
-    public Image[] buttons;
+    [Header("UI Elements")]
+    [SerializeField] private Image _victoryImage;
+    [SerializeField] private Image _gameOverImage;
+
     private SceneFader sceneFader;
 
     void Start()
@@ -17,10 +19,21 @@ public class EndScreen : MonoBehaviour
             Debug.LogError("EndScreen: SceneFader not found in the scene. Please ensure a SceneFader object exists and is active.");
         }
 
-        for (int i = 0; i < buttons.Length; i++)
-        {
-            buttons[i].alphaHitTestMinimumThreshold = 1f;
-        }
+        // Ensure images are assigned
+        if (_victoryImage == null) Debug.LogError("EndScreen: Victory Image not assigned in Inspector.");
+        if (_gameOverImage == null) Debug.LogError("EndScreen: Game Over Image not assigned in Inspector.");
+    }
+
+    public void ShowVictoryScreen()
+    {
+        if (_victoryImage != null) _victoryImage.gameObject.SetActive(true);
+        if (_gameOverImage != null) _gameOverImage.gameObject.SetActive(false);
+    }
+
+    public void ShowGameOverScreen()
+    {
+        if (_victoryImage != null) _victoryImage.gameObject.SetActive(false);
+        if (_gameOverImage != null) _gameOverImage.gameObject.SetActive(true);
     }
 
     public void PlayAgain()

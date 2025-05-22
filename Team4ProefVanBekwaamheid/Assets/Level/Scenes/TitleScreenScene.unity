@@ -788,6 +788,7 @@ MonoBehaviour:
   playGameSFX: {fileID: 8300000, guid: 9f441db4ce0bc244da33b169cf71e2b3, type: 3}
   pickupArmorSFX: {fileID: 0}
   pickupHealSFX: {fileID: 0}
+  armorBreakSFX: {fileID: 0}
 --- !u!4 &923557101
 Transform:
   m_ObjectHideFlags: 0
@@ -1079,7 +1080,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   fadeImage: {fileID: 0}
   fadeDuration: 1
-  fadeInOnStart: 0
+  fadeInOnStart: 1
   fadeInDelay: 0
 --- !u!1 &1251682406
 GameObject:

@@ -30,6 +30,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Animator _phaseTransitionAnimator; // Animator for phase transition
     [SerializeField] private Animator _matchGridCoverAnimator; // Animator for the Match3 grid cover
     [SerializeField] private Animator _powerUpInfoAnimator; // Animator for the PowerUp information UI
+    [SerializeField] private EndScreen _endScreen; // Reference to the EndScreen script
  
     [Header("Phase Animation Sprites")]
     [SerializeField] private Sprite _matchingPhaseSprite;
@@ -56,6 +57,10 @@ public class GameManager : MonoBehaviour
         {
             Debug.LogError("GameManager: Player Timer reference not set in Inspector!");
         }
+        if (_endScreen == null)
+        {
+            Debug.LogError("GameManager: EndScreen reference not set in Inspector!");
+        }
         // Initialize previous state to something different from Matching to avoid issues on first run
         _previousGameState = GameState.Start;
         UpdateGameState(GameState.Matching);
@@ -77,6 +82,14 @@ public class GameManager : MonoBehaviour
     /// <exception cref="ArgumentOutOfRangeException"></exception>
     public void UpdateGameState(GameState newState)
     {
+        // Prevent state changes if the game is already over or won
+        if (State == GameState.Win || State == GameState.GameOver)
+        {
+            // Optionally log or handle this attempt to change state after game end
+            Debug.Log($"Attempted to change state to {newState} after game ended. State remains {State}.");
+            return;
+        }
+
         _previousGameState = State; // Store current state as previous before updating
         State = newState;
         // Handle game state changes here
@@ -271,6 +284,24 @@ public class GameManager : MonoBehaviour
             SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.EnemyDeath);
             SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.Win);
         }
+
+        if (_phaseTransitionAnimator != null)
+        {
+            _phaseTransitionAnimator.SetTrigger("GameEnd");
+        }
+        else
+        {
+            Debug.LogWarning("GameManager: Phase Transition Animator reference not set.");
+        }
+
+        if (_endScreen != null)
+        {
+            _endScreen.ShowVictoryScreen();
+        }
+        else
+        {
+            Debug.LogWarning("GameManager: EndScreen reference not set.");
+        }
     }
 
     private void HandleGameOver()
@@ -281,6 +312,24 @@ public class GameManager : MonoBehaviour
         {
             SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.PlayerDeath);
             SFXManager.Instance.PlayActionSFX(SFXManager.ActionType.GameOver);
+        }
+
+        if (_phaseTransitionAnimator != null)
+        {
+            _phaseTransitionAnimator.SetTrigger("GameEnd");
+        }
+        else
+        {
+            Debug.LogWarning("GameManager: Phase Transition Animator reference not set.");
+        }
+
+        if (_endScreen != null)
+        {
+            _endScreen.ShowGameOverScreen();
+        }
+        else
+        {
+            Debug.LogWarning("GameManager: EndScreen reference not set.");
         }
     }
 

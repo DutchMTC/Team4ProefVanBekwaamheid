@@ -11495,7 +11495,7 @@ GameObject:
   - component: {fileID: 1904655126}
   - component: {fileID: 1904655127}
   m_Layer: 0
-  m_Name: SFX Manager
+  m_Name: SFX Manager.
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

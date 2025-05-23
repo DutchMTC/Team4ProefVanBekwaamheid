@@ -93,7 +93,6 @@ public class SceneFader : MonoBehaviour
             CreateFadeImage(); 
             if (fadeImage == null)
             {
-                Debug.LogError("SceneFader: CRITICAL - Failed to create or find fadeImage in OnSceneLoaded. Fading will not occur for scene '" + scene.name + "'.");
                 return;
             }
         }
@@ -127,7 +126,6 @@ public class SceneFader : MonoBehaviour
 
         if (fadeImage == null)
         {
-            Debug.LogError("SceneFader: StartFadeInInternal - fadeImage is NULL. Aborting fade-in.");
             yield break;
         }
         
@@ -148,7 +146,6 @@ public class SceneFader : MonoBehaviour
     {
         if (fadeImage == null)
         {
-            Debug.LogError("SceneFader: PerformFade - fadeImage is null. Cannot perform fade.");
             onComplete?.Invoke();
             yield break;
         }
@@ -186,7 +183,6 @@ public class SceneFader : MonoBehaviour
             // Attempt to create/find image if one isn't assigned, for robustness
             CreateFadeImage();
             if (fadeImage == null) {
-                 Debug.LogError("SceneFader: FadeToScene - fadeImage is null and could not be created. Loading scene directly: " + sceneName);
                  SceneManager.LoadScene(sceneName);
                  return;
             }
@@ -197,12 +193,13 @@ public class SceneFader : MonoBehaviour
     // INSTANCE METHOD: Call this on a SceneFader component in your current scene
     public void FadeToScene(int sceneIndex)
     {
-         if (fadeImage == null) {
+         if (fadeImage == null)
+        {
             CreateFadeImage();
-            if (fadeImage == null) {
-                 Debug.LogError("SceneFader: FadeToScene - fadeImage is null and could not be created. Loading scene directly by index: " + sceneIndex);
-                 SceneManager.LoadScene(sceneIndex);
-                 return;
+            if (fadeImage == null)
+            {
+                SceneManager.LoadScene(sceneIndex);
+                return;
             }
         }
         StartCoroutine(FadeOutAndLoadSceneInternal(sceneIndex));
@@ -212,7 +209,6 @@ public class SceneFader : MonoBehaviour
     {
         if (fadeImage == null) // Should have been handled by public FadeToScene, but double check
         {
-            Debug.LogError("SceneFader: CRITICAL - fadeImage is null in FadeOutAndLoadSceneInternal. Loading scene directly.");
             LoadSceneByIdentifier(sceneIdentifier);
             yield break;
         }
@@ -228,7 +224,8 @@ public class SceneFader : MonoBehaviour
             StartCoroutine(sfxManager.FadeMusicVolume(0f, fadeDuration));
         }
 
-        yield return StartCoroutine(PerformFade(1f, fadeDuration, () => {
+        yield return StartCoroutine(PerformFade(1f, fadeDuration, () =>
+        {
             LoadSceneByIdentifier(sceneIdentifier);
         }));
     }
@@ -242,10 +239,6 @@ public class SceneFader : MonoBehaviour
         else if (sceneIdentifier is int sceneIndex)
         {
             SceneManager.LoadScene(sceneIndex);
-        }
-        else
-        {
-            Debug.LogError("SceneFader: LoadSceneByIdentifier - Invalid scene identifier type.");
         }
     }
 }

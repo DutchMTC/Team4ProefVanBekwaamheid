@@ -153,7 +153,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   fadeImage: {fileID: 0}
   fadeDuration: 1
-  fadeInOnStart: 0
+  fadeInOnStart: 1
   fadeInDelay: 0
 --- !u!4 &246917646
 Transform:
@@ -1536,11 +1536,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9cb6df6300522d499a686b4acf45103, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerAnimator: {fileID: 1579300338}
-  enemyAnimator: {fileID: 1742409006}
-  buttonAnimator: {fileID: 286489144}
-  cameraAnimator: {fileID: 1670874726}
-  sceneFader: {fileID: 246917645}
+  _playerAnimator: {fileID: 1579300338}
+  _enemyAnimator: {fileID: 1742409006}
+  _buttonAnimator: {fileID: 286489144}
+  _cameraAnimator: {fileID: 1670874726}
+  _sceneFader: {fileID: 246917645}
 --- !u!95 &1670874726
 Animator:
   serializedVersion: 5

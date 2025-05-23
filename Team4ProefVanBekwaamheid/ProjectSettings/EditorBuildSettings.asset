@@ -6,13 +6,13 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 0
-    path: Assets/Level/Scenes/Game_Old.unity
+    path: Assets/Level/Scenes/Archive/Game_Old.unity
     guid: 493a195042509074b84c42deb046f0a8
   - enabled: 0
-    path: Assets/Level/Scenes/TurnBasedGrid.unity
+    path: Assets/Level/Scenes/Archive/TurnBasedGrid.unity
     guid: d6071a79ffe3a08439fa03f336238ed8
   - enabled: 0
-    path: Assets/Level/Scenes/MatchCounter.unity
+    path: Assets/Level/Scenes/Archive/MatchCounter.unity
     guid: b093a9c304364b8498f094f281c77c91
   - enabled: 0
     path: Assets/Individual/Miyaki/MiyakiScene.unity

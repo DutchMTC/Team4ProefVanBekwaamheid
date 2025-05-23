@@ -5,49 +5,49 @@ using System.Collections;
 public class VignetteController : MonoBehaviour
 {
     [Header("Vignette Volumes")]
-    [SerializeField] private Volume damageVignetteVolume;
-    [SerializeField] private Volume healVignetteVolume;
+    [SerializeField] private Volume _damageVignetteVolume;
+    [SerializeField] private Volume _healVignetteVolume;
 
     [Header("Animation Settings")]
-    [SerializeField] private float fadeInDuration = 0.2f; 
-    [SerializeField] private float fadeOutDuration = 0.8f; 
-    private Coroutine damageVignetteCoroutine;
-    private Coroutine healVignetteCoroutine;
+    [SerializeField] private float _fadeInDuration = 0.2f; 
+    [SerializeField] private float _fadeOutDuration = 0.8f; 
+    private Coroutine _damageVignetteCoroutine;
+    private Coroutine _healVignetteCoroutine;
 
     void Start()
     {
         // Ensure vignettes are off at the start
-        if (damageVignetteVolume != null)
+        if (_damageVignetteVolume != null)
         {
-            damageVignetteVolume.weight = 0f;
+            _damageVignetteVolume.weight = 0f;
         }
-        if (healVignetteVolume != null)
+        if (_healVignetteVolume != null)
         {
-            healVignetteVolume.weight = 0f;
+            _healVignetteVolume.weight = 0f;
         }
     }
 
     public void PlayDamageVignette()
     {
-        if (damageVignetteVolume != null)
+        if (_damageVignetteVolume != null)
         {
-            if (damageVignetteCoroutine != null)
+            if (_damageVignetteCoroutine != null)
             {
-                StopCoroutine(damageVignetteCoroutine);
+                StopCoroutine(_damageVignetteCoroutine);
             }
-            damageVignetteCoroutine = StartCoroutine(AnimateVignette(damageVignetteVolume));
+            _damageVignetteCoroutine = StartCoroutine(AnimateVignette(_damageVignetteVolume));
         }
     }
 
     public void PlayHealVignette()
     {
-        if (healVignetteVolume != null)
+        if (_healVignetteVolume != null)
         {
-            if (healVignetteCoroutine != null)
+            if (_healVignetteCoroutine != null)
             {
-                StopCoroutine(healVignetteCoroutine);
+                StopCoroutine(_healVignetteCoroutine);
             }
-            healVignetteCoroutine = StartCoroutine(AnimateVignette(healVignetteVolume));
+            _healVignetteCoroutine = StartCoroutine(AnimateVignette(_healVignetteVolume));
         }
     }
 
@@ -56,9 +56,9 @@ public class VignetteController : MonoBehaviour
         float elapsedTime = 0f;
 
         // Animate from 0 to 1 (Fade In)
-        while (elapsedTime < fadeInDuration)
+        while (elapsedTime < _fadeInDuration)
         {
-            vignetteVolume.weight = Mathf.Lerp(0f, 1f, elapsedTime / fadeInDuration);
+            vignetteVolume.weight = Mathf.Lerp(0f, 1f, elapsedTime / _fadeInDuration);
             elapsedTime += Time.deltaTime;
             yield return null;
         }
@@ -66,9 +66,9 @@ public class VignetteController : MonoBehaviour
 
         // Animate from 1 to 0 (Fade Out)
         elapsedTime = 0f;
-        while (elapsedTime < fadeOutDuration)
+        while (elapsedTime < _fadeOutDuration)
         {
-            vignetteVolume.weight = Mathf.Lerp(1f, 0f, elapsedTime / fadeOutDuration);
+            vignetteVolume.weight = Mathf.Lerp(1f, 0f, elapsedTime / _fadeOutDuration);
             elapsedTime += Time.deltaTime;
             yield return null;
         }

@@ -1,4 +1,16 @@
+![T_SentoTilesLogo2_Shadow](https://github.com/user-attachments/assets/1d7ec4a5-1b66-4293-a0a2-1861aa2642d3)
 # Sento Tiles
+
+
+## Pages
+
+- [Asset Naming Conventions](https://github.com/DutchMTC/Team4ProefVanBekwaamheid/wiki/Asset-Naming-Conventions)
+- [Code Conventions](https://github.com/DutchMTC/Team4ProefVanBekwaamheid/wiki/Code-Conventions)
+- [Functional Design](https://github.com/DutchMTC/Team4ProefVanBekwaamheid/wiki/Functional-Design)
+- [Pipeline](https://github.com/DutchMTC/Team4ProefVanBekwaamheid/wiki/Pipeline)
+- [Software](https://github.com/DutchMTC/Team4ProefVanBekwaamheid/wiki/Software)
+- [Technical Design](https://github.com/DutchMTC/Team4ProefVanBekwaamheid/wiki/Technical-Design)
+- [User Tests](https://github.com/DutchMTC/Team4ProefVanBekwaamheid/wiki/User-Tests)
 
 # What is our game?
 

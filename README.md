@@ -59,5 +59,3 @@ When the enemy has completed their turn, it is the player's turn again: match th
 Two items can also be obtained on the grid: a flask and a samurai armor. These items will appear randomly on the grid; if the player wants to get this item, the player must move to this item to pick it up and use it immediately.
 *   Flask: This item restores a portion of the player's health.
 *   Samurai armor: This item is guaranteed to block all enemy attacks. No health is lost if the player is attacked. If the player is hit by an attack, the armor breaks, and the player is vulnerable to attacks again.
-
-This is also the final phase.

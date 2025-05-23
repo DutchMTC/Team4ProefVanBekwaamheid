@@ -12,6 +12,9 @@
 - [Technical Design](https://github.com/DutchMTC/Team4ProefVanBekwaamheid/wiki/Technical-Design)
 - [User Tests](https://github.com/DutchMTC/Team4ProefVanBekwaamheid/wiki/User-Tests)
 
+## Gameplay Video
+https://www.youtube.com/watch?v=MHON9Zuhplo
+
 # What is our game?
 
 Our game "Sento Tiles" consists of two parts. Of course, the core of our game is the match-3 part. But we have added an extra element: a kind of turn-based grid combat part. The player stands on a grid, surrounded by classic Japanese props. Opposite the player on the grid is the enemy. The player's goal is to defeat the enemy by strategically matching tiles.

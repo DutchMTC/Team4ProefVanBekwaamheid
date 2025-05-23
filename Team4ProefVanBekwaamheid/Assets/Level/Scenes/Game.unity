@@ -572,7 +572,6 @@ GameObject:
   m_Component:
   - component: {fileID: 84001780}
   - component: {fileID: 84001778}
-  - component: {fileID: 84001779}
   - component: {fileID: 84001777}
   - component: {fileID: 84001781}
   m_Layer: 0
@@ -654,25 +653,6 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!114 &84001779
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 84001776}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8eccf720190957247b268a935b9abbf3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  speed: 0.01
-  minZoom: 1.7
-  maxZoom: 4
-  minX: -2
-  maxX: 4
-  minY: 19
-  maxY: 21
 --- !u!4 &84001780
 Transform:
   m_ObjectHideFlags: 0
@@ -1081,87 +1061,6 @@ RectTransform:
   m_AnchoredPosition: {x: 220, y: -420}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!1 &147858571
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 147858572}
-  - component: {fileID: 147858573}
-  m_Layer: 0
-  m_Name: Enemy AI Controller
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!4 &147858572
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 147858571}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1873409516}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &147858573
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 147858571}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 58d875c4ac0961b45a5d6583e2855387, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gameManager: {fileID: 1028325833}
-  playerOccupants: {fileID: 0}
-  powerupDisplayIcons:
-  - {fileID: 588301819}
-  - {fileID: 266884193}
-  - {fileID: 211356382}
-  powerupSpriteMappings:
-  - type: 0
-    sprites:
-      unusable: {fileID: 21300000, guid: 968dada4dd95eb04fa69c6f243006cc3, type: 3}
-      usable: {fileID: 21300000, guid: c563f3dd04eb8a44aa1d037402fd83ea, type: 3}
-      charged: {fileID: 21300000, guid: 2075ab53137849a4b9b295909e18a5ef, type: 3}
-      supercharged: {fileID: 21300000, guid: 95804c84c4b0b7a469789871f615f7fe, type: 3}
-  - type: 1
-    sprites:
-      unusable: {fileID: 21300000, guid: 226a3f48890ffe441a9885498ccddad8, type: 3}
-      usable: {fileID: 21300000, guid: 20ebe8d3fe4b8004f905617c2fb6ad52, type: 3}
-      charged: {fileID: 21300000, guid: 14eb20062cc3cf2488339c5e2a657685, type: 3}
-      supercharged: {fileID: 21300000, guid: e95ccad5ddfc6f44cba06a76c1aacdb3, type: 3}
-  - type: 2
-    sprites:
-      unusable: {fileID: 21300000, guid: 6484b75c62e1e6f43a1be5e75fbcf9f3, type: 3}
-      usable: {fileID: 21300000, guid: f5c2e27045df3654ca63adc038dd924a, type: 3}
-      charged: {fileID: 21300000, guid: 36b2861e22c98644990bdbbb91900254, type: 3}
-      supercharged: {fileID: 21300000, guid: eb6efc18b9098504d938a55f2ac73e64, type: 3}
-  - type: 3
-    sprites:
-      unusable: {fileID: 21300000, guid: 80a9263cb448fc94f8ed2074c885d5cc, type: 3}
-      usable: {fileID: 21300000, guid: a49d1c1729e0ec446896df353046d59c, type: 3}
-      charged: {fileID: 21300000, guid: 4feed9b43fa656e4685d137b58f2e0e9, type: 3}
-      supercharged: {fileID: 21300000, guid: 3dc7d927142e9f54b834473164613642, type: 3}
-  characterAnimationController: {fileID: 0}
-  _tileSelection: {fileID: 0}
-  _characterRotator: {fileID: 0}
-  probabilityToSelectThreePowerups: 0.2
-  probabilityCharged: 0.4
-  probabilitySupercharged: 0.1
 --- !u!1 &154450975
 GameObject:
   m_ObjectHideFlags: 0
@@ -1207,10 +1106,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cee3665ef6cb7cb4f9e65357958e4b45, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  animators:
-  - {fileID: 1873409517}
-  - {fileID: 84001777}
-  - {fileID: 1792846263}
+  _animators: []
 --- !u!114 &154450978
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1225,7 +1121,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerAnimator: {fileID: 1549750275}
   enemyAnimator: {fileID: 1789669737}
-  sfxManager: {fileID: 0}
+  sfxManager: {fileID: 1904655127}
 --- !u!1 &182217162
 GameObject:
   m_ObjectHideFlags: 0
@@ -2952,30 +2848,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b45014c91bed9e43bd50e0f2882c642, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mainHealthSlider: {fileID: 205286107}
-  mainSliderFillImage: {fileID: 368078758}
-  mainSliderBackgroundImage: {fileID: 785778224}
-  damagePreviewSlider: {fileID: 821378559}
-  previewSliderFillImage: {fileID: 1601236586}
-  previewSliderBackgroundImage: {fileID: 438806967}
-  previewSliderFillAreaImage: {fileID: 1099523844}
-  armorIcon: {fileID: 616616220}
-  fillSpriteFullHealth: {fileID: 21300000, guid: e4e30d59585233c43a429c6dc388cb7e,
+  _mainHealthSlider: {fileID: 205286107}
+  _mainSliderFillImage: {fileID: 368078758}
+  _mainSliderBackgroundImage: {fileID: 785778224}
+  _damagePreviewSlider: {fileID: 821378559}
+  _previewSliderFillImage: {fileID: 438806967}
+  _previewSliderBackgroundImage: {fileID: 1601236586}
+  _previewSliderFillAreaImage: {fileID: 1099523844}
+  _armorIcon: {fileID: 616616220}
+  _fillSpriteFullHealth: {fileID: 21300000, guid: e4e30d59585233c43a429c6dc388cb7e,
     type: 3}
-  fillSpriteMidHealth: {fileID: 21300000, guid: 934803a4e0825f248bd764203e40bc32,
+  _fillSpriteMidHealth: {fileID: 21300000, guid: 934803a4e0825f248bd764203e40bc32,
     type: 3}
-  fillSpriteLowHealth: {fileID: 21300000, guid: 2d46450e4feabce409e70152bcde50be,
+  _fillSpriteLowHealth: {fileID: 21300000, guid: 2d46450e4feabce409e70152bcde50be,
     type: 3}
-  fillSpriteDead: {fileID: 21300000, guid: fcfed0ad0517bfd4c8eac356e9171c63, type: 3}
-  backgroundSpriteFullHealth: {fileID: 21300000, guid: 8ee221c7f4e67bd478fd96acab255efa,
+  _fillSpriteDead: {fileID: 21300000, guid: fcfed0ad0517bfd4c8eac356e9171c63, type: 3}
+  _backgroundSpriteFullHealth: {fileID: 21300000, guid: 8ee221c7f4e67bd478fd96acab255efa,
     type: 3}
-  backgroundSpriteMidHealth: {fileID: 21300000, guid: 318a37db291fad648be8abe85aaba532,
+  _backgroundSpriteMidHealth: {fileID: 21300000, guid: 318a37db291fad648be8abe85aaba532,
     type: 3}
-  backgroundSpriteLowHealth: {fileID: 21300000, guid: 6cd6c32fc03ffcb45849a71be121e776,
+  _backgroundSpriteLowHealth: {fileID: 21300000, guid: 6cd6c32fc03ffcb45849a71be121e776,
     type: 3}
-  backgroundSpriteDead: {fileID: 21300000, guid: f6e377332fbaaea47a8805b85c0d255e,
+  _backgroundSpriteDead: {fileID: 21300000, guid: f6e377332fbaaea47a8805b85c0d255e,
     type: 3}
-  fastDrainAnimationCurve:
+  _fastDrainAnimationCurve:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
@@ -2990,8 +2886,8 @@ MonoBehaviour:
     - serializedVersion: 3
       time: 1
       value: 1
-      inSlope: 2
-      outSlope: 2
+      inSlope: 0
+      outSlope: 0
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
@@ -2999,8 +2895,8 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  fastDrainDuration: 0.15
-  slowDrainAnimationCurve:
+  _fastDrainDuration: 0.25
+  _slowDrainAnimationCurve:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
@@ -3015,8 +2911,8 @@ MonoBehaviour:
     - serializedVersion: 3
       time: 1
       value: 1
-      inSlope: 2
-      outSlope: 2
+      inSlope: 0
+      outSlope: 0
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
@@ -3024,10 +2920,10 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  slowDrainDuration: 0.5
-  slowDrainStartDelay: 0.5
-  shakeIntensity: 5
-  shakeDuration: 0.4
+  _slowDrainDuration: 0.5
+  _slowDrainStartDelay: 0.5
+  _shakeIntensity: 5
+  _shakeDuration: 0.4
 --- !u!1 &432745556
 GameObject:
   m_ObjectHideFlags: 0
@@ -6753,8 +6649,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 58d875c4ac0961b45a5d6583e2855387, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameManager: {fileID: 1028325833}
-  playerOccupants: {fileID: 1557919040}
+  _gameManager: {fileID: 1028325833}
+  _playerOccupants: {fileID: 1557919040}
+  _characterAnimationController: {fileID: 154450978}
+  _tileSelection: {fileID: 1557919039}
+  _characterRotator: {fileID: 1557919045}
   powerupDisplayIcons:
   - {fileID: 588301819}
   - {fileID: 266884193}
@@ -6784,9 +6683,6 @@ MonoBehaviour:
       usable: {fileID: 21300000, guid: 5b53d848daa4821419bc4ca91f368274, type: 3}
       charged: {fileID: 21300000, guid: 916c252f01ca9854ea7efc622425e48d, type: 3}
       supercharged: {fileID: 21300000, guid: bf7a74949fc5fd746b6b9cab2cf45f30, type: 3}
-  characterAnimationController: {fileID: 154450978}
-  _tileSelection: {fileID: 1557919039}
-  _characterRotator: {fileID: 1557919045}
   probabilityToSelectThreePowerups: 0.2
   probabilityCharged: 0.4
   probabilitySupercharged: 0.1
@@ -6806,15 +6702,15 @@ MonoBehaviour:
   myOccupantType: 2
   gridY: 0
   gridX: 4
-  maxHealth: 65
-  health: 65
-  armorPlayerVisualsToEnable: []
-  armorPlayerVisualsToDisable: []
-  usableAttackDamageDelay: 0.7
-  chargedAttackDamageDelay: 0.7
-  superchargedAttackDamageDelay: 0.85
-  trapDamageDelay: 1.75
-  healthBarUI: {fileID: 1937977755}
+  _maxHealth: 65
+  _health: 65
+  _armorPlayerVisualsToEnable: []
+  _armorPlayerVisualsToDisable: []
+  _usableAttackDamageDelay: 0.7
+  _chargedAttackDamageDelay: 0.7
+  _superchargedAttackDamageDelay: 0.85
+  _trapDamageDelay: 1.75
+  _healthBarUI: {fileID: 1937977755}
 --- !u!65 &939605195
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -7310,7 +7206,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _gridManager: {fileID: 269116825}
-  _enemyAIController: {fileID: 147858573}
+  _enemyAIController: {fileID: 0}
   _playerTimer: {fileID: 108760223}
   _matchCounterUI: {fileID: 601989663}
   _timerUI: {fileID: 1860587833}
@@ -9176,10 +9072,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f3b348680ab959849a41a5358ed9c215, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  damageVignetteVolume: {fileID: 1607429516}
-  healVignetteVolume: {fileID: 443661310}
-  fadeInDuration: 0.2
-  fadeOutDuration: 1.5
+  _damageVignetteVolume: {fileID: 1607429516}
+  _healVignetteVolume: {fileID: 443661310}
+  _fadeInDuration: 0.2
+  _fadeOutDuration: 1.5
 --- !u!1 &1468007055
 GameObject:
   m_ObjectHideFlags: 0
@@ -9583,11 +9479,11 @@ MonoBehaviour:
       m_Calls: []
   _topCamera: {fileID: 84001778}
   _gridGenerator: {fileID: 0}
-  characterAnimationController: {fileID: 154450978}
-  characterRotator: {fileID: 1557919045}
-  moveSpeed: 7
-  tilePauseDuration: 0.1
-  movementCurve:
+  _characterAnimationController: {fileID: 154450978}
+  _characterRotator: {fileID: 1557919045}
+  _moveSpeed: 5
+  _tilePauseDuration: 0.1
+  _movementCurve:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
@@ -9611,7 +9507,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  actionRotationDuration: 0.3
+  _actionRotationDuration: 0.3
   pathVisualizer: {fileID: 0}
 --- !u!114 &1557919040
 MonoBehaviour:
@@ -9629,17 +9525,17 @@ MonoBehaviour:
   myOccupantType: 1
   gridY: 4
   gridX: 0
-  maxHealth: 65
-  health: 65
-  armorPlayerVisualsToEnable:
-  - {fileID: 5625417186292943735}
-  armorPlayerVisualsToDisable:
-  - {fileID: 2975207015878038552}
-  usableAttackDamageDelay: 0.7
-  chargedAttackDamageDelay: 0.7
-  superchargedAttackDamageDelay: 0.85
-  trapDamageDelay: 1.75
-  healthBarUI: {fileID: 389566553}
+  _maxHealth: 65
+  _health: 65
+  _armorPlayerVisualsToEnable:
+  - {fileID: 0}
+  _armorPlayerVisualsToDisable:
+  - {fileID: 0}
+  _usableAttackDamageDelay: 0.7
+  _chargedAttackDamageDelay: 0.7
+  _superchargedAttackDamageDelay: 0.85
+  _trapDamageDelay: 1.75
+  _healthBarUI: {fileID: 389566553}
 --- !u!4 &1557919041
 Transform:
   m_ObjectHideFlags: 0
@@ -9715,8 +9611,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f86dbbf9f4dec84ca34bb78f1e133ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rotationDuration: 0.3
-  rotationCurve:
+  _rotationDuration: 0.3
+  _rotationCurve:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
@@ -9740,9 +9636,9 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  playerRotationOffset: {x: -90, y: 90, z: 0}
-  enemyRotationOffset: {x: 0, y: 25, z: 0}
-  enemyModelToRotate: {fileID: 2110333418}
+  _playerRotationOffset: {x: -90, y: 90, z: 0}
+  _enemyRotationOffset: {x: 0, y: 25, z: 0}
+  _enemyModelToRotate: {fileID: 2110333418}
 --- !u!1 &1576145458
 GameObject:
   m_ObjectHideFlags: 0
@@ -11577,7 +11473,6 @@ Transform:
   - {fileID: 269116826}
   - {fileID: 31519539}
   - {fileID: 233285971}
-  - {fileID: 147858572}
   - {fileID: 154450976}
   - {fileID: 1460892208}
   m_Father: {fileID: 0}
@@ -12192,30 +12087,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b45014c91bed9e43bd50e0f2882c642, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mainHealthSlider: {fileID: 742150375}
-  mainSliderFillImage: {fileID: 484823069}
-  mainSliderBackgroundImage: {fileID: 1158481709}
-  damagePreviewSlider: {fileID: 879542231}
-  previewSliderFillImage: {fileID: 518731891}
-  previewSliderBackgroundImage: {fileID: 2048488205}
-  previewSliderFillAreaImage: {fileID: 1468007058}
-  armorIcon: {fileID: 1399281656}
-  fillSpriteFullHealth: {fileID: 21300000, guid: e4e30d59585233c43a429c6dc388cb7e,
+  _mainHealthSlider: {fileID: 742150375}
+  _mainSliderFillImage: {fileID: 484823069}
+  _mainSliderBackgroundImage: {fileID: 1158481709}
+  _damagePreviewSlider: {fileID: 879542231}
+  _previewSliderFillImage: {fileID: 518731891}
+  _previewSliderBackgroundImage: {fileID: 2048488205}
+  _previewSliderFillAreaImage: {fileID: 1468007058}
+  _armorIcon: {fileID: 1399281656}
+  _fillSpriteFullHealth: {fileID: 21300000, guid: e4e30d59585233c43a429c6dc388cb7e,
     type: 3}
-  fillSpriteMidHealth: {fileID: 21300000, guid: 934803a4e0825f248bd764203e40bc32,
+  _fillSpriteMidHealth: {fileID: 21300000, guid: 934803a4e0825f248bd764203e40bc32,
     type: 3}
-  fillSpriteLowHealth: {fileID: 21300000, guid: 2d46450e4feabce409e70152bcde50be,
+  _fillSpriteLowHealth: {fileID: 21300000, guid: 2d46450e4feabce409e70152bcde50be,
     type: 3}
-  fillSpriteDead: {fileID: 21300000, guid: fcfed0ad0517bfd4c8eac356e9171c63, type: 3}
-  backgroundSpriteFullHealth: {fileID: 21300000, guid: 8ee221c7f4e67bd478fd96acab255efa,
+  _fillSpriteDead: {fileID: 21300000, guid: fcfed0ad0517bfd4c8eac356e9171c63, type: 3}
+  _backgroundSpriteFullHealth: {fileID: 21300000, guid: 8ee221c7f4e67bd478fd96acab255efa,
     type: 3}
-  backgroundSpriteMidHealth: {fileID: 21300000, guid: 318a37db291fad648be8abe85aaba532,
+  _backgroundSpriteMidHealth: {fileID: 21300000, guid: 318a37db291fad648be8abe85aaba532,
     type: 3}
-  backgroundSpriteLowHealth: {fileID: 21300000, guid: 6cd6c32fc03ffcb45849a71be121e776,
+  _backgroundSpriteLowHealth: {fileID: 21300000, guid: 6cd6c32fc03ffcb45849a71be121e776,
     type: 3}
-  backgroundSpriteDead: {fileID: 21300000, guid: f6e377332fbaaea47a8805b85c0d255e,
+  _backgroundSpriteDead: {fileID: 21300000, guid: f6e377332fbaaea47a8805b85c0d255e,
     type: 3}
-  fastDrainAnimationCurve:
+  _fastDrainAnimationCurve:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
@@ -12230,8 +12125,8 @@ MonoBehaviour:
     - serializedVersion: 3
       time: 1
       value: 1
-      inSlope: 2
-      outSlope: 2
+      inSlope: 0
+      outSlope: 0
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
@@ -12239,8 +12134,8 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  fastDrainDuration: 0.15
-  slowDrainAnimationCurve:
+  _fastDrainDuration: 0.25
+  _slowDrainAnimationCurve:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
@@ -12255,8 +12150,8 @@ MonoBehaviour:
     - serializedVersion: 3
       time: 1
       value: 1
-      inSlope: 2
-      outSlope: 2
+      inSlope: 0
+      outSlope: 0
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
@@ -12264,83 +12159,10 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  slowDrainDuration: 0.5
-  slowDrainStartDelay: 0.5
-  shakeIntensity: 5
-  shakeDuration: 0.4
---- !u!1001 &1960334505
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 3375841526802153266, guid: cb93b75d7b88d9947a94d499a9b9556a,
-        type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 4.392801
-      objectReference: {fileID: 0}
-    - target: {fileID: 3375841526802153266, guid: cb93b75d7b88d9947a94d499a9b9556a,
-        type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 6.415221
-      objectReference: {fileID: 0}
-    - target: {fileID: 3375841526802153266, guid: cb93b75d7b88d9947a94d499a9b9556a,
-        type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 20.897614
-      objectReference: {fileID: 0}
-    - target: {fileID: 3375841526802153266, guid: cb93b75d7b88d9947a94d499a9b9556a,
-        type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3375841526802153266, guid: cb93b75d7b88d9947a94d499a9b9556a,
-        type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3375841526802153266, guid: cb93b75d7b88d9947a94d499a9b9556a,
-        type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3375841526802153266, guid: cb93b75d7b88d9947a94d499a9b9556a,
-        type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3375841526802153266, guid: cb93b75d7b88d9947a94d499a9b9556a,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3375841526802153266, guid: cb93b75d7b88d9947a94d499a9b9556a,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3375841526802153266, guid: cb93b75d7b88d9947a94d499a9b9556a,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6752704633253395109, guid: cb93b75d7b88d9947a94d499a9b9556a,
-        type: 3}
-      propertyPath: m_Name
-      value: DamageVignette
-      objectReference: {fileID: 0}
-    - target: {fileID: 7043046081037256024, guid: cb93b75d7b88d9947a94d499a9b9556a,
-        type: 3}
-      propertyPath: weight
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: cb93b75d7b88d9947a94d499a9b9556a, type: 3}
+  _slowDrainDuration: 0.5
+  _slowDrainStartDelay: 0.5
+  _shakeIntensity: 5
+  _shakeDuration: 0.4
 --- !u!1 &1978110831
 GameObject:
   m_ObjectHideFlags: 0
@@ -15599,4 +15421,3 @@ SceneRoots:
   - {fileID: 1792846268}
   - {fileID: 565481380}
   - {fileID: 2002042724}
-  - {fileID: 1960334505}

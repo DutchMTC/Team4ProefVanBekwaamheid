@@ -41,11 +41,6 @@ public class GameManagerEditor : Editor
                 Undo.RecordObject(gameManager, "Change Game State"); // Record state for Undo
                 gameManager.UpdateGameState(_selectedState);
                 EditorUtility.SetDirty(gameManager); // Mark the object as dirty to ensure changes are registered
-                Debug.Log($"Game state updated to: {_selectedState} via Inspector.");
-            }
-            else
-            {
-                Debug.LogWarning("Cannot update game state while not in Play Mode.");
             }
         }
     }

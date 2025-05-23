@@ -14,14 +14,6 @@ public class EndScreen : MonoBehaviour
     {
         // Attempt to find the SceneFader instance in the scene
         sceneFader = FindObjectOfType<SceneFader>();
-        if (sceneFader == null)
-        {
-            Debug.LogError("EndScreen: SceneFader not found in the scene. Please ensure a SceneFader object exists and is active.");
-        }
-
-        // Ensure images are assigned
-        if (_victoryImage == null) Debug.LogError("EndScreen: Victory Image not assigned in Inspector.");
-        if (_gameOverImage == null) Debug.LogError("EndScreen: Game Over Image not assigned in Inspector.");
     }
 
     public void ShowVictoryScreen()
@@ -43,10 +35,6 @@ public class EndScreen : MonoBehaviour
             // Get the current active scene's build index to reload it
             sceneFader.FadeToScene(SceneManager.GetActiveScene().buildIndex);
         }
-        else
-        {
-            Debug.LogError("EndScreen: SceneFader reference is missing. Cannot reload scene.");
-        }
     }
 
     public void MainMenu()
@@ -54,10 +42,6 @@ public class EndScreen : MonoBehaviour
         if (sceneFader != null)
         {
             sceneFader.FadeToScene("TitleScreenScene");
-        }
-        else
-        {
-            Debug.LogError("EndScreen: SceneFader reference is missing. Cannot load Main Menu.");
         }
     }
 }

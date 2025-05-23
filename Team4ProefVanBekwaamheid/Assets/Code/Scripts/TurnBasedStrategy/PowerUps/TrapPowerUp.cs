@@ -244,12 +244,6 @@ namespace Team4ProefVanBekwaamheid.TurnBasedStrategy.PowerUps
              return bestTile;
         }
 
-        // Helper for distance calculation (optional refinement)
-        private int CalculateManhattanDistance(Vector2Int posA, Vector2Int posB)
-        {
-            return Mathf.Abs(posA.x - posB.x) + Mathf.Abs(posA.y - posB.y);
-        }
-
         // Method to increment trap count when a trap is placed
         public static void IncrementTrapCount()
         {

@@ -58,17 +58,6 @@ public class GridManager : MonoBehaviour
         Blocks = new Block[gridWidth, gridHeight];
         InitializeGrid();
         if (matchCounterText != null) matchCounterText.text = (swapLimit - currentSwaps).ToString();
-        else Debug.LogError("MatchCounterText is not assigned in the Inspector!");
-
-        // Basic check for power-up targets
-        if (movePowerUpTarget == null || attackPowerUpTarget == null || defensePowerUpTarget == null || trapPowerUpTarget == null)
-        {
-            Debug.LogWarning("One or more PowerUp Target Transforms are not assigned in the GridManager Inspector. Animations might not target correctly.");
-        }
-        if (animationPanelParent == null)
-        {
-            Debug.LogError("Animation Panel Parent is not assigned in the GridManager Inspector! Power-up animations might not render correctly.");
-        }
     }
 
     private void InitializeGrid()
@@ -278,8 +267,7 @@ public class GridManager : MonoBehaviour
         Block blockComponent = blockPrefab.GetComponent<Block>();
         if (blockComponent.blockTypes == null || blockComponent.blockTypes.Length == 0)
         {
-            Debug.LogError("Block prefab has no block types defined!");
-            return default; // Or handle error appropriately
+           return default; // Or handle error appropriately
         }
 
         List<Block.BlockTypeData> validTypes = new List<Block.BlockTypeData>();
@@ -301,8 +289,7 @@ public class GridManager : MonoBehaviour
 
         if (typesToChooseFrom.Count == 0)
         {
-             Debug.LogError($"No block types (valid or invalid) available for position ({x}, {y})! Falling back to first defined type.");
-             // Fallback to the first type defined in the prefab if absolutely necessary
+            // Fallback to the first type defined in the prefab if absolutely necessary
              return blockComponent.blockTypes[0].type;
         }
 
@@ -484,8 +471,6 @@ public class GridManager : MonoBehaviour
             {
                 matchCounterText.text = (swapLimit - currentSwaps).ToString();
             }
-            Debug.Log($"Valid swap performed (Match Found). Current Swaps: {currentSwaps}/{swapLimit}");
-
             // ProcessMatch is now a coroutine
             StartCoroutine(ProcessMatch(matchingBlocks));
 
@@ -591,12 +576,7 @@ public class GridManager : MonoBehaviour
             foreach (var kvp in powerUpsToGrant)
             {
                 PowerUpInventory.Instance.AddPowerUps(kvp.Key, kvp.Value);
-                Debug.Log($"Match Grant: Awarded {kvp.Value} {kvp.Key} power-ups");
             }
-        }
-        else
-        {
-            Debug.LogWarning("PowerUpInventory.Instance is null. Cannot grant power-ups.");
         }
 
         // --- Step 3: Calculate Grouping Point ---
@@ -645,7 +625,6 @@ public class GridManager : MonoBehaviour
             else if (block != null && block.gameObject != null) // Check if block exists but is not in the grid array (already processed?)
             {
                 // This block might have already been cleared by an overlapping match check, just destroy it without animation
-                Debug.LogWarning($"Block {block.type} at ({block.column},{block.row}) was already cleared or missing from grid array. Destroying immediately.");
                 Destroy(block.gameObject);
             }
         }
@@ -669,10 +648,6 @@ public class GridManager : MonoBehaviour
         if (animationPanelParent != null)
         {
             block.transform.SetParent(animationPanelParent, true); // Reparent to the specified panel, keep world position
-        }
-        else
-        {
-             Debug.LogError("Animation Panel Parent is null in AnimateBlockToPowerUp! Block will not be reparented.");
         }
         // Ensure block still exists after potential reparenting error log
         if (block == null) {
@@ -704,7 +679,6 @@ public class GridManager : MonoBehaviour
         Transform targetTransform = GetPowerUpTargetTransform(type);
         if (targetTransform == null)
         {
-            Debug.LogWarning($"No target transform found for PowerUpType {type}. Block will just shrink and disappear.");
             targetTransform = block.transform; // Fallback to self to avoid null ref
         }
 
@@ -713,7 +687,6 @@ public class GridManager : MonoBehaviour
         Camera mainCamera = Camera.main;
         if (mainCamera == null)
         {
-             Debug.LogError("Main Camera not found! Cannot calculate screen positions for power-up animation.");
              if (block != null) Destroy(block.gameObject); // Clean up block
              _activePowerUpAnimations--;
              yield break;
@@ -790,7 +763,6 @@ public class GridManager : MonoBehaviour
             // Add cases for other power-up types if they exist in PowerUpInventory.PowerUpType
             // case PowerUpInventory.PowerUpType.Health: return healPowerUpTarget;
             default:
-                Debug.LogWarning($"No specific target defined for PowerUpInventory.PowerUpType: {type}.");
                 return null; // No appropriate target found
         }
     }
@@ -871,7 +843,6 @@ public class GridManager : MonoBehaviour
                 }
             }
 
-
             // --- Step 3: Wait for fall/spawn animations ---
             if (fallAnimations.Count > 0)
             {
@@ -888,7 +859,6 @@ public class GridManager : MonoBehaviour
             List<Block> newMatches = FindMatches();
             if (newMatches.Count >= 3)
             {
-                 Debug.Log($"Cascade Match Found ({newMatches.Count} blocks).");
                  // ProcessMatch is now a coroutine
                  StartCoroutine(ProcessMatch(newMatches));
                  blocksMovedOrMatched = true; // Indicate that changes happened
@@ -906,10 +876,6 @@ public class GridManager : MonoBehaviour
         if (GameManager.Instance != null && GameManager.Instance.State == GameState.Matching && currentSwaps >= swapLimit)
         {
             GameManager.Instance.UpdateGameState(GameState.Player);
-        }
-         else if (GameManager.Instance == null)
-        {
-            Debug.LogWarning("GameManager.Instance is null. Cannot update game state.");
         }
     }
 
@@ -940,7 +906,6 @@ public class GridManager : MonoBehaviour
                  }
                  yield break;
             }
-
 
             float t = timeElapsed / duration;
             // Use fallEaseCurve only for falling/spawning, not for swaps
@@ -1100,22 +1065,6 @@ public class GridManager : MonoBehaviour
                 }
             }
         }
-
-
         return matchingBlocks.ToList();
     }
-
-    // This specific function might not be needed anymore with the improved FindMatches logic
-    // private bool AreBlocksMatching(Block block1, Block block2)
-    // {
-    //     if (block1 == null || block2 == null) return false;
-    //     // If neither block is a joker, just check if they're the same type
-    //     if (!block1.IsJoker && !block2.IsJoker)
-    //     {
-    //         return block1.type == block2.type;
-    //     }
-    //     // If at least one is a joker, they are considered matching in a sequence context
-    //     return true;
-    // }
-
 }
